@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 
 import pytest
@@ -165,6 +166,74 @@ def test_exit_assertion_output_is_disjoint_from_hidden(db):
     output = {item["id"] for item in result["items"]}
     assert output & hidden == set()
     assert service.stats.snapshot()["exit_assertion_drops"] == 0
+
+
+def test_exit_assertion_catches_deliberate_hidden_leak(db, monkeypatch, caplog):
+    """故意制造泄漏：hidden 映射到自己 → 路内替换不剔除，只有出口断言能拦。
+
+    ``snapshot.heads`` 置空时 ``_apply_route_replacement`` 会把被作废项直接丢弃，
+    到不了出口；因此这里把 heads[target] 指向 target 本身，模拟替换逻辑有 bug。
+    """
+    target = add_memory(db, "北京项目计划书", session_id="s1")
+    add_memory(db, "北京项目计划书附件", session_id="s2")  # 剔除泄漏项后结果仍非空
+    corrector = add_memory(db, "计划书改期了", session_id="s9")
+    add_edge(db, corrector, target, kind="supersede", recorded_at=100)
+    build_derived(db)
+
+    from app import voided as voided_mod
+
+    real_snapshot = voided_mod.hidden_snapshot
+
+    def leaking_snapshot(conn):
+        snapshot = real_snapshot(conn)
+        snapshot.heads[target] = [target]
+        return snapshot
+
+    monkeypatch.setattr(voided_mod, "hidden_snapshot", leaking_snapshot)
+    service = make_service(db, routes=("bigram",))
+    caplog.set_level(logging.ERROR, logger="factlayer.retrieval")
+
+    result = service.search("北京项目计划书")
+
+    # 泄漏项被剔除、结果仍正常返回；丢弃计数 +1
+    output_ids = [item["id"] for item in result["items"]]
+    assert target not in output_ids
+    assert output_ids, "泄漏项被剔除后仍应有其它命中（验证不是整条查询失败）"
+    assert service.stats.snapshot()["exit_assertion_drops"] == 1
+    # ERROR 日志带 query_id，便于复现
+    errors = [rec for rec in caplog.records if rec.levelno == logging.ERROR]
+    assert errors
+    assert any(result["query_id"] in rec.getMessage() for rec in errors)
+    assert any(
+        target in rec.getMessage() and "hidden" in rec.getMessage() for rec in errors
+    )
+
+
+def test_first_item_two_tail_lines_still_within_item_max(db):
+    """首条同时拼 hidden 尾行 + 预算尾行时，单条仍须 ≤1200（否则下游硬截掉通知）。"""
+    for i in range(6):
+        add_memory(db, "北京" + ("很长的记录内容" * 400) + f" {i}", session_id=f"s{i}")
+    target = add_memory(
+        db, "北京" + ("很长的记录内容" * 400) + " 被作废", session_id="sh"
+    )
+    corrector = add_memory(db, "改期了", session_id="sc")
+    add_edge(db, corrector, target, kind="supersede", recorded_at=100)
+    build_derived(db)
+
+    # final_k=5 让第 5 条触发总预算截断 → 首条除 hidden 尾行外再叠一条预算尾行
+    service = make_service(
+        db, routes=("bigram",), final_k=5, item_max_chars=1200, total_max_chars=4800
+    )
+    result = service.search("北京")
+
+    assert result["items"]
+    first = result["items"][0]
+    assert "hidden:1" in first["tags"]
+    assert len(first["content"]) <= 1200  # 单条含**两条**尾行也不得超单条预算
+    assert result["output"]["truncated_items"] >= 1
+    assert "条因字符预算未显示" in first["content"]  # 尾行没有被 1200 硬截掉
+    _assert_contract_items(result["items"])
+    assert sum(len(item["content"]) for item in result["items"]) <= 4800
 
 
 # ---- admin 端点 -------------------------------------------------------------

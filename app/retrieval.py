@@ -570,7 +570,10 @@ class RetrievalService:
 
         if truncated_items:
             notice = f"〔另有 {truncated_items} 条因字符预算未显示〕"
-            items = _append_tail_line(items, notice, self.cfg.total_max_chars)
+            # 尾行走**单条预算**（1200），不能只看总预算 4800：首条可能已有
+            # hidden/环尾行，两条尾行叠加会超过单条上限，被下游按 1200 硬截时
+            # 通知会被截掉（v8 审阅第 4 条）。
+            items = _append_tail_line(items, notice, int(self.cfg.item_max_chars))
             chars = sum(len(item["content"]) for item in items)
 
         if not items:
@@ -1100,8 +1103,10 @@ def _normalize_tags(tags: list[str]) -> list[str]:
 
 
 def _ensure_tail(content: str, notice: str, max_chars: int) -> str:
-    """把 notice 作为尾行拼进 content，仍保证总长 ≤max_chars。"""
-    tail = "\n" + notice
+    """把 notice 作为尾行拼进 content，**保证**总长 ≤max_chars。"""
+    max_chars = max(1, int(max_chars))
+    # 极端情况 notice 本身超预算：先截尾行，否则 keep=0 也会返回超长串
+    tail = ("\n" + notice)[:max_chars]
     if len(content) + len(tail) <= max_chars:
         return content + tail
     keep = max(0, max_chars - len(tail))
@@ -1109,17 +1114,15 @@ def _ensure_tail(content: str, notice: str, max_chars: int) -> str:
 
 
 def _append_tail_line(
-    items: list[dict], notice: str, total_max_chars: int
+    items: list[dict], notice: str, item_max_chars: int
 ) -> list[dict]:
+    """把 notice 作为尾行拼到首条 ``content``，**按单条预算**保证 ≤item_max_chars。
+
+    与 ``_ensure_tail`` 同一约束（统一入口），避免首条先有 hidden/环尾行、再叠
+    预算尾行时突破 1200。
+    """
     if not items:
         return items
     first = items[0]
-    tail = "\n" + notice
-    content = first["content"]
-    if len(content) + len(tail) <= total_max_chars:
-        first["content"] = content + tail
-        return items
-    # 总预算已满：先压缩首条，再拼 notice
-    overflow = len(content) + len(tail) - total_max_chars
-    first["content"] = content[: max(0, len(content) - overflow)] + tail
+    first["content"] = _ensure_tail(first["content"], notice, item_max_chars)
     return items

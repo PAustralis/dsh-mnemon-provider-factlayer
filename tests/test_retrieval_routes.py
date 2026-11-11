@@ -57,6 +57,42 @@ def test_trigram_default_off_per_v8(db, monkeypatch):
     assert cfg.route_names == ("bigram",)
 
 
+def test_auto_degrade_defaults_off_per_design_s12(db, monkeypatch):
+    """设计 §12：不做运行时质量自动降级。默认关闭；开关只留给离线评测。"""
+    import json
+    from dataclasses import replace
+
+    from app.config import load_config
+    from app.retrieval import resolve_routes
+    from app.schema import set_meta
+
+    monkeypatch.delenv("RETRIEVAL_AUTO_DEGRADE", raising=False)
+    monkeypatch.delenv("DSH_RETRIEVAL_AUTO_DEGRADE", raising=False)
+    assert load_config().auto_degrade is False
+
+    # 即使 meta:retrieval:eval 说融合比单路差，默认也不允许运行时收窄路线
+    set_meta(
+        db,
+        "retrieval:eval",
+        json.dumps(
+            {
+                "best_single_route": "bigram",
+                "best_single_r6": 0.5,
+                "fusion_r6": 0.2,
+            }
+        ),
+    )
+    cfg = replace(load_config(), retrieval_routes=("bigram", "trigram"))
+    routes, degrade = resolve_routes(db, cfg)
+    assert routes == ("bigram", "trigram")
+    assert degrade["degraded"] is False
+
+    # 显式打开时仍可按评测快照收窄（仅评测/离线复现用）
+    routes, degrade = resolve_routes(db, replace(cfg, auto_degrade=True))
+    assert routes == ("bigram",)
+    assert degrade["degraded"] is True
+
+
 def test_recent_fallback_is_deleted(db):
     """v8 删除“最近分区”：命中不足 FINAL_K 也不补最近项。"""
     add_memory(db, "唯一命中北京的记录", session_id="s1")

@@ -52,6 +52,7 @@ admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 
 | `FINAL_K` | `4` | 契约 strict-v1 默认 maxRankedResults=4 |
 | `ITEM_MAX_CHARS` / `TOTAL_MAX_CHARS` | `1200` / `4800` | 单条 / 总字符预算 |
 | `EXPAND_ENABLED` | `false` | 会话展开默认关；开启时只占 FINAL_K 名额内 |
+| `RETRIEVAL_AUTO_DEGRADE` | `false` | 设计 §12 不做运行时质量自动降级；仅离线评测复现时显式打开 |
 | `ADMIN_TOKEN` | 空 | 空则 admin 端点仅回环 |
 | `EMBEDDING_MAX_SPEND_USD` | `0.50` | 向量重建预算上限 |
 
@@ -62,8 +63,32 @@ admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 
   保留为对外标识；`seq` 语义不变）。SQLite 改主键必须重建表，`init_db()` 的
   `migrate_memories_gseq()` 会自动：DROP 防写/FTS 触发器 → 建新表 →
   `INSERT … SELECT` 按旧 rowid 显式填 `gseq` → 重建 FTS（external content rowid 稳定）→
-  重建触发器与索引 → 更新 `sqlite_sequence`。无生产数据时也可**删库 + 派生重建**，
-  但必须重跑 `POST /admin/rebuild`（或启动派生循环）补齐派生层。
+  重建触发器与索引 → 更新 `sqlite_sequence`。
+- **保留旧库升级时必须完成派生重建（P0，绝不静默丢数据）**：`migrate_memories_gseq()`
+  只重建了原文 `memories_fts`；检索层后加的 `memories_ngrams` / `memories_fts_bigram`
+  （bigram 派生）在 legacy 库迁移后是空表，**旧记忆会永久搜不到**。因此 `init_db()`
+  在检测到「刚完成 memories 迁移」或「`memories_ngrams` / `memories_fts_bigram`
+  行数 != `memories` 行数」时，会**在启动时强制跑一次完整派生重建**（等价
+  `POST /admin/rebuild` 的 ngram + FTS 派生；`EMBEDDING_MODEL` 未配置时跳过
+  embedding 并记录原因，不报错）：
+  - 重建成功：`/health` 的 `migration_needs_rebuild=false`、`migration.status=ok`
+    （`migration.embedding_skipped` 记录跳过原因），`index.memories == index.ngrams ==
+    index.bigram_fts`。
+  - 重建失败：服务端 ERROR 日志 + `/health` 的 `migration_needs_rebuild: true`、
+    `alerts` 含 `pending fts > 0`、`migration.status=failed`。此时**不要直接上线**，
+    处理磁盘/权限等问题后用 admin 端点**手动补跑**：
+
+    ```bash
+    curl -X POST http://127.0.0.1:8000/admin/rebuild \
+         -H "X-Admin-Token: $ADMIN_TOKEN"      # ADMIN_TOKEN 为空时用回环地址即可
+    ```
+
+    重建后确认 `/health.index.gap == 0`（即 `memories_ngrams` 与
+    `memories_fts_bigram` 行数等于 `memories` 行数），再验证一条中文查询。
+  - `DSH_DERIVE_LOOP_ENABLED` 默认 **false**，且 `/derive/tick` 每轮只处理 50 条，
+    **不能**当作迁移补数手段；旧库升级必须完成上面这次重建。
+  - 无生产数据时也可以**删库 + 派生重建**，但同样必须重跑 `POST /admin/rebuild`
+    （或让启动时自动重建跑完）补齐派生层。
 - **supersedes 主键迁移**：早期版本将 `(from_id, to_id, recorded_at)` 作为主键，
   同毫秒 `revoke` 后再 `supersede` 会撞主键。现在主键为自增 `id`，最新边**只按
   `id DESC`**（不依赖 `recorded_at`，时钟回拨不会选错边）；旧表在 `init_db()` 启动时

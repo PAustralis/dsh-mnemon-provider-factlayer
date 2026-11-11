@@ -86,15 +86,23 @@ def test_index_and_r6_reproduce_baseline_exactly(db):
     for record in data["queries"]:
         outcome = service.bigram_route(record["query"], 50)
         ranking = [fixture_index[mid] for mid in outcome.raw_ids]
-        # 基线 top-6 里的同分并列按 rowid ASC，产品 v8 按 gseq DESC；集合必须一致。
-        assert set(ranking[:6]) == set(record["top6"]), record["sid"]
+        # bigram 路的原始名次是 bm25 ASC, gseq ASC（= 基线 rowid ASC，见
+        # docs/02 §6 实测注记），因此与 fixture 必须**逐位一致**，不只是集合相等。
+        # 全 40 题 top-6 顺序一致；top-50 也逐位一致（实测），故在这里直接断言。
+        assert ranking[:6] == record["top6"], record["sid"]
+        assert ranking == record["top50"], record["sid"]
         exact += ranking[:6] == record["top6"]
         gold = set(record["gold"])
         hits.append(len(set(ranking[:6]) & gold) / max(1, len(gold)))
     r6 = sum(hits) / len(hits)
     assert r6 == pytest.approx(0.4875, abs=0.01)
-    # 40 题里只有同分并列的顺序差异，不存在「一条翻出 top-6」
-    assert exact >= 39, f"top-6 顺序不一致的题数 {len(data['queries']) - exact}"
+    # 收紧到 40/40：原 `exact >= 39` 的 1 题容差是 v8 实现初稿遗留的猜测
+    # （当时注释误以为 bigram 原始名次用 gseq DESC）。逐题实测**没有**不一致的题：
+    # 产品 tie-break 是 gseq ASC，与基线 rowid ASC 完全同序，故不存在需要写进
+    # fixture 的偏差。
+    assert exact == len(data["queries"]), (
+        f"top-6 顺序不一致的题：{len(data['queries']) - exact}"
+    )
     # 2/40 空结果题在索引侧也必须为空（不是查询构造差异）
     empty_sids = {item["sid"] for item in data["empty_queries"]}
     for record in data["queries"]:

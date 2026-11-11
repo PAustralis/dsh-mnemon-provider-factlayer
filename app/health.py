@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import json
+
 from . import voided as voided_mod
 from .contract import PROVIDER_MANIFEST
 from .db import Database
 from .derive import STAGES, DerivePipeline
-from .schema import get_meta
+from .schema import (
+    MIGRATION_NEEDS_REBUILD_KEY,
+    MIGRATION_REBUILD_KEY,
+    get_meta,
+)
 
 LAST_BACKUP_AT_KEY = "last_backup_at"
 
@@ -19,6 +25,35 @@ def last_backup_at(db: Database) -> int | None:
         return int(raw)
     except ValueError:
         return None
+
+
+def migration_state(db: Database) -> dict:
+    """迁移后派生重建状态（init_db 写入 meta；失败时必须让 /health 可见）。"""
+    needs = get_meta(db, MIGRATION_NEEDS_REBUILD_KEY) == "1"
+    last: dict | None = None
+    raw = get_meta(db, MIGRATION_REBUILD_KEY)
+    if raw:
+        try:
+            parsed = json.loads(raw)
+        except (TypeError, ValueError):
+            parsed = {"status": "unknown", "raw": raw}
+        last = parsed if isinstance(parsed, dict) else {"status": "unknown"}
+    return {"needs_rebuild": needs, "last": last}
+
+
+def index_row_counts(db: Database) -> dict:
+    """事实行数 vs 派生索引行数：三者不等 = 有记忆搜不到。"""
+    conn = db.read_conn
+    memories = int(conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0])
+    ngrams = int(conn.execute("SELECT COUNT(*) FROM memories_ngrams").fetchone()[0])
+    bigram = int(conn.execute("SELECT COUNT(*) FROM memories_fts_bigram").fetchone()[0])
+    gap = max(0, memories - ngrams, memories - bigram)
+    return {
+        "memories": memories,
+        "ngrams": ngrams,
+        "bigram_fts": bigram,
+        "gap": gap,
+    }
 
 
 def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None, retrieval=None) -> dict:
@@ -36,12 +71,28 @@ def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None,
         if backup_scheduler is not None
         else {"last_backup_error": None, "backup_consecutive_failures": 0}
     )
+    pending = {stage: pipeline.pending_count(stage) for stage in STAGES}
+    migration = migration_state(db)
+    index = index_row_counts(db)
+    alerts: list[str] = []
+    if migration["needs_rebuild"]:
+        # 需求口径：迁移后重建失败时 /health 必须暴露「pending fts > 0」告警
+        if pending["fts"] > 0:
+            alerts.append("pending fts > 0")
+        alerts.append("migration_needs_rebuild")
+    if index["gap"] > 0:
+        # 任何原因的索引缺口：事实层有、ngram/bigram 没有 = 有记忆搜不到
+        alerts.append(f"fts index gap: {index['gap']}")
     report = {
-        "pending": {stage: pipeline.pending_count(stage) for stage in STAGES},
+        "pending": pending,
         "failures": {stage: pipeline.failures[stage] for stage in STAGES},
         "last_backup_at": last_backup_at(db),
         "last_backup_error": run_state["last_backup_error"],
         "backup_consecutive_failures": run_state["backup_consecutive_failures"],
+        "migration_needs_rebuild": migration["needs_rebuild"],
+        "migration": migration["last"],
+        "index": index,
+        "alerts": alerts,
     }
     if retrieval is not None:
         snapshot = retrieval.cfg.snapshot()

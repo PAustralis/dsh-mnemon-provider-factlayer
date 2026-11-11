@@ -17,12 +17,23 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
+import time
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from .db import Database
 
+if TYPE_CHECKING:  # pragma: no cover - 仅类型提示，避免 schema ↔ derive 循环导入
+    from .derive import DerivePipeline
+
 logger = logging.getLogger("factlayer.schema")
+
+# 迁移后派生重建状态（/health 与 init_db 共用，避免「静默搜不到」）
+MIGRATION_NEEDS_REBUILD_KEY = "migration_needs_rebuild"
+MIGRATION_REBUILD_KEY = "migration_rebuild"
 
 SUPERSEDES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS supersedes (
@@ -414,14 +425,145 @@ def migrate_embeddings_columns(db: Database) -> bool:
     return True
 
 
-def init_db(db: Database) -> None:
-    """迁移入口：先重建旧结构，再幂等补齐其余结构。"""
-    migrate_memories_gseq(db)
+@dataclass
+class InitReport:
+    """``init_db()`` 的结果：是否迁移、是否做了派生重建、重建是否成功。"""
+
+    migrated_memories: bool = False
+    memories: int = 0
+    rebuild_needed: bool = False
+    rebuild_attempted: bool = False
+    rebuild_ok: bool | None = None
+    rebuild_counts: dict[str, int] | None = None
+    embedding_skipped: str | None = None
+    embedding_error: str | None = None
+    rebuild_error: str | None = None
+
+
+def _index_row_counts(db: Database) -> tuple[int, int, int]:
+    """(事实行数, ngram 影子行数, bigram FTS 行数)——三者应恒等。"""
+    conn = db.read_conn
+    memories = conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
+    ngrams = conn.execute("SELECT COUNT(*) FROM memories_ngrams").fetchone()[0]
+    bigram = conn.execute("SELECT COUNT(*) FROM memories_fts_bigram").fetchone()[0]
+    return int(memories), int(ngrams), int(bigram)
+
+
+def _rebuild_after_migration(
+    db: Database,
+    pipeline: DerivePipeline | None,
+    *,
+    migrated_memories: bool,
+    memories: int,
+    ngrams: int,
+    bigram: int,
+) -> InitReport:
+    """迁移/索引缺失后的强制派生重建，状态写 meta 供 ``/health`` 暴露。
+
+    - 触发条件：刚完成 memories 迁移且库里有数据；或索引行数 != 事实行数
+      （覆盖「先手工 migrate_memories_gseq、再 init_db」以及历史上已发生的静默缺索引）。
+    - 重建失败**不抛异常**（服务仍启动，但必须可观测）：ERROR 日志 + meta
+      ``migration_needs_rebuild=1`` + ``migration_rebuild.status=failed``。
+    """
+    index_gap = memories > 0 and (ngrams != memories or bigram != memories)
+    needed = (migrated_memories and memories > 0) or index_gap
+    if not needed:
+        return InitReport(migrated_memories=migrated_memories, memories=memories)
+
+    logger.warning(
+        "检测到派生索引不完整，启动时强制全量重建：memories=%d ngrams=%d "
+        "bigram_fts=%d（migrated=%s）",
+        memories,
+        ngrams,
+        bigram,
+        migrated_memories,
+    )
+    # 先落标记：重建中途崩溃（进程被杀）时 /health 仍能显示需要补跑
+    set_meta(db, MIGRATION_NEEDS_REBUILD_KEY, "1")
+    try:
+        if pipeline is None:
+            # init_db 的直接调用方（脚本/测试/研究代码）没有注入 provider：
+            # 用无 provider 的 pipeline 重建 ngram/FTS（embedding 跳过并记录原因）。
+            from .derive import DerivePipeline
+
+            pipeline = DerivePipeline(db, stub_success=True)
+        outcome = pipeline.rebuild_after_migration()
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        logger.error(
+            "迁移后派生重建失败（/health migration_needs_rebuild=true）：%s",
+            error,
+            exc_info=True,
+        )
+        set_meta(
+            db,
+            MIGRATION_REBUILD_KEY,
+            json.dumps(
+                {"status": "failed", "at": int(time.time() * 1000), "error": error},
+                ensure_ascii=False,
+            ),
+        )
+        return InitReport(
+            migrated_memories=migrated_memories,
+            memories=memories,
+            rebuild_needed=True,
+            rebuild_attempted=True,
+            rebuild_ok=False,
+            rebuild_error=error,
+        )
+
+    detail = {
+        "status": "ok",
+        "at": int(time.time() * 1000),
+        "counts": outcome.get("counts"),
+        "embedding_skipped": outcome.get("embedding_skipped"),
+        "embedding_error": outcome.get("embedding_error"),
+    }
+    set_meta(db, MIGRATION_NEEDS_REBUILD_KEY, "0")
+    set_meta(db, MIGRATION_REBUILD_KEY, json.dumps(detail, ensure_ascii=False))
+    logger.info(
+        "迁移后派生重建完成：%s（embedding 跳过原因：%s；embedding 错误：%s）",
+        detail["counts"],
+        detail["embedding_skipped"],
+        detail["embedding_error"],
+    )
+    return InitReport(
+        migrated_memories=migrated_memories,
+        memories=memories,
+        rebuild_needed=True,
+        rebuild_attempted=True,
+        rebuild_ok=True,
+        rebuild_counts=outcome.get("counts"),
+        embedding_skipped=outcome.get("embedding_skipped"),
+        embedding_error=outcome.get("embedding_error"),
+    )
+
+
+def init_db(
+    db: Database, *, pipeline: DerivePipeline | None = None
+) -> InitReport:
+    """迁移入口：先重建旧结构，再幂等补齐其余结构。
+
+    结构就绪后，若检测到「刚迁移」或「派生索引行数与事实行数不一致」，会**在启动时
+    强制跑一次完整派生重建**（ngram + FTS；有 embedding provider 时连同向量），
+    避免 legacy 库迁移后 bigram 索引为空、旧记忆永久搜不到。失败状态由
+    ``/health`` 的 ``migration_needs_rebuild`` / ``alerts`` 暴露。
+    """
+    migrated_memories = migrate_memories_gseq(db)
     migrate_supersedes_pk(db)
     migrate_supersedes_pair_index(db)
     migrate_derive_state_stages(db)
     migrate_embeddings_columns(db)
     db.execute_script(SCHEMA_SQL)
+    memories, ngrams, bigram = _index_row_counts(db)
+    return _rebuild_after_migration(
+        db,
+        pipeline,
+        migrated_memories=migrated_memories,
+        memories=memories,
+        ngrams=ngrams,
+        bigram=bigram,
+    )
 
 
 def get_meta(db: Database, key: str) -> str | None:

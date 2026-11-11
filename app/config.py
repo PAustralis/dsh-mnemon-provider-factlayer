@@ -132,7 +132,9 @@ class Config:
     expand_window: int = 1
     expand_max_items: int = FINAL_K_DEFAULT
     weak_best_rank: int = 3
-    auto_degrade: bool = True
+    # v8 §12：明确不做「运行时质量自动降级」。默认关闭；保留开关仅用于离线评测
+    # （research/recall/baseline_r2.py --record-meta 写 meta:retrieval:eval）复现实验。
+    auto_degrade: bool = False
 
     # ---- 检索层：运维 ----
     admin_token: str = ""
@@ -251,7 +253,7 @@ def load_config() -> Config:
         ),
         weak_best_rank=_env_int("WEAK_BEST_RANK", "DSH_WEAK_BEST_RANK", default=3),
         auto_degrade=_env_bool(
-            "RETRIEVAL_AUTO_DEGRADE", "DSH_RETRIEVAL_AUTO_DEGRADE", default=True
+            "RETRIEVAL_AUTO_DEGRADE", "DSH_RETRIEVAL_AUTO_DEGRADE", default=False
         ),
         admin_token=_env_raw("ADMIN_TOKEN", "DSH_ADMIN_TOKEN"),
         canary_enabled=_env_bool("CANARY_ENABLED", "DSH_CANARY_ENABLED", default=True),

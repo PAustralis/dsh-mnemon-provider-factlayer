@@ -35,6 +35,7 @@ from .embeddings import (
     EmbeddingConfigError,
     EmbeddingModelMismatch,
     EmbeddingProvider,
+    VectorIndex,
     build_provider,
 )
 from .health import health_report
@@ -112,16 +113,32 @@ def create_app(
         provider = build_provider(cfg)  # 配置/依赖错误在此暴露
     validate_config(cfg, provider)
     db = Database(db_path or cfg.db_path)
-    init_db(db)
-    retrieval = RetrievalService(db, cfg, provider)
+    # 先共用同一个向量内存矩阵，再构造流水线（构造函数不碰库）：这样 init_db 的
+    # 迁移后强制重建能用上配置好的 embedding provider，派生 processor 与检索服务
+    # 也共享同一个 VectorIndex（写事务提交后的增量刷新才有效）。
+    vector_index = VectorIndex()
     pipeline = DerivePipeline(
         db,
         stub_success=cfg.derive_stub_success,
         embedding_provider=provider,
         embedding_dim=cfg.embedding_dim_int,
-        # 写事务提交后增量刷新检索层的内存向量矩阵（与 retrieval 共用同一实例）
-        vector_index=retrieval.index,
+        vector_index=vector_index,
     )
+    init_report = init_db(db, pipeline=pipeline)
+    if init_report.rebuild_attempted:
+        if init_report.rebuild_ok:
+            logger.info(
+                "migration rebuild done: counts=%s embedding_skipped=%s",
+                init_report.rebuild_counts,
+                init_report.embedding_skipped,
+            )
+        else:
+            logger.error(
+                "migration rebuild FAILED（/health.migration_needs_rebuild=true）: %s",
+                init_report.rebuild_error,
+            )
+    # retrieval 必须在 init_db 之后构造（resolve_routes 要读 meta）
+    retrieval = RetrievalService(db, cfg, provider, index=vector_index)
     backup_scheduler = BackupScheduler(
         db,
         interval_seconds=cfg.backup_interval_seconds,

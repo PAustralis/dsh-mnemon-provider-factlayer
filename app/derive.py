@@ -120,6 +120,8 @@ class DerivePipeline:
         self.embedding_provider = embedding_provider
         self.embedding_dim = embedding_dim
         self.failures: dict[str, int] = {stage: 0 for stage in STAGES}
+        # 最近一次全量/启动重建中 embedding 派生失败的原始错误（/health 可读）
+        self.last_embedding_error: str | None = None
         self._lock = threading.Lock()
         processors: dict[str, Processor] = {
             stage: _make_stub(stage, stub_success)
@@ -196,14 +198,24 @@ class DerivePipeline:
         return count
 
     # -- 全量重建 ---------------------------------------------------------------
-    def rebuild_all(self) -> dict[str, int]:
+    def rebuild_all(
+        self,
+        *,
+        skip_embedding: bool = False,
+        allow_embedding_failure: bool = False,
+    ) -> dict[str, int]:
         """全量重建：**一个写事务内**清空派生层并重算全部条目。
 
         - 事实层 memories 永不动。
         - embedding 在事务外先算好（避免持写锁做网络调用），写库与其余派生在
           同一事务内完成，查询永远看到完整旧/新索引。
+        - ``skip_embedding``：跳过向量派生——不清空 ``embeddings``、不写 embedding
+          水位（迁移启动时无 provider 的降级路径，避免把旧向量一起删掉）。
+        - ``allow_embedding_failure``：provider 故障时 ERROR 日志 + 降级为仅重建
+          ngram/FTS，而不是让整次重建失败（旧向量保留，待后续 tick/rebuild 补算）。
         - 成功后清空内存向量矩阵，下次检索全量载入（与 gseq 对齐）。
         """
+        self.last_embedding_error = None
         rows = [
             dict(row)
             for row in self.db.read_conn.execute(
@@ -211,25 +223,36 @@ class DerivePipeline:
             ).fetchall()
         ]
         vectors: dict[str, list[float]] = {}
-        if self.embedding_provider is not None:
-            for memory in rows:
-                result = self.embedding_provider.embed([memory["content"]])
-                if not result:
-                    raise RuntimeError("embedding provider 返回空结果")
-                vectors[memory["id"]] = result[0]
+        if not skip_embedding and self.embedding_provider is not None:
+            try:
+                for memory in rows:
+                    result = self.embedding_provider.embed([memory["content"]])
+                    if not result:
+                        raise RuntimeError("embedding provider 返回空结果")
+                    vectors[memory["id"]] = result[0]
+            except Exception as exc:
+                if not allow_embedding_failure:
+                    raise
+                skip_embedding = True
+                self.last_embedding_error = f"{type(exc).__name__}: {exc}"
+                logger.exception(
+                    "全量重建：embedding 派生失败，降级为仅重建 ngram/FTS"
+                    "（旧向量数据保留，待后续 tick / rebuild 补算）"
+                )
 
         counts = {stage: 0 for stage in STAGES}
         with self.db.write_txn() as conn:
             conn.execute("DELETE FROM derive_state")
-            conn.execute("DELETE FROM embeddings")
             conn.execute("DELETE FROM entities")
             conn.execute("DELETE FROM memories_ngrams")
             conn.execute("DELETE FROM memories_fts_bigram")
             conn.execute("DELETE FROM memories_fts_trigram")
-            # 维度/模型指纹也是派生元数据：重建后必须重新推断
-            conn.execute(
-                "DELETE FROM meta WHERE key IN ('embedding_model','embedding_dim')"
-            )
+            if not skip_embedding:
+                conn.execute("DELETE FROM embeddings")
+                # 维度/模型指纹也是派生元数据：重建后必须重新推断
+                conn.execute(
+                    "DELETE FROM meta WHERE key IN ('embedding_model','embedding_dim')"
+                )
             done_at = now_ms()
             for memory in rows:
                 memory_id = memory["id"]
@@ -250,20 +273,21 @@ class DerivePipeline:
                     (rowid, trigram_text),
                 )
                 counts["fts"] += 1
-                if self.embedding_provider is not None:
-                    write_embedding_row(
-                        conn,
-                        memory_id,
-                        vectors[memory_id],
-                        model_id=self.embedding_provider.model_id,
-                        configured_dim=self.embedding_dim,
-                    )
-                    counts["embedding"] += 1
-                else:
+                if not skip_embedding:
+                    if self.embedding_provider is not None:
+                        write_embedding_row(
+                            conn,
+                            memory_id,
+                            vectors[memory_id],
+                            model_id=self.embedding_provider.model_id,
+                            configured_dim=self.embedding_dim,
+                        )
                     counts["embedding"] += 1  # stub 语义：无 provider 视为完成
                 counts["entity"] += 1
                 counts["graph"] += 1
                 for stage in STAGES:
+                    if skip_embedding and stage == "embedding":
+                        continue  # 未派生：留空水位，/health 可见、后续 tick 可重试
                     conn.execute(
                         "INSERT OR REPLACE INTO derive_state(memory_id, stage, done_at) "
                         "VALUES (?,?,?)",
@@ -274,3 +298,31 @@ class DerivePipeline:
         with self._lock:
             self.failures = {stage: 0 for stage in STAGES}
         return counts
+
+    def rebuild_after_migration(self) -> dict:
+        """旧库迁移/派生索引缺失后的**启动强制重建**（v8 审阅 P0）。
+
+        ``init_db()`` 检测到 migration 或索引行数 < 事实行数时调用：
+
+        - ngram + FTS 必须重建，否则旧记忆永远搜不到（默认派生循环关闭、
+          ``/derive/tick`` 每轮只处理 50 条，不能当补数手段）。
+        - 未配置 embedding provider：跳过向量派生并记录原因（warning + /health），
+          不报错；旧 ``embeddings`` 行原样保留。
+        - provider 故障：ERROR 日志后降级为仅重建 ngram/FTS（旧向量保留）。
+        """
+        skipped_reason: str | None = None
+        if self.embedding_provider is None:
+            skipped_reason = (
+                "未配置 embedding provider（EMBEDDING_MODEL 为空）："
+                "跳过向量派生，仅重建 ngram/FTS 索引"
+            )
+            logger.warning("迁移后派生重建：%s", skipped_reason)
+        counts = self.rebuild_all(
+            skip_embedding=skipped_reason is not None,
+            allow_embedding_failure=True,
+        )
+        return {
+            "counts": counts,
+            "embedding_skipped": skipped_reason,
+            "embedding_error": self.last_embedding_error,
+        }
