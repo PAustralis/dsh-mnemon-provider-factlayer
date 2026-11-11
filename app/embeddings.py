@@ -18,9 +18,11 @@ from __future__ import annotations
 
 import bisect
 import logging
+import re
 import sqlite3
 import threading
-from typing import Protocol, runtime_checkable
+import time
+from typing import Callable, Protocol, runtime_checkable
 
 import numpy as np
 
@@ -46,6 +48,97 @@ class EmbeddingModelMismatch(RuntimeError):
         self.message = message
 
 
+class EmbeddingRequestError(RuntimeError):
+    """embedding 请求/传输失败（含客户端构造失败）：可计数、可重试。
+
+    与 :class:`EmbeddingConfigError` 区分：配置错误必须启动即暴露，请求错误是
+    运行期故障，由派生循环计数、退避、熔断，并在 ``/health`` 暴露。
+    """
+
+
+# 与检索层向量路同一熔断语义（连续 3 次失败 → 打开 5 分钟），两边共用实现。
+CIRCUIT_FAILURE_THRESHOLD = 3
+CIRCUIT_OPEN_SECONDS = 300.0
+
+_SECRET_PATTERNS = (
+    re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]+"),
+    re.compile(r"(?i)\b(?:api[_-]?key|token|secret)\s*[=:]\s*\S+"),
+    re.compile(r"\bsk-[A-Za-z0-9_-]{6,}"),
+)
+
+
+def redact_error(exc: BaseException, *, max_chars: int = 500) -> str:
+    """``类型: 消息`` 的脱敏短串（去掉 Bearer/API key，长度封顶）。"""
+    text = f"{type(exc).__name__}: {exc}"
+    for pattern in _SECRET_PATTERNS:
+        text = pattern.sub("<redacted>", text)
+    return text[:max_chars]
+
+
+class CircuitBreaker:
+    """连续失败 N 次 → 打开 M 秒；期间拒绝调用（向量路与派生 embedding 共用）。"""
+
+    def __init__(
+        self,
+        *,
+        threshold: int = CIRCUIT_FAILURE_THRESHOLD,
+        open_seconds: float = CIRCUIT_OPEN_SECONDS,
+        label: str = "embedding",
+        clock: Callable[[], float] | None = None,
+    ) -> None:
+        self.threshold = int(threshold)
+        self.open_seconds = float(open_seconds)
+        self.label = label
+        self._clock = clock or time.monotonic
+        self._lock = threading.Lock()
+        self._failures = 0
+        self._open_until = 0.0
+        self._last_error: str | None = None
+
+    def allow(self) -> bool:
+        with self._lock:
+            return self._clock() >= self._open_until
+
+    def record_failure(self, exc: BaseException) -> bool:
+        """记一次失败；返回本次是否（重新）打开了熔断。"""
+        message = redact_error(exc)
+        with self._lock:
+            self._failures += 1
+            self._last_error = message
+            opened = self._failures >= self.threshold
+            if opened:
+                self._open_until = self._clock() + self.open_seconds
+            failures = self._failures
+        if opened:
+            logger.error(
+                "%s 连续失败 %d 次，熔断 %.0fs：%s",
+                self.label,
+                failures,
+                self.open_seconds,
+                message,
+            )
+        return opened
+
+    def record_success(self) -> None:
+        with self._lock:
+            self._failures = 0
+            self._last_error = None
+
+    def retry_after(self) -> float:
+        with self._lock:
+            return max(0.0, self._open_until - self._clock())
+
+    def state(self) -> dict:
+        with self._lock:
+            remaining = max(0.0, self._open_until - self._clock())
+            return {
+                "circuit_open": remaining > 0,
+                "consecutive_failures": self._failures,
+                "open_seconds_remaining": remaining,
+                "last_error": self._last_error,
+            }
+
+
 @runtime_checkable
 class EmbeddingProvider(Protocol):
     """可注入的 embedding 接口（测试用确定性假实现，不联网）。"""
@@ -56,7 +149,13 @@ class EmbeddingProvider(Protocol):
 
 
 class OpenAICompatProvider:
-    """OpenAI 兼容 ``POST {base_url}/embeddings`` 后端（httpx 同步调用）。"""
+    """OpenAI 兼容 ``POST {base_url}/embeddings`` 后端（httpx 同步调用）。
+
+    ``trust_env=False``（默认）**直连** embedding 端点：本机 ``NO_PROXY`` /
+    ``HTTP_PROXY`` 里的畸形条目（如 ``[::1]``）会在 httpx 解析代理时抛
+    ``InvalidURL``，把请求死在客户端构造阶段。密钥请求也不应被用户机器上的
+    代理截获；确实需要走代理时才配置 ``EMBEDDING_TRUST_ENV=1``。
+    """
 
     def __init__(
         self,
@@ -65,6 +164,7 @@ class OpenAICompatProvider:
         model_id: str,
         *,
         timeout_seconds: float = 30.0,
+        trust_env: bool = False,
     ) -> None:
         if not base_url:
             raise EmbeddingConfigError(
@@ -76,24 +176,49 @@ class OpenAICompatProvider:
         self.api_key = api_key
         self.model_id = model_id
         self.timeout_seconds = float(timeout_seconds)
+        self.trust_env = bool(trust_env)
 
     @property
     def endpoint(self) -> str:
         return self.base_url + "/embeddings"
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
+    def _make_client(self):
+        """构造 httpx 客户端；代理环境解析失败 → 分类错误，不裸 traceback。"""
         import httpx
 
+        try:
+            return httpx.Client(
+                timeout=self.timeout_seconds, trust_env=self.trust_env
+            )
+        except Exception as exc:
+            raise EmbeddingRequestError(
+                "embedding HTTP client 初始化失败"
+                f"（EMBEDDING_TRUST_ENV={'true' if self.trust_env else 'false'}）："
+                f"{type(exc).__name__}: {exc}。"
+                "若本机代理环境变量（NO_PROXY/HTTP_PROXY）畸形，请保持"
+                " EMBEDDING_TRUST_ENV=0（默认直连）"
+            ) from exc
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        client = self._make_client()
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        response = httpx.post(
-            self.endpoint,
-            headers=headers,
-            json={"model": self.model_id, "input": list(texts)},
-            timeout=self.timeout_seconds,
-        )
-        response.raise_for_status()
+        try:
+            try:
+                response = client.post(
+                    self.endpoint,
+                    headers=headers,
+                    json={"model": self.model_id, "input": list(texts)},
+                )
+                response.raise_for_status()
+            except Exception as exc:
+                # 传输/HTTP/URL 错误统一分类（脱敏后由派生层计数与 /health 暴露）。
+                raise EmbeddingRequestError(
+                    f"embedding 请求失败：{redact_error(exc)}"
+                ) from exc
+        finally:
+            client.close()
         payload = response.json()
         data = payload.get("data")
         if not isinstance(data, list) or not data:
@@ -150,6 +275,7 @@ def build_provider(cfg) -> EmbeddingProvider:
             api_key=cfg.embedding_api_key,
             model_id=cfg.embedding_model,
             timeout_seconds=cfg.embedding_timeout_seconds,
+            trust_env=getattr(cfg, "embedding_trust_env", False),
         )
     if backend == "local-onnx":
         return LocalOnnxProvider(cfg.embedding_model)

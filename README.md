@@ -95,8 +95,10 @@ admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 
 
     重建后确认 `/health.index.gap == 0`（即 `memories_ngrams` 与
     `memories_fts_bigram` 行数等于 `memories` 行数），再验证一条中文查询。
-  - `DSH_DERIVE_LOOP_ENABLED` 默认 **false**，且 `/derive/tick` 每轮只处理 50 条，
-    **不能**当作迁移补数手段；旧库升级必须完成上面这次重建。
+  - `DSH_DERIVE_LOOP_ENABLED` 默认在 `RETRIEVAL_ROUTES` 含 `vector` 且
+    embedding 已配置时开启（否则写入后 embedding 永久 pending、向量路线永久
+    降级）；显式设 `0` 才关闭。`/derive/tick` 每轮只处理 50 条，**不能**当作
+    迁移补数手段；旧库升级必须完成上面这次重建。
   - 无生产数据时也可以**删库 + 派生重建**，但同样必须重跑 `POST /admin/rebuild`
     （或让启动时自动重建跑完）补齐派生层。
 - **supersedes 主键迁移**：早期版本将 `(from_id, to_id, recorded_at)` 作为主键，

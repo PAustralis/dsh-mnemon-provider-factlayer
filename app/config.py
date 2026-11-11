@@ -115,6 +115,7 @@ class Config:
     embedding_model: str = ""
     embedding_dim: str = "auto"      # "auto" 或正整数字符串
     embedding_timeout_seconds: float = 3.0
+    embedding_trust_env: bool = False  # True 才让 httpx 读取本机代理环境变量
     embedding_max_spend_usd: float = 0.50
 
     # ---- 检索层：LLM 生成（本层不实现生成，仅配置快照） ----
@@ -151,6 +152,15 @@ class Config:
     health_refresh_seconds: float = 5.0
 
     @property
+    def embedding_configured(self) -> bool:
+        """embedding 是否「配置了」（不检查可用性；可用性由 build_provider 暴露）。"""
+        if not self.embedding_model.strip():
+            return False
+        if self.embedding_backend == "openai-compat" and not self.embedding_base_url.strip():
+            return False
+        return True
+
+    @property
     def embedding_dim_int(self) -> int | None:
         from .embeddings import parse_configured_dim
 
@@ -171,6 +181,8 @@ class Config:
             "embedding_backend": self.embedding_backend,
             "embedding_model": self.embedding_model,
             "embedding_dim": self.embedding_dim,
+            "embedding_trust_env": self.embedding_trust_env,
+            "derive_loop_enabled": self.derive_loop_enabled,
             "routes": list(self.retrieval_routes),
             "rrf_k": self.rrf_k,
             "route_top_k": self.route_top_k,
@@ -213,27 +225,40 @@ def load_config() -> Config:
     raw_routes = _env_raw(
         "RETRIEVAL_ROUTES", "DSH_RETRIEVAL_ROUTES", default=DEFAULT_ROUTES
     )
+    routes = parse_routes(raw_routes)
+    embedding_backend = _env_raw(
+        "EMBEDDING_BACKEND", "DSH_EMBEDDING_BACKEND", default="openai-compat"
+    )
+    embedding_base_url = _env_raw(
+        "EMBEDDING_BASE_URL", "DSH_EMBEDDING_BASE_URL", "DSH_EMBEDDING_API_URL"
+    )
+    embedding_model = _env_raw("EMBEDDING_MODEL", "DSH_EMBEDDING_MODEL")
+    # 「vector 已启用 + embedding 已配置」时派生循环默认开：否则写入后 embedding
+    # 永久 pending，默认向量路线永久降级（2026-11-12 联调实测 P0）。显式
+    # DSH_DERIVE_LOOP_ENABLED=0 才关闭。
+    loop_default = "vector" in routes and bool(embedding_model.strip()) and (
+        embedding_backend != "openai-compat" or bool(embedding_base_url.strip())
+    )
     return Config(
         db_path=_env_raw("DSH_FACT_DB_PATH", default="facts.db") or "facts.db",
         falkordb_url=_env_raw("DSH_FALKORDB_URL"),
         server_port=_env_int("DSH_SERVER_PORT", default=8000),
         backup_keep=_env_int("DSH_BACKUP_KEEP", default=7),
         backup_interval_seconds=_env_int("DSH_BACKUP_INTERVAL_SECONDS", default=86400),
-        derive_loop_enabled=_env_bool("DSH_DERIVE_LOOP_ENABLED", default=False),
+        derive_loop_enabled=_env_bool("DSH_DERIVE_LOOP_ENABLED", default=loop_default),
         derive_stub_success=_env_bool("DSH_DERIVE_STUB_SUCCESS", default=True),
-        embedding_backend=_env_raw(
-            "EMBEDDING_BACKEND", "DSH_EMBEDDING_BACKEND", default="openai-compat"
-        ),
-        embedding_base_url=_env_raw(
-            "EMBEDDING_BASE_URL", "DSH_EMBEDDING_BASE_URL", "DSH_EMBEDDING_API_URL"
-        ),
+        embedding_backend=embedding_backend,
+        embedding_base_url=embedding_base_url,
         embedding_api_key=_env_raw(
             "EMBEDDING_API_KEY", "DSH_EMBEDDING_API_KEY", "DSH_EMBEDDING_API_KEY"
         ),
-        embedding_model=_env_raw("EMBEDDING_MODEL", "DSH_EMBEDDING_MODEL"),
+        embedding_model=embedding_model,
         embedding_dim=_env_raw("EMBEDDING_DIM", "DSH_EMBEDDING_DIM", default="auto"),
         embedding_timeout_seconds=_env_float(
             "EMBEDDING_TIMEOUT_SECONDS", "DSH_EMBEDDING_TIMEOUT_SECONDS", default=3.0
+        ),
+        embedding_trust_env=_env_bool(
+            "EMBEDDING_TRUST_ENV", "DSH_EMBEDDING_TRUST_ENV", default=False
         ),
         embedding_max_spend_usd=_env_float(
             "EMBEDDING_MAX_SPEND_USD", "DSH_EMBEDDING_MAX_SPEND_USD", default=0.50
@@ -242,7 +267,7 @@ def load_config() -> Config:
         llm_api_key=_env_raw("LLM_API_KEY", "DSH_LLM_API_KEY"),
         llm_model=_env_raw("LLM_MODEL", "DSH_LLM_MODEL", default="deepseek-flash"),
         llm_max_tokens=_env_int("LLM_MAX_TOKENS", "DSH_LLM_MAX_TOKENS", default=3000),
-        retrieval_routes=parse_routes(raw_routes),
+        retrieval_routes=routes,
         rrf_k=_env_int("RRF_K", "DSH_RRF_K", default=60),
         route_top_k=_env_int("ROUTE_TOP_K", "DSH_ROUTE_TOP_K", default=50),
         final_k=_env_int("FINAL_K", "DSH_FINAL_K", default=FINAL_K_DEFAULT),

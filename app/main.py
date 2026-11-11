@@ -94,11 +94,7 @@ class SearchIn(BaseModel):
 
 def _embedding_configured(cfg: Config) -> bool:
     """embedding 是否「配置了」（不检查可用性；可用性由 build_provider / 运行期暴露）。"""
-    if not cfg.embedding_model.strip():
-        return False
-    if cfg.embedding_backend == "openai-compat" and not cfg.embedding_base_url.strip():
-        return False
-    return True
+    return cfg.embedding_configured
 
 
 def validate_config(cfg: Config, embedding_provider: EmbeddingProvider | None) -> None:
@@ -208,11 +204,15 @@ def create_app(
     stop_event = threading.Event()
     loop_thread: threading.Thread | None = None
     # 派生循环与自动备份共用同一个后台线程：任一开启即启动。
-    loop_needed = cfg.derive_loop_enabled or cfg.backup_interval_seconds > 0
+    # derive_loop_enabled 已由 config.load_config 按「vector + embedding 已配置」
+    # 默认开启（显式 DSH_DERIVE_LOOP_ENABLED=0 才关），否则写入后 embedding
+    # 永久 pending、默认向量路线永久降级（联调实测 P0）。
+    derive_loop_enabled = cfg.derive_loop_enabled
+    loop_needed = derive_loop_enabled or cfg.backup_interval_seconds > 0
 
     def _loop() -> None:
         while not stop_event.wait(DERIVE_LOOP_INTERVAL_SECONDS):
-            if cfg.derive_loop_enabled:
+            if derive_loop_enabled:
                 try:
                     pipeline.tick()
                 except Exception:  # 派生失败不拖垮备份检查
@@ -232,10 +232,16 @@ def create_app(
                 target=_loop, name="derive-backup-loop", daemon=True
             )
             loop_thread.start()
+            app.state.derive_loop_thread = loop_thread
+            if derive_loop_enabled:
+                # 联调验收要求这条日志明确可查（routes=vector）。
+                logger.info(
+                    "deriveloop started (routes=%s)", ",".join(cfg.route_names)
+                )
             logger.info(
                 "background loop started (interval=%ss, derive=%s, backup_interval=%ss)",
                 DERIVE_LOOP_INTERVAL_SECONDS,
-                cfg.derive_loop_enabled,
+                derive_loop_enabled,
                 cfg.backup_interval_seconds,
             )
         yield
@@ -253,6 +259,8 @@ def create_app(
     app.state.backup_scheduler = backup_scheduler
     app.state.rebuild_gate = rebuild_gate
     app.state.health_cache = health_cache
+    app.state.derive_loop_enabled = derive_loop_enabled
+    app.state.derive_loop_thread = None
 
     def _admin_allowed(request: Request) -> bool:
         """ADMIN_TOKEN 非空 → 校验 token；为空 → 只接受回环（含 TestClient）。"""

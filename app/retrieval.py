@@ -43,6 +43,9 @@ from . import voided as voided_mod
 from .config import Config
 from .db import Database
 from .embeddings import (
+    CIRCUIT_FAILURE_THRESHOLD,
+    CIRCUIT_OPEN_SECONDS,
+    CircuitBreaker,
     EmbeddingModelMismatch,
     EmbeddingProvider,
     VectorIndex,
@@ -54,8 +57,9 @@ logger = logging.getLogger("factlayer.retrieval")
 
 EVAL_META_KEY = "retrieval:eval"
 R1_TIMEOUT_SECONDS = 3.0
-R1_CIRCUIT_FAILURES = 3
-R1_CIRCUIT_SECONDS = 300.0
+# 与派生 embedding 失败的熔断共用同一实现与阈值（embeddings.CircuitBreaker）。
+R1_CIRCUIT_FAILURES = CIRCUIT_FAILURE_THRESHOLD
+R1_CIRCUIT_SECONDS = CIRCUIT_OPEN_SECONDS
 
 # 契约状态 tag 白名单（docs/03 §4.4）；不参与写入语义
 STATUS_TAG_PREFIXES = ("via:", "superseded-by:", "hidden:")
@@ -231,11 +235,12 @@ class RetrievalService:
         self.index = index or VectorIndex()
         self.stats = stats or RetrievalStats()
         self.routes, self.degrade = resolve_routes(db, cfg)
-        # R1 熔断：连续失败 3 次 → 打开 5 分钟
-        self._vector_lock = threading.Lock()
-        self._vector_failures = 0
-        self._vector_open_until = 0.0
-        self._vector_last_error: str | None = None
+        # R1 熔断：连续失败 3 次 → 打开 5 分钟（CircuitBreaker 与派生层共用）
+        self._vector_circuit = CircuitBreaker(
+            threshold=R1_CIRCUIT_FAILURES,
+            open_seconds=R1_CIRCUIT_SECONDS,
+            label="vector 路",
+        )
         self._canary_history: deque[dict] = deque(maxlen=2)
         self._canary_last: dict | None = None
 
@@ -312,11 +317,10 @@ class RetrievalService:
             return RouteOutcome(
                 name="vector", unavailable=True, skipped="embedding_provider_missing"
             )
-        with self._vector_lock:
-            if time.monotonic() < self._vector_open_until:
-                return RouteOutcome(
-                    name="vector", unavailable=True, skipped="circuit_open"
-                )
+        if not self._vector_circuit.allow():
+            return RouteOutcome(
+                name="vector", unavailable=True, skipped="circuit_open"
+            )
         check_fingerprint(self.db, self.embedding_provider, self.cfg.embedding_dim_int)
         dim = self.cfg.embedding_dim_int
         ids, matrix, gseqs = self.index.load(
@@ -353,33 +357,15 @@ class RetrievalService:
         )
 
     def _record_vector_failure(self, exc: Exception) -> None:
-        with self._vector_lock:
-            self._vector_failures += 1
-            self._vector_last_error = f"{type(exc).__name__}: {exc}"
-            if self._vector_failures >= R1_CIRCUIT_FAILURES:
-                self._vector_open_until = time.monotonic() + R1_CIRCUIT_SECONDS
-                logger.error(
-                    "vector 路连续失败 %d 次，熔断 %.0fs：%s",
-                    self._vector_failures,
-                    R1_CIRCUIT_SECONDS,
-                    self._vector_last_error,
-                )
-        self.stats.record_vector_degraded(self._vector_last_error or str(exc))
+        self._vector_circuit.record_failure(exc)
+        last_error = self._vector_circuit.state()["last_error"]
+        self.stats.record_vector_degraded(last_error or str(exc))
 
     def _record_vector_success(self) -> None:
-        with self._vector_lock:
-            self._vector_failures = 0
-            self._vector_last_error = None
+        self._vector_circuit.record_success()
 
     def vector_state(self) -> dict:
-        with self._vector_lock:
-            open_until = self._vector_open_until
-            return {
-                "circuit_open": time.monotonic() < open_until,
-                "consecutive_failures": self._vector_failures,
-                "open_seconds_remaining": max(0.0, open_until - time.monotonic()),
-                "last_error": self._vector_last_error,
-            }
+        return self._vector_circuit.state()
 
     # ------------------------------------------------------------------ 主流程
     def search(

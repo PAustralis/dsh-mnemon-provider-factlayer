@@ -72,6 +72,7 @@ def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None,
         else {"last_backup_error": None, "backup_consecutive_failures": 0}
     )
     pending = {stage: pipeline.pending_count(stage) for stage in STAGES}
+    embedding = pipeline.embedding_state()
     migration = migration_state(db)
     index = index_row_counts(db)
     alerts: list[str] = []
@@ -83,9 +84,15 @@ def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None,
     if index["gap"] > 0:
         # 任何原因的索引缺口：事实层有、ngram/bigram 没有 = 有记忆搜不到
         alerts.append(f"fts index gap: {index['gap']}")
+    if embedding["failures"] > 0:
+        # embedding 失败是静默通道：必须让 /health 的 alerts 直接可见。
+        alerts.append("embedding_failures>0")
+    if embedding["circuit"]["circuit_open"]:
+        alerts.append("embedding_circuit_open")
     report = {
         "pending": pending,
         "failures": {stage: pipeline.failures[stage] for stage in STAGES},
+        "embedding": embedding,
         "last_backup_at": last_backup_at(db),
         "last_backup_error": run_state["last_backup_error"],
         "backup_consecutive_failures": run_state["backup_consecutive_failures"],

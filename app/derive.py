@@ -17,13 +17,16 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from typing import Callable
 
 from . import textnorm
 from .db import Database
 from .embeddings import (
+    CircuitBreaker,
     EmbeddingProvider,
     VectorIndex,
+    redact_error,
     store_embedding,
     write_embedding_row,
 )
@@ -33,6 +36,10 @@ logger = logging.getLogger("factlayer.derive")
 
 STAGES = ("fts", "embedding", "entity", "graph")
 BATCH_LIMIT = 50
+
+# embedding 失败退避：1s / 2s / 4s … 上限 60s（连续第 3 次失败会先触发熔断）。
+EMBEDDING_BACKOFF_BASE_SECONDS = 1.0
+EMBEDDING_BACKOFF_MAX_SECONDS = 60.0
 
 Processor = Callable[[dict], None]  # 接收 memory 行 dict；抛异常 = 该条本阶段失败
 
@@ -114,14 +121,20 @@ class DerivePipeline:
         embedding_dim: int | None = None,
         fts_enabled: bool = True,
         vector_index: VectorIndex | None = None,
+        clock: Callable[[], float] | None = None,
     ) -> None:
         self.db = db
         self.vector_index = vector_index
         self.embedding_provider = embedding_provider
         self.embedding_dim = embedding_dim
         self.failures: dict[str, int] = {stage: 0 for stage in STAGES}
-        # 最近一次全量/启动重建中 embedding 派生失败的原始错误（/health 可读）
+        # 最近一次 embedding 派生失败的**脱敏**错误（/health 可读，不含 key）
         self.last_embedding_error: str | None = None
+        self._clock = clock or time.monotonic
+        # 与检索层向量路共用熔断实现：连续 3 次失败 → 5 分钟（见 embeddings）。
+        self.embedding_circuit = CircuitBreaker(label="embedding provider", clock=self._clock)
+        self.embedding_circuit_skips = 0
+        self._embedding_backoff_until = 0.0
         self._lock = threading.Lock()
         processors: dict[str, Processor] = {
             stage: _make_stub(stage, stub_success)
@@ -168,7 +181,10 @@ class DerivePipeline:
         """跑一轮：每个 stage 处理最多 50 条未完成条目。返回 {stage: 处理条数}。"""
         processed: dict[str, int] = {}
         for stage in STAGES:
-            processed[stage] = self._run_stage(stage)
+            if stage == "embedding":
+                processed[stage] = self._run_embedding_stage()
+            else:
+                processed[stage] = self._run_stage(stage)
         return processed
 
     def _run_stage(self, stage: str) -> int:
@@ -196,6 +212,112 @@ class DerivePipeline:
                 )
             count += 1
         return count
+
+    def _run_embedding_stage(self) -> int:
+        """embedding 派生：熔断/退避检查 → 失败计数 → 成功写水位。
+
+        失败**不写** derive_state（保持 pending 等重试）；连续失败按指数退避
+        （1s/2s/4s…上限 60s），连续 3 次失败由共享熔断器打开 5 分钟。熔断期间
+        每轮记一次 ``embedding_circuit_skips``，避免静默空转。
+        """
+        if not self.embedding_circuit.allow():
+            self._skip_embedding_due_to_circuit()
+            return 0
+        with self._lock:
+            backoff_remaining = self._embedding_backoff_until - self._clock()
+        if backoff_remaining > 0:
+            logger.info(
+                "embedding 退避中（剩余 %.1fs），本轮跳过（pending %d 条保持）",
+                backoff_remaining,
+                self.pending_count("embedding"),
+            )
+            return 0
+
+        count = 0
+        for memory in self.pending("embedding"):
+            # 同批内触发熔断/退避后立即停手，避免继续打 API 烧钱。
+            if not self.embedding_circuit.allow():
+                self._skip_embedding_due_to_circuit()
+                break
+            with self._lock:
+                if self._clock() < self._embedding_backoff_until:
+                    break
+            try:
+                self.processors["embedding"](memory)
+            except Exception as exc:
+                self._record_embedding_failure(exc, memory_id=memory["id"])
+                break  # 退避后再试；失败不写 done
+            self._record_embedding_success()
+            with self.db.write_txn() as conn:
+                conn.execute(
+                    "INSERT OR REPLACE INTO derive_state(memory_id, stage, done_at) "
+                    "VALUES (?,?,?)",
+                    (memory["id"], "embedding", now_ms()),
+                )
+            count += 1
+        return count
+
+    def _skip_embedding_due_to_circuit(self) -> None:
+        with self._lock:
+            self.embedding_circuit_skips += 1
+        state = self.embedding_circuit.state()
+        logger.warning(
+            "embedding 熔断中（剩余 %.0fs，连续失败 %d 次），本轮跳过 embedding"
+            "（pending %d 条保持）",
+            state["open_seconds_remaining"],
+            state["consecutive_failures"],
+            self.pending_count("embedding"),
+        )
+
+    def _record_embedding_failure(
+        self, exc: BaseException, *, memory_id: str | None = None
+    ) -> None:
+        """失败计数 + 脱敏 last_error + 指数退避 + 共享熔断。"""
+        self.embedding_circuit.record_failure(exc)
+        message = redact_error(exc)
+        state = self.embedding_circuit.state()
+        consecutive = max(1, int(state["consecutive_failures"]))
+        backoff = min(
+            EMBEDDING_BACKOFF_BASE_SECONDS * (2 ** (consecutive - 1)),
+            EMBEDDING_BACKOFF_MAX_SECONDS,
+        )
+        with self._lock:
+            self.failures["embedding"] += 1
+            failures = self.failures["embedding"]
+            self.last_embedding_error = message
+            self._embedding_backoff_until = self._clock() + backoff
+        logger.exception(
+            "embedding processor failed for memory %s（失败计数 %d，连续 %d 次，"
+            "退避 %.1fs，条目保持未完成）：%s",
+            memory_id or "-",
+            failures,
+            consecutive,
+            backoff,
+            message,
+        )
+
+    def _record_embedding_success(self) -> None:
+        self.embedding_circuit.record_success()
+        with self._lock:
+            self._embedding_backoff_until = 0.0
+            self.last_embedding_error = None
+
+    def embedding_state(self) -> dict:
+        """embedding 派生健康（/health）：熔断、退避、跳过次数、脱敏错误。"""
+        circuit = self.embedding_circuit.state()
+        with self._lock:
+            backoff = max(0.0, self._embedding_backoff_until - self._clock())
+            failures = self.failures["embedding"]
+            skips = self.embedding_circuit_skips
+            last_error = self.last_embedding_error
+        return {
+            "configured": self.embedding_provider is not None,
+            "failures": failures,
+            "circuit": circuit,
+            "circuit_skips": skips,
+            "backoff_remaining_seconds": round(backoff, 3),
+            "last_error": last_error,
+        }
 
     # -- 全量重建 ---------------------------------------------------------------
     def rebuild_all(
@@ -231,13 +353,15 @@ class DerivePipeline:
                         raise RuntimeError("embedding provider 返回空结果")
                     vectors[memory["id"]] = result[0]
             except Exception as exc:
+                # 全量重建的 embedding 失败同样计数/退避/熔断，绝不只打日志。
+                self._record_embedding_failure(exc, memory_id="rebuild")
                 if not allow_embedding_failure:
                     raise
                 skip_embedding = True
-                self.last_embedding_error = f"{type(exc).__name__}: {exc}"
-                logger.exception(
+                logger.error(
                     "全量重建：embedding 派生失败，降级为仅重建 ngram/FTS"
-                    "（旧向量数据保留，待后续 tick / rebuild 补算）"
+                    "（旧向量数据保留，待后续 tick / rebuild 补算）：%s",
+                    self.last_embedding_error,
                 )
 
         counts = {stage: 0 for stage in STAGES}
@@ -295,8 +419,15 @@ class DerivePipeline:
                     )
         if self.vector_index is not None:
             self.vector_index.invalidate()
+        if not skip_embedding:
+            self._record_embedding_success()
         with self._lock:
-            self.failures = {stage: 0 for stage in STAGES}
+            if skip_embedding:
+                # 向量未派生：保留 embedding 失败计数（/health 告警），其余清零。
+                for stage in ("fts", "entity", "graph"):
+                    self.failures[stage] = 0
+            else:
+                self.failures = {stage: 0 for stage in STAGES}
         return counts
 
     def rebuild_after_migration(self) -> dict:

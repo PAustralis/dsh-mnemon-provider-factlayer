@@ -20,6 +20,9 @@ env/
 *.db-wal
 *.db-shm
 
+# 本地联调 shim（临时库 / 日志 / 探针）
+.tmp-shim*/
+
 # 测试 / 工具缓存
 .pytest_cache/
 .mypy_cache/
