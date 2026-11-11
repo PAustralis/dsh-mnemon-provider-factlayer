@@ -2,10 +2,15 @@
 
 端点：POST /memories、GET /memories/{id}、GET /memories（按 session）、
 POST /supersedes、GET /health、POST /search（检索层），以及运维辅助
-POST /derive/tick、POST /admin/rebuild、POST /admin/backup。部署固定单 worker：
+POST /derive/tick、POST /admin/rebuild、POST /admin/backup、GET /admin/search、
+POST /admin/canary。部署固定单 worker：
 
     python -m app.main
     python -m uvicorn app.main:create_app --factory --workers 1
+
+admin 端点由 ``ADMIN_TOKEN`` 保护：非空时要求 ``X-Admin-Token`` 或
+``Authorization: Bearer <token>``；为空时只接受回环请求（含 TestClient）。
+``include_superseded`` 在模型路径上不可达，只由 ``GET /admin/search`` 提供。
 
 模块级不创建 ``app``：``import app.main`` 不会建库、不会产生 facts.db。
 配置错误（如启用 vector 路线但 EMBEDDING_MODEL 为空）在 ``create_app`` 时即抛错。
@@ -74,13 +79,13 @@ def validate_config(cfg: Config, embedding_provider: EmbeddingProvider | None) -
     if cfg.route_top_k <= 0:
         raise EmbeddingConfigError(f"ROUTE_TOP_K 必须为正整数（当前 {cfg.route_top_k}）")
     if cfg.final_k <= 0:
-        raise EmbeddingConfigError(f"FINAL_K 必须为正整数（当前 {cfg.final_k}）")
-    if cfg.expand_max_items <= 0 or cfg.expand_max_chars <= 0:
-        raise EmbeddingConfigError(
-            "EXPAND_MAX_ITEMS / EXPAND_MAX_CHARS 必须为正整数"
-        )
-    if not (0.0 <= cfg.mmr_lambda <= 1.0):
-        raise EmbeddingConfigError(f"MMR_LAMBDA 必须在 [0,1]（当前 {cfg.mmr_lambda}）")
+        raise EmbeddingConfigError(f"FINAL_K 必须正整数（当前 {cfg.final_k}）")
+    if cfg.item_max_chars <= 0 or cfg.total_max_chars <= 0:
+        raise EmbeddingConfigError("ITEM_MAX_CHARS / TOTAL_MAX_CHARS 必须为正整数")
+    if cfg.item_max_chars > cfg.total_max_chars:
+        raise EmbeddingConfigError("ITEM_MAX_CHARS 不得大于 TOTAL_MAX_CHARS")
+    if cfg.expand_window < 0:
+        raise EmbeddingConfigError("EXPAND_WINDOW 必须 ≥ 0")
     if cfg.embedding_dim_int is None:
         pass  # auto：首次调用推断
     if "vector" in cfg.route_names:
@@ -108,13 +113,15 @@ def create_app(
     validate_config(cfg, provider)
     db = Database(db_path or cfg.db_path)
     init_db(db)
+    retrieval = RetrievalService(db, cfg, provider)
     pipeline = DerivePipeline(
         db,
         stub_success=cfg.derive_stub_success,
         embedding_provider=provider,
         embedding_dim=cfg.embedding_dim_int,
+        # 写事务提交后增量刷新检索层的内存向量矩阵（与 retrieval 共用同一实例）
+        vector_index=retrieval.index,
     )
-    retrieval = RetrievalService(db, cfg, provider)
     backup_scheduler = BackupScheduler(
         db,
         interval_seconds=cfg.backup_interval_seconds,
@@ -164,6 +171,22 @@ def create_app(
     app.state.config = cfg
     app.state.retrieval = retrieval
     app.state.backup_scheduler = backup_scheduler
+
+    def _admin_allowed(request: Request) -> bool:
+        """ADMIN_TOKEN 非空 → 校验 token；为空 → 只接受回环（含 TestClient）。"""
+        if cfg.admin_token:
+            supplied = request.headers.get("x-admin-token", "")
+            if not supplied:
+                auth = request.headers.get("authorization", "")
+                if auth.lower().startswith("bearer "):
+                    supplied = auth[7:].strip()
+            return supplied == cfg.admin_token
+        host = request.client.host if request.client is not None else ""
+        return host in ("127.0.0.1", "::1", "localhost", "testclient")
+
+    def _require_admin(request: Request) -> None:
+        if not _admin_allowed(request):
+            raise HTTPException(status_code=403, detail="admin 端点需要 ADMIN_TOKEN 或回环访问")
 
     @app.exception_handler(sqlite3.Error)
     def _sqlite_error_handler(_request: Request, exc: sqlite3.Error) -> JSONResponse:
@@ -247,22 +270,60 @@ def create_app(
 
     @app.get("/health")
     def get_health() -> dict:
-        return health_report(db, pipeline, backup_scheduler, retrieval)
+        report = health_report(db, pipeline, backup_scheduler, retrieval)
+        if cfg.canary_enabled:
+            # 金丝雀查询不计入检索统计（直接走 bigram_route）
+            try:
+                report["retrieval"]["canary"] = retrieval.run_canary()
+            except Exception:  # 金丝雀失败不影响 /health 其余字段
+                logger.exception("canary failed")
+                report["retrieval"]["canary"] = {
+                    "status": "error",
+                    "alert": False,
+                }
+        return report
 
     @app.post("/derive/tick")
     def derive_tick() -> dict:
         processed = pipeline.tick()
-        retrieval.invalidate_caches()
+        # 向量写入已在写事务提交后增量刷新 retrieval.index；这里不再整表失效。
         return processed
 
     @app.post("/admin/rebuild")
-    def admin_rebuild() -> dict:
-        pipeline.rebuild_all()
+    def admin_rebuild(request: Request) -> dict:
+        _require_admin(request)
+        counts = pipeline.rebuild_all()
         retrieval.invalidate_caches()
-        return {"ok": True}
+        return {"ok": True, "counts": counts}
+
+    @app.get("/admin/search")
+    def admin_search(
+        request: Request,
+        query: str = Query(min_length=1, max_length=2000),
+        include_superseded: int = Query(0),
+        limit: int | None = Query(None, ge=1, le=50),
+    ) -> dict:
+        """运维/评测端点：模型路径不可达的 include_superseded 只在这里可用。"""
+        _require_admin(request)
+        try:
+            return retrieval.search(
+                query,
+                limit=limit,
+                include_superseded=bool(include_superseded),
+            )
+        except EmbeddingModelMismatch as exc:
+            raise HTTPException(status_code=409, detail=exc.message) from None
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    @app.post("/admin/canary")
+    def admin_canary(request: Request) -> dict:
+        _require_admin(request)
+        return retrieval.run_canary()
 
     @app.post("/admin/backup")
-    def admin_backup() -> dict:
+    def admin_backup(request: Request) -> dict:
+        _require_admin(request)
         try:
             dest = backup_scheduler.run_now()
         except Exception:

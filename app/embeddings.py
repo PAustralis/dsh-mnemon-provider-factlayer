@@ -1,17 +1,22 @@
 """R1 向量：embedding provider 接口 + 维度指纹 + float32 归一化存储 + 内存暴力点积。
 
-设计要点（docs/02 §3.2 / §8）：
+设计要点（docs/02 检索层 v8 §7）：
 
 - 后端只认接口：``openai-compat``（httpx 调 OpenAI 兼容 /embeddings）或
   ``local-onnx``（骨架；依赖 import 失败时**启动即报明确错误**，绝不静默）。
 - ``EMBEDDING_DIM=auto``：首次调用取 ``len(vector)`` 写入 meta，之后每次校验一致。
-- ``model_id + dim`` 与 meta 不符 → 抛 :class:`EmbeddingModelMismatch`，由 API 层
+- **按行存 ``model_id + dim``**；无 embedding 行天然被排除在 R1 候选外（JOIN memories）。
+- **写事务提交后增量刷新内存矩阵**（新增/替换该行向量），不整表重载；
+  启动/重建时全量载入；矩阵与 DB 用 ``gseq`` 对齐（恢复旧备份后 sqlite_sequence
+  可能回退，因此恢复后必须全量重载）。
+- ``model_id + dim`` 与库内不符 → 抛 :class:`EmbeddingModelMismatch`，由 API 层
   拒绝检索（HTTP 409）并提示 ``POST /admin/rebuild``；**不自动重建**。
 - 写库前 L2 归一化，float32 小端 BLOB；检索时内存矩阵暴力点积（点积即余弦）。
 """
 
 from __future__ import annotations
 
+import bisect
 import logging
 import sqlite3
 import threading
@@ -235,6 +240,29 @@ def _assert_matches(
         )
 
 
+def write_embedding_row(
+    conn: sqlite3.Connection,
+    memory_id: str,
+    vector: list[float],
+    *,
+    model_id: str,
+    configured_dim: int | None,
+) -> tuple[int, int]:
+    """在调用方事务内写入一行向量 + 指纹；返回 (dim, gseq)。"""
+    dim = len(vector)
+    if dim == 0:
+        raise RuntimeError("embedding 向量为空")
+    packed = pack_vector(vector)
+    _write_fingerprint(conn, model_id, dim, configured_dim)
+    conn.execute(
+        "INSERT OR REPLACE INTO embeddings(memory_id, vector, model_id, dim) "
+        "VALUES (?, ?, ?, ?)",
+        (memory_id, packed, model_id, dim),
+    )
+    row = conn.execute("SELECT gseq FROM memories WHERE id=?", (memory_id,)).fetchone()
+    return dim, int(row[0]) if row is not None else 0
+
+
 def store_embedding(
     db: Database,
     memory_id: str,
@@ -242,18 +270,22 @@ def store_embedding(
     *,
     model_id: str,
     configured_dim: int | None,
+    index: "VectorIndex | None" = None,
 ) -> None:
-    """L2 归一化 + float32 小端入库，并在同一写事务内维护 model_id/dim 指纹。"""
-    dim = len(vector)
-    if dim == 0:
-        raise RuntimeError("embedding 向量为空")
-    packed = pack_vector(vector)
+    """L2 归一化 + float32 小端入库（按行存 model_id/dim），同事务维护指纹。
+
+    提交后**增量刷新**内存向量矩阵（``index`` 非空时），不整表重载。
+    """
     with db.write_txn() as conn:
-        _write_fingerprint(conn, model_id, dim, configured_dim)
-        conn.execute(
-            "INSERT OR REPLACE INTO embeddings(memory_id, vector) VALUES (?, ?)",
-            (memory_id, packed),
+        dim, gseq = write_embedding_row(
+            conn,
+            memory_id,
+            vector,
+            model_id=model_id,
+            configured_dim=configured_dim,
         )
+    if index is not None and gseq:
+        index.upsert(memory_id, gseq, vector, model_id=model_id, dim=dim)
 
 
 def check_fingerprint(
@@ -268,11 +300,35 @@ def check_fingerprint(
             stored_model, stored_dim, provider.model_id, vector_dim, configured_dim
         )
     elif configured_dim is not None and stored_dim is not None:
-        _assert_matches(stored_model, stored_dim, provider.model_id, configured_dim, configured_dim)
+        _assert_matches(
+            stored_model, stored_dim, provider.model_id, configured_dim, configured_dim
+        )
+    # 按行校验 model_id / dim：任何一行不匹配都是配置事故（不自动重建）
+    rows = conn.execute(
+        "SELECT DISTINCT model_id, dim FROM embeddings LIMIT 50"
+    ).fetchall()
+    for row in rows:
+        row_dim = int(row[1])
+        if vector_dim is not None and row_dim and row_dim != vector_dim:
+            raise EmbeddingModelMismatch(
+                f"库内向量维度不一致：{row_dim} vs {vector_dim}；"
+                "请执行 POST /admin/rebuild 后重试。"
+            )
+        _assert_matches(
+            stored_model, stored_dim, provider.model_id, row_dim or (vector_dim or 0), configured_dim
+        )
+        if row[0] and row[0] != provider.model_id:
+            raise EmbeddingModelMismatch(
+                f"库内存在由模型 {row[0]!r} 生成的向量行，当前配置为 "
+                f"{provider.model_id!r}；请执行 POST /admin/rebuild 后重试。"
+            )
     return stored_model, stored_dim
 
 
 def _first_vector_dim(conn: sqlite3.Connection) -> int | None:
+    row = conn.execute("SELECT dim FROM embeddings LIMIT 1").fetchone()
+    if row is not None and int(row[0]) > 0:
+        return int(row[0])
     row = conn.execute("SELECT vector FROM embeddings LIMIT 1").fetchone()
     if row is None:
         return None
@@ -308,45 +364,142 @@ def unpack_vector(blob: bytes, dim: int | None = None) -> np.ndarray:
 
 
 class VectorIndex:
-    """内存矩阵（只回 id + 距离），按 (条数, 最大 rowid) 失效重建。
+    """内存矩阵（只回 id + 距离），gseq 对齐、写事务后增量 upsert。
 
-    1024 维 × 1 万条 ≈ 40MB，暴力点积 ms 级（§3.2）。
+    1024 维 × 1 万条 ≈ 40MB，暴力点积 ms 级（§7）。
     """
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._key: tuple[int, int] | None = None
-        self._ids: tuple[str, ...] = ()
+        self._fingerprint: tuple[str | None, int | None] | None = None
+        self._ids: list[str] = []
+        self._gseqs: list[int] = []
+        self._vectors: list[np.ndarray] = []
         self._matrix: np.ndarray | None = None
+        self._loaded_key: tuple[int, int, str, int] | None = None
 
     def invalidate(self) -> None:
         with self._lock:
-            self._key = None
-            self._ids = ()
+            self._fingerprint = None
+            self._ids = []
+            self._gseqs = []
+            self._vectors = []
             self._matrix = None
+            self._loaded_key = None
 
-    def load(self, db: Database) -> tuple[tuple[str, ...], np.ndarray]:
+    def load(
+        self,
+        db: Database,
+        *,
+        model_id: str | None = None,
+        dim: int | None = None,
+    ) -> tuple[tuple[str, ...], np.ndarray, tuple[int, ...]]:
+        """返回 (ids, matrix, gseqs)。只包含 embeddings 行（无向量行天然排除）。"""
         conn = db.read_conn
-        row = conn.execute(
-            "SELECT COUNT(*), COALESCE(MAX(rowid), 0) FROM embeddings"
+        where = ""
+        params: list[object] = []
+        if model_id is not None and dim is not None:
+            where = " WHERE e.model_id=? AND e.dim=?"
+            params = [model_id, int(dim)]
+        elif model_id is not None:
+            where = " WHERE e.model_id=?"
+            params = [model_id]
+        count_row = conn.execute(
+            "SELECT COUNT(*), COALESCE(MAX(m.gseq), 0) FROM embeddings e "
+            "JOIN memories m ON m.id = e.memory_id"
+            + where,
+            params,
         ).fetchone()
-        key = (int(row[0]), int(row[1]))
+        key = (int(count_row[0]), int(count_row[1]), model_id or "", int(dim or 0))
         with self._lock:
-            if key == self._key and self._matrix is not None:
-                return self._ids, self._matrix
+            if key == self._loaded_key and self._matrix is not None:
+                return tuple(self._ids), self._matrix, tuple(self._gseqs)
         rows = conn.execute(
-            "SELECT memory_id, vector FROM embeddings ORDER BY memory_id"
+            "SELECT e.memory_id, e.vector, e.dim, m.gseq FROM embeddings e "
+            "JOIN memories m ON m.id = e.memory_id"
+            + where
+            + " ORDER BY m.gseq ASC",
+            params,
         ).fetchall()
-        if not rows:
-            ids: tuple[str, ...] = ()
-            matrix = np.zeros((0, 0), dtype=np.float32)
-        else:
-            dim = len(rows[0][1]) // 4
-            vectors = [unpack_vector(r[1], dim) for r in rows]
-            ids = tuple(r[0] for r in rows)
-            matrix = np.vstack(vectors).astype(np.float32, copy=False)
+        ids: list[str] = []
+        gseqs: list[int] = []
+        vectors: list[np.ndarray] = []
+        dims = {len(row[1]) // 4 for row in rows if row[1]}
+        if len(dims) > 1:
+            raise EmbeddingModelMismatch(
+                f"库内向量维度不一致：{sorted(dims)}；请执行 POST /admin/rebuild"
+            )
+        for row in rows:
+            row_dim = int(row[2]) or (len(row[1]) // 4)
+            ids.append(row[0])
+            gseqs.append(int(row[3]))
+            vectors.append(unpack_vector(row[1], row_dim))
+        matrix = (
+            np.vstack(vectors).astype(np.float32, copy=False)
+            if vectors
+            else np.zeros((0, 0), dtype=np.float32)
+        )
         with self._lock:
-            self._key = key
             self._ids = ids
+            self._gseqs = gseqs
+            self._vectors = vectors
             self._matrix = matrix
-        return ids, matrix
+            self._loaded_key = key
+        return tuple(ids), matrix, tuple(gseqs)
+
+    def upsert(
+        self,
+        memory_id: str,
+        gseq: int,
+        vector: list[float] | np.ndarray,
+        *,
+        model_id: str,
+        dim: int,
+    ) -> None:
+        """写事务提交后增量刷新一行（保持 gseq 升序，矩阵随之更新）。"""
+        vec = unpack_vector(pack_vector(vector), dim)
+        with self._lock:
+            if self._matrix is None:
+                # 尚未载入：不猜现有行，等下一次 load 全量载入
+                self._loaded_key = None
+                return
+            index = None
+            if memory_id in self._ids:
+                index = self._ids.index(memory_id)
+                self._vectors[index] = vec
+                self._gseqs[index] = int(gseq)
+                if self._vectors:
+                    self._matrix = np.vstack(self._vectors).astype(
+                        np.float32, copy=False
+                    )
+                return
+            position = bisect.bisect_left(self._gseqs, int(gseq))
+            self._ids.insert(position, memory_id)
+            self._gseqs.insert(position, int(gseq))
+            self._vectors.insert(position, vec)
+            if self._matrix.size == 0:
+                self._matrix = vec.reshape(1, -1)
+            else:
+                self._matrix = np.insert(
+                    self._matrix, position, vec.reshape(1, -1), axis=0
+                ).astype(np.float32, copy=False)
+            # 增量后更新缓存键（只在该行与已载入矩阵的 model/dim 一致时）
+            old = self._loaded_key
+            if old is not None and old[2] == model_id and old[3] == dim:
+                self._loaded_key = (
+                    len(self._ids),
+                    max(self._gseqs) if self._gseqs else 0,
+                    model_id,
+                    dim,
+                )
+            else:
+                self._loaded_key = None
+
+
+def load_vectors(db: Database) -> list[tuple[str, int, str, int, bytes]]:
+    """诊断/重建用：列出所有向量行的 (memory_id, gseq, model_id, dim, blob)。"""
+    rows = db.read_conn.execute(
+        "SELECT e.memory_id, m.gseq, e.model_id, e.dim, e.vector "
+        "FROM embeddings e JOIN memories m ON m.id=e.memory_id ORDER BY m.gseq"
+    ).fetchall()
+    return [(r[0], int(r[1]), r[2], int(r[3]), r[4]) for r in rows]

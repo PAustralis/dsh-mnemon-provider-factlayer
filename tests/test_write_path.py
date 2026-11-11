@@ -50,6 +50,19 @@ def test_duplicate_content_different_cwid_stored_twice(client):
     assert second.json()["seq"] == 1  # 两条都存，靠多条记录本身表达重复
 
 
+def test_oversized_content_is_rejected_explicitly(client):
+    from app.write_path import CONTENT_MAX_CHARS
+
+    resp = write_one(
+        client,
+        cwid="cw-too-long",
+        content="字" * (CONTENT_MAX_CHARS + 1),
+        session_id="s1",
+    )
+    assert resp.status_code == 413
+    assert "超长" in resp.json()["detail"]
+
+
 # ---- event_time 校验 -------------------------------------------------------
 
 
@@ -240,6 +253,9 @@ def test_supersede_integrity_error_is_friendly_and_hides_sqlite_text(db, monkeyp
         def fetchone(self):
             return (1,)
 
+        def fetchall(self):
+            return []
+
     class FakeConn:
         def execute(self, sql, params=()):
             if sql.lstrip().startswith("INSERT INTO supersedes"):
@@ -260,3 +276,51 @@ def test_supersede_integrity_error_is_friendly_and_hides_sqlite_text(db, monkeyp
     assert excinfo.value.status_code == 409
     assert "UNIQUE constraint" not in excinfo.value.detail
     assert "supersedes.from_id" not in excinfo.value.detail
+
+
+# ---- v8 §4.4 写入拒环 --------------------------------------------------------
+
+
+def test_self_loop_supersede_is_rejected_409(client):
+    a = write_one(client, cwid="cw-loop-a", content="A", session_id="s1").json()
+    resp = _edge(client, a["id"], a["id"], "supersede")
+    assert resp.status_code == 409
+    assert "循环" in resp.json()["detail"]
+    # 原始错误只进日志：响应不含 SQLite 细节
+    assert "sqlite" not in resp.text.lower()
+
+
+def test_two_node_cycle_supersede_is_rejected_409(client):
+    a = write_one(client, cwid="cw-cyc-a", content="A", session_id="s1").json()
+    b = write_one(client, cwid="cw-cyc-b", content="B", session_id="s2").json()
+    assert _edge(client, a["id"], b["id"], "supersede").status_code == 200
+    resp = _edge(client, b["id"], a["id"], "supersede")
+    assert resp.status_code == 409
+
+
+def test_external_corrector_is_allowed_to_close_cycle_path(client):
+    """A↔B 已由历史数据成环时，外部 C 纠正 A 不成环（应允许，读侧映射到 C）。"""
+    a = write_one(client, cwid="cw-ext-a", content="A", session_id="s1").json()
+    b = write_one(client, cwid="cw-ext-b", content="B", session_id="s2").json()
+    c = write_one(client, cwid="cw-ext-c", content="C", session_id="s3").json()
+    # 历史数据直插成环（绕过写路径拒环）
+    with client.app.state.db.write_txn() as conn:
+        conn.execute(
+            "INSERT INTO supersedes(from_id,to_id,kind,recorded_at,source_client)"
+            " VALUES (?,?,?,?,?)",
+            (a["id"], b["id"], "supersede", 1, "t"),
+        )
+        conn.execute(
+            "INSERT INTO supersedes(from_id,to_id,kind,recorded_at,source_client)"
+            " VALUES (?,?,?,?,?)",
+            (b["id"], a["id"], "supersede", 2, "t"),
+        )
+    assert _edge(client, c["id"], a["id"], "supersede").status_code == 200
+
+
+def test_revoke_edges_do_not_participate_in_cycle_detection(client):
+    a = write_one(client, cwid="cw-rev-a", content="A", session_id="s1").json()
+    b = write_one(client, cwid="cw-rev-b", content="B", session_id="s2").json()
+    assert _edge(client, a["id"], b["id"], "supersede").status_code == 200
+    # revoke 不进入「最新边为 supersede 的图」；反向 revoke 永远允许
+    assert _edge(client, b["id"], a["id"], "revoke").status_code == 200

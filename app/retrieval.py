@@ -1,20 +1,22 @@
-"""检索层（第二层）：六路召回 + RRF 融合 + 裁剪（作废过滤 / R5 纠正后补 / MMR / 会话展开）。
+"""检索层（第二层，v8）：单混合列二元组路 + RRF + 路内替换 + 契约输出。
 
-路线用**语义名**（vector / bigram / trigram / graph / recent / correction），
-配置与日志都不使用 R1..R6 编号（编号在 REPORT 与设计文档间错位过）。
+路线用**语义名**（vector / bigram / trigram / graph），配置与日志都不使用 R1..R6 编号。
 
-- 每路独立开关（``RETRIEVAL_ROUTES``），关掉任一路不丢数据、不报错。
-- 每路 SQL 内部用共享 CTE 排除作废记录（per-pair 最新边语义，见 ``app.voided``）。
-- 向量路故障**降级**：超时/报错跳过 vector，其余路照常，计数并进 /health；
-  ``model_id + dim`` 不符是配置事故 → 抛 :class:`EmbeddingModelMismatch`，
-  API 层拒绝检索（409）并提示 ``POST /admin/rebuild``，不自动重建。
-- R5 纠正后补：只对被作废而剔除的候选生效（任一路「未过滤排名 ≤ FINAL_K」视为
-  「会进入前 6」的可判定近似），沿 supersedes 边拉纠正者、最多 3 跳、继承名次，
-  不参与 RRF 打分、不占常规名额；多纠正者并存全部保留。
-- R6 最近 50：仅当前几路去重后 < FINAL_K 时兜底。
-- 会话邻域展开：融合与 MMR 之后，同 session_id ±2 条，不占名额、继承父项名次、
-  不重新打分、必须过作废过滤；重叠邻域按「父项名次 → recorded_at → id」确定性合并。
-- 输出上限：``EXPAND_MAX_ITEMS``（含本体）/ ``EXPAND_MAX_CHARS``，超出截断并标注。
+v8 语义（docs/02 检索层设计）：
+
+- **各路取含 hidden 的原始 top-K**：SQL / mask 阶段不排除 hidden；排除只发生在出口。
+- **路内替换（RRF 之前）**：命中 A ∈ hidden → 用 A 的 live head（可多个）占 A 的
+  原始名次，A 移出该路；路内同 id 取最佳名次、每路至多一票；按
+  ``(名次 asc, gseq desc)`` 排序后截断 ``ROUTE_TOP_K``。
+- 跨路各一票是正当多路证据；被作废项只当位置提供者，不参与 RRF 打分。
+- ``FINAL_K=4``、单条 ≤1200 字符、总 ≤4800 字符；每条结果带数值 ``score``
+  （RRF，adapter 声明 ``scoreSemantics: provider-native``）与 ISO 8601 UTC ``createdAt``。
+- 结果为空 → ``hint`` 以 ``NO_MATCH`` 开头 + 路状态摘要；结果非空 → 状态只走
+  ``tags``（weak / via: / superseded-by: / hidden:N / vector-unavailable / expanded），
+  被隐藏匹配计数另拼进首条 ``content`` 尾行。
+- ``include_superseded`` 模型路径不可达，只由 admin 端点传入。
+- 会话展开默认关；开启时只能占用 FINAL_K 名额内、过替换语义、继承名次。
+- 出口断言：输出 ∩ hidden ⊆ 豁免集（仅 admin 显式请求）；否则丢弃 + 计数 + ERROR。
 """
 
 from __future__ import annotations
@@ -23,8 +25,10 @@ import json
 import logging
 import threading
 import time
+import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -39,40 +43,57 @@ from .embeddings import (
     check_fingerprint,
     normalize_vector,
 )
-from .read_path import TRUNCATE_LIMIT, truncate_for_output
 
 logger = logging.getLogger("factlayer.retrieval")
 
-MMR_POOL = 20
 EVAL_META_KEY = "retrieval:eval"
-RECENT_FALLBACK_LIMIT = 50
-EXPAND_WINDOW = 2
+R1_TIMEOUT_SECONDS = 3.0
+R1_CIRCUIT_FAILURES = 3
+R1_CIRCUIT_SECONDS = 300.0
+
+# 契约状态 tag 白名单（docs/03 §4.4）；不参与写入语义
+STATUS_TAG_PREFIXES = ("via:", "superseded-by:", "hidden:")
+STATUS_TAGS = ("weak", "expanded", "vector-unavailable")
+
+
+def iso_utc(recorded_at_ms: int) -> str:
+    """Unix 毫秒 → ISO 8601 UTC 字符串（契约要求字符串，给数字会被静默丢弃）。"""
+    dt = datetime.fromtimestamp(int(recorded_at_ms) / 1000.0, tz=timezone.utc)
+    return dt.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def truncate_item(content: str, memory_id: str, max_chars: int) -> str:
+    """把单条 content 截到 ≤max_chars（含截断自报标记）。"""
+    if len(content) <= max_chars:
+        return content
+    marker = f"[已截断，原文 {len(content)} 字，id={memory_id}]"
+    keep = max(0, max_chars - len(marker))
+    return content[:keep] + marker
 
 
 @dataclass
 class RouteOutcome:
-    """单路一次查询的结果（raw_ids = 去重/截断前，ids = 去重截断后）。"""
+    """单路一次查询的结果；raw_ids 含 hidden，ids 是路内替换/去重/截断后的列表。"""
 
     name: str
     ids: list[str] = field(default_factory=list)
+    ranks: list[int] = field(default_factory=list)
     raw_ids: list[str] = field(default_factory=list)
-    near_misses: list[tuple[str, int]] = field(default_factory=list)
+    hidden_hits: list[tuple[str, str]] = field(default_factory=list)
     error: str | None = None
     skipped: str | None = None
     unavailable: bool = False
-    fallback: bool = False
-    deduped_count: int = 0
-    truncated_count: int = 0
+    token_count: int = 0
 
     @property
     def raw_count(self) -> int:
-        return len(self.raw_ids) if self.raw_ids else len(self.ids)
+        return len(self.raw_ids)
 
 
 class RetrievalStats:
     """每路最近空结果率 + 事件计数（/health 暴露，进程内滚动窗口）。"""
 
-    ROUTES = ("vector", "bigram", "trigram", "graph", "recent")
+    ROUTES = ("vector", "bigram", "trigram", "graph")
 
     def __init__(self, window: int = 200) -> None:
         self._lock = threading.Lock()
@@ -83,7 +104,9 @@ class RetrievalStats:
         self.route_unavailable = {name: 0 for name in self.ROUTES}
         self._recent_empty = {name: deque(maxlen=window) for name in self.ROUTES}
         self.queries = 0
-        self.phrase_fallback_count = 0
+        self.no_match_count = 0
+        self.hidden_replaced_count = 0
+        self.exit_assertion_drops = 0
         self.vector_degraded_count = 0
         self.last_vector_error: str | None = None
 
@@ -101,10 +124,15 @@ class RetrievalStats:
                     self.route_errors[outcome.name] += 1
                 if outcome.unavailable:
                     self.route_unavailable[outcome.name] += 1
+                self.hidden_replaced_count += len(outcome.hidden_hits)
 
-    def record_phrase_fallback(self) -> None:
+    def record_no_match(self) -> None:
         with self._lock:
-            self.phrase_fallback_count += 1
+            self.no_match_count += 1
+
+    def record_exit_drop(self, count: int) -> None:
+        with self._lock:
+            self.exit_assertion_drops += count
 
     def record_vector_degraded(self, message: str) -> None:
         with self._lock:
@@ -126,7 +154,9 @@ class RetrievalStats:
             return {
                 "queries": self.queries,
                 "routes": routes,
-                "phrase_fallback_count": self.phrase_fallback_count,
+                "no_match_count": self.no_match_count,
+                "hidden_replaced_count": self.hidden_replaced_count,
+                "exit_assertion_drops": self.exit_assertion_drops,
                 "vector_degraded_count": self.vector_degraded_count,
                 "last_vector_error": self.last_vector_error,
             }
@@ -148,13 +178,7 @@ def read_eval_snapshot(db: Database) -> dict | None:
 
 
 def resolve_routes(db: Database, cfg: Config) -> tuple[tuple[str, ...], dict]:
-    """生效路线 + 自动降级状态。
-
-    验收 §6.3：融合结果低于最好单路时自动收窄到最好单路（默认即 bigram），
-    不要求 owner 手工改配置、降级本身落日志。运行时没有相关性标签，因此用
-    「基线 harness 写入 meta:retrieval:eval 的评测快照」作为唯一可判定依据
-    （无快照 = 不降级）。
-    """
+    """生效路线 + 自动降级状态（保留第一层能力；v8 默认只有 bigram，不触发）。"""
     routes = cfg.route_names
     degrade = {"degraded": False, "reason": None}
     if not cfg.auto_degrade:
@@ -201,96 +225,69 @@ class RetrievalService:
         self.index = index or VectorIndex()
         self.stats = stats or RetrievalStats()
         self.routes, self.degrade = resolve_routes(db, cfg)
+        # R1 熔断：连续失败 3 次 → 打开 5 分钟
+        self._vector_lock = threading.Lock()
+        self._vector_failures = 0
+        self._vector_open_until = 0.0
+        self._vector_last_error: str | None = None
+        self._canary_history: deque[dict] = deque(maxlen=2)
+        self._canary_last: dict | None = None
 
     def invalidate_caches(self) -> None:
         self.index.invalidate()
 
     # ------------------------------------------------------------------ 单路
     def _fts_rank(
-        self, table: str, expr: str | None, limit: int, *, filtered: bool
+        self, table: str, expr: str | None, limit: int, *, gseq_desc: bool = True
     ) -> list[str]:
+        """原始 top-K（**含 hidden**，SQL 不排除作废）。
+
+        bigram 路沿用基线的 ``bm25 ASC, rowid ASC``（rowid == gseq，天然升序）：
+        BM25 同分并列若改成 gseq DESC 会翻转基线 top-6 / R@6（见测试与报告）。
+        其余路与所有输出 tie-break 仍用 ``gseq DESC``（新者优先）。
+        """
         if not expr:
             return []
-        condition = voided_mod.NOT_VOIDED_SQL if filtered else "1=1"
+        tie = "m.gseq DESC" if gseq_desc else "m.gseq ASC"
         sql = (
-            voided_mod.VOIDED_CTE
-            + f" SELECT m.id FROM {table}"
-            f" JOIN memories m ON m.rowid = {table}.rowid"
-            f" WHERE {table} MATCH ? AND {condition}"
-            f" ORDER BY bm25({table}) ASC, m.id ASC LIMIT ?"
+            f"SELECT m.id FROM {table} f"
+            f" JOIN memories m ON m.gseq = f.rowid"
+            f" WHERE {table} MATCH ?"
+            f" ORDER BY bm25({table}) ASC, {tie} LIMIT ?"
         )
         rows = self.db.read_conn.execute(sql, (expr, int(limit))).fetchall()
         return [row[0] for row in rows]
 
-    def _recent_rank(self, limit: int, *, filtered: bool) -> list[str]:
-        condition = voided_mod.NOT_VOIDED_SQL if filtered else "1=1"
-        sql = (
-            voided_mod.VOIDED_CTE
-            + " SELECT m.id FROM memories m"
-            f" WHERE {condition}"
-            " ORDER BY m.recorded_at DESC, m.id DESC LIMIT ?"
-        )
-        rows = self.db.read_conn.execute(sql, (int(limit),)).fetchall()
-        return [row[0] for row in rows]
-
-    @staticmethod
-    def _near_misses(
-        unfiltered: list[str], filtered: list[str]
-    ) -> list[tuple[str, int]]:
-        kept = set(filtered)
-        return [
-            (mid, rank) for rank, mid in enumerate(unfiltered, 1) if mid not in kept
-        ]
+    def _gseq_map(self, ids: list[str]) -> dict[str, int]:
+        if not ids:
+            return {}
+        unique = list(dict.fromkeys(ids))
+        placeholders = ",".join("?" * len(unique))
+        rows = self.db.read_conn.execute(
+            f"SELECT id, gseq FROM memories WHERE id IN ({placeholders})", unique
+        ).fetchall()
+        return {row["id"]: int(row["gseq"]) for row in rows}
 
     def bigram_route(self, query: str, limit: int) -> RouteOutcome:
-        """R2 二元组：双字短语优先 → 0 命中回退单字（计数 + 日志）→ <2 字直接单字。"""
-        norm = textnorm.normalize(query)
-        direct_single = len(norm) < 2
-        fallback = False
-        if direct_single:
-            # 查询串 < 2 字：直接走单字，不算「短语→OR 回退」
-            expr = textnorm.fts_match_expr(textnorm.unigram_query_tokens(norm))
-        else:
-            expr = textnorm.fts_match_expr(textnorm.bigram_query_tokens(norm))
-        unfiltered = self._fts_rank("memories_fts_bigram", expr, limit, filtered=False)
-        if expr and not unfiltered and not direct_single:
-            # 短语 0 命中 → 回退 OR 单字互连；必须计数 + 打日志（不许静默 0 命中）
-            expr = textnorm.fts_match_expr(textnorm.unigram_query_tokens(norm))
-            self.stats.record_phrase_fallback()
-            fallback = True
-            logger.warning(
-                "bigram 短语 0 命中，回退 OR 单字：query=%r（累计回退 %d 次）",
-                query,
-                self.stats.phrase_fallback_count,
-            )
-            unfiltered = self._fts_rank(
-                "memories_fts_bigram", expr, limit, filtered=False
-            )
-        filtered = self._fts_rank("memories_fts_bigram", expr, limit, filtered=True)
-        return RouteOutcome(
-            name="bigram",
-            ids=filtered,
-            raw_ids=filtered,
-            near_misses=self._near_misses(unfiltered, filtered),
-            fallback=fallback,
-        )
+        """R2 二元组：与基线同构的单混合列查询（无单字回退、无最近兜底）。"""
+        tokens, _truncated = textnorm.query_tokens(query)
+        expr = textnorm.fts_match_expr(tokens)
+        if not expr:
+            return RouteOutcome(name="bigram", skipped="no_tokens", token_count=0)
+        raw = self._fts_rank("memories_fts_bigram", expr, limit, gseq_desc=False)
+        return RouteOutcome(name="bigram", raw_ids=raw, token_count=len(tokens))
 
     def trigram_route(self, query: str, limit: int) -> RouteOutcome:
-        """R3 trigram：独立 FTS5 虚表；1–2 字查询在此路不可用（明确跳过并计数）。"""
-        expr = textnorm.fts_match_expr(textnorm.trigram_tokens(query))
+        """可选 trigram 路（v8 默认不启用）；1–2 字查询在此路不可用。"""
+        tokens = textnorm.trigram_tokens(query)
+        expr = textnorm.fts_match_expr(tokens)
         if not expr:
             return RouteOutcome(name="trigram", skipped="query_shorter_than_3_chars")
-        unfiltered = self._fts_rank("memories_fts_trigram", expr, limit, filtered=False)
-        filtered = self._fts_rank("memories_fts_trigram", expr, limit, filtered=True)
-        return RouteOutcome(
-            name="trigram",
-            ids=filtered,
-            raw_ids=filtered,
-            near_misses=self._near_misses(unfiltered, filtered),
-        )
+        raw = self._fts_rank("memories_fts_trigram", expr, limit)
+        return RouteOutcome(name="trigram", raw_ids=raw, token_count=len(tokens))
 
     def graph_route(self, query: str, limit: int) -> RouteOutcome:
-        """R4 图邻居：只留接口与开关，默认关；未实现时明确返回空并计数。"""
+        """图邻居路：只留接口与开关，默认关；未实现时明确返回空并计数。"""
         logger.warning(
             "graph 路线已启用但本层未实现（FalkorDB 实体 1 跳邻居）；"
             "本次返回空结果并计入 /health.retrieval.routes.graph.unavailable"
@@ -299,50 +296,84 @@ class RetrievalService:
             name="graph", ids=[], unavailable=True, skipped="graph_not_implemented"
         )
 
-    def recent_route(self, query: str, limit: int) -> RouteOutcome:
-        unfiltered = self._recent_rank(limit, filtered=False)
-        filtered = self._recent_rank(limit, filtered=True)
-        return RouteOutcome(
-            name="recent",
-            ids=filtered,
-            raw_ids=filtered,
-            near_misses=self._near_misses(unfiltered, filtered),
-        )
-
     def vector_route(self, query: str, limit: int) -> RouteOutcome:
-        """R1 向量：内存矩阵暴力点积（只回 id + 距离）。
+        """R1 向量：原始 top-K（**含 hidden**，不预先 mask）。
 
-        ``EmbeddingModelMismatch`` 向上抛（配置事故 → 409）；其他异常由 search()
-        捕获并降级（跳过本路、其余路照常、计数进 /health）。
+        - ``EmbeddingModelMismatch`` 向上抛（配置事故 → 409）。
+        - 其他异常计数并向上抛，由 search() 降级；连续 3 次失败熔断 5 分钟。
         """
         if self.embedding_provider is None:
             return RouteOutcome(
                 name="vector", unavailable=True, skipped="embedding_provider_missing"
             )
+        with self._vector_lock:
+            if time.monotonic() < self._vector_open_until:
+                return RouteOutcome(
+                    name="vector", unavailable=True, skipped="circuit_open"
+                )
         check_fingerprint(self.db, self.embedding_provider, self.cfg.embedding_dim_int)
-        ids, matrix = self.index.load(self.db)
+        dim = self.cfg.embedding_dim_int
+        ids, matrix, gseqs = self.index.load(
+            self.db, model_id=self.embedding_provider.model_id, dim=dim
+        )
         if not ids or matrix.size == 0:
             return RouteOutcome(name="vector", skipped="empty_embedding_index")
-        query_vectors = self.embedding_provider.embed([textnorm.normalize(query)])
+        try:
+            query_vectors = self.embedding_provider.embed([textnorm.normalize(query)])
+        except Exception as exc:
+            self._record_vector_failure(exc)
+            raise
         if not query_vectors:
-            raise RuntimeError("embedding provider 返回空结果")
+            exc = RuntimeError("embedding provider 返回空结果")
+            self._record_vector_failure(exc)
+            raise exc
         query_vector = normalize_vector(query_vectors[0])
         if query_vector.shape[0] != matrix.shape[1]:
             raise EmbeddingModelMismatch(
                 f"查询向量维度 {query_vector.shape[0]} 与库内矩阵维度 "
                 f"{matrix.shape[1]} 不符；请 POST /admin/rebuild"
             )
+        self._record_vector_success()
         sims = matrix @ query_vector
-        order = np.argsort(-sims, kind="stable")
-        voided = voided_mod.voided_id_set(self.db.read_conn)
-        unfiltered = [ids[i] for i in order[: int(limit)]]
-        filtered = [ids[i] for i in order if ids[i] not in voided][: int(limit)]
+        # 确定性排序：相似度降序 → gseq DESC
+        order = sorted(
+            range(len(ids)), key=lambda i: (-float(sims[i]), -int(gseqs[i]))
+        )
+        raw = [ids[i] for i in order[: int(limit)]]
         return RouteOutcome(
             name="vector",
-            ids=filtered,
-            raw_ids=filtered,
-            near_misses=self._near_misses(unfiltered, filtered),
+            raw_ids=raw,
+            token_count=len(textnorm.query_tokens(query)[0]),
         )
+
+    def _record_vector_failure(self, exc: Exception) -> None:
+        with self._vector_lock:
+            self._vector_failures += 1
+            self._vector_last_error = f"{type(exc).__name__}: {exc}"
+            if self._vector_failures >= R1_CIRCUIT_FAILURES:
+                self._vector_open_until = time.monotonic() + R1_CIRCUIT_SECONDS
+                logger.error(
+                    "vector 路连续失败 %d 次，熔断 %.0fs：%s",
+                    self._vector_failures,
+                    R1_CIRCUIT_SECONDS,
+                    self._vector_last_error,
+                )
+        self.stats.record_vector_degraded(self._vector_last_error or str(exc))
+
+    def _record_vector_success(self) -> None:
+        with self._vector_lock:
+            self._vector_failures = 0
+            self._vector_last_error = None
+
+    def vector_state(self) -> dict:
+        with self._vector_lock:
+            open_until = self._vector_open_until
+            return {
+                "circuit_open": time.monotonic() < open_until,
+                "consecutive_failures": self._vector_failures,
+                "open_seconds_remaining": max(0.0, open_until - time.monotonic()),
+                "last_error": self._vector_last_error,
+            }
 
     # ------------------------------------------------------------------ 主流程
     def search(
@@ -351,8 +382,10 @@ class RetrievalService:
         *,
         session_id: str | None = None,
         limit: int | None = None,
+        include_superseded: bool = False,
     ) -> dict:
         started = time.perf_counter()
+        query_id = uuid.uuid4().hex
         timings: dict[str, float] = {}
         norm_query = textnorm.normalize(query or "")
         if not norm_query:
@@ -361,6 +394,23 @@ class RetrievalService:
         if limit is not None:
             final_k = max(1, min(final_k, int(limit)))
         route_limit = int(self.cfg.route_top_k)
+
+        tokens, token_truncated = textnorm.query_tokens(norm_query)
+        snapshot = voided_mod.hidden_snapshot(self.db.read_conn)
+        hidden_matched_ids: set[str] = set()
+
+        if not tokens:
+            return self._no_match_response(
+                query,
+                session_id,
+                query_id,
+                started,
+                outcomes=[],
+                token_count=0,
+                token_truncated=0,
+                hidden_size=len(snapshot.hidden),
+                reason="tokens=0（查询只含标点/空白等不产 token 的字符）",
+            )
 
         outcomes: list[RouteOutcome] = []
         for name in self.routes:
@@ -380,9 +430,6 @@ class RetrievalService:
                 raise
             except Exception as exc:  # 向量路故障降级：不 500、不静默空结果
                 logger.exception("%s 路线失败，本次跳过（其余路照常）", name)
-                self.stats.record_vector_degraded(
-                    f"{name}: {type(exc).__name__}: {exc}"
-                )
                 outcome = RouteOutcome(
                     name=name, ids=[], error=f"{type(exc).__name__}: {exc}"
                 )
@@ -392,184 +439,522 @@ class RetrievalService:
                 )
             outcomes.append(outcome)
 
-        # 每路先去重再截断（同一 id 在一路内重复不重复计分）
+        # ---- 路内替换（RRF 之前） -------------------------------------------
+        repl_started = time.perf_counter()
+        all_raw = [mid for o in outcomes for mid in o.raw_ids]
+        head_ids: set[str] = set()
+        cycle_map: dict[str, str] = {}
+        if not include_superseded:
+            for outcome in outcomes:
+                for mid in outcome.raw_ids:
+                    if mid in snapshot.hidden:
+                        head_ids.update(snapshot.heads.get(mid, ()))
+        # 环整体只算一票：每个连通分量选 gseq 最新的成员作代表（其余成员稍后展开）
+        cycle_members = [mid for comp in snapshot.cycle_components for mid in comp]
+        gseq_map = self._gseq_map(all_raw + list(head_ids) + cycle_members)
+        for comp in snapshot.cycle_components:
+            representative = max(comp, key=lambda mid: gseq_map.get(mid, 0))
+            for member in comp:
+                cycle_map[member] = representative
         for outcome in outcomes:
-            deduped = _dedupe(outcome.ids)
-            outcome.deduped_count = len(deduped)
-            outcome.truncated_count = max(0, len(deduped) - route_limit)
-            outcome.ids = deduped[:route_limit]
-
-        distinct_before_fallback = {mid for outcome in outcomes for mid in outcome.ids}
-        recent_fallback = False
-        if len(distinct_before_fallback) < final_k:
-            recent_started = time.perf_counter()
-            recent = self.recent_route(norm_query, RECENT_FALLBACK_LIMIT)
-            recent.deduped_count = len(_dedupe(recent.ids))
-            recent.truncated_count = max(0, recent.deduped_count - RECENT_FALLBACK_LIMIT)
-            recent.ids = _dedupe(recent.ids)[:RECENT_FALLBACK_LIMIT]
-            timings["route_recent"] = round(
-                (time.perf_counter() - recent_started) * 1000, 3
-            )
-            outcomes.append(recent)
-            recent_fallback = True
-            logger.info(
-                "R6 最近 50 兜底触发：去重后 %d 条 < FINAL_K=%d",
-                len(distinct_before_fallback),
-                final_k,
-            )
+            if include_superseded:
+                outcome.ids = _dedupe(outcome.raw_ids)[:route_limit]
+                outcome.ranks = list(range(1, len(outcome.ids) + 1))
+            else:
+                outcome.ids, outcome.ranks, outcome.hidden_hits = (
+                    _apply_route_replacement(
+                        outcome.raw_ids,
+                        snapshot.hidden,
+                        snapshot.heads,
+                        gseq_map,
+                        route_limit,
+                        cycle_map,
+                    )
+                )
+                for hidden_id, _head in outcome.hidden_hits:
+                    hidden_matched_ids.add(hidden_id)
+        timings["replacement"] = round(
+            (time.perf_counter() - repl_started) * 1000, 3
+        )
+        if not include_superseded:
+            self.stats.record_query(outcomes)
+        else:
+            # admin 查询不计入模型路径统计
+            pass
 
         # ---- RRF：score(d) = Σ 1/(k + rank_i) --------------------------------
         fuse_started = time.perf_counter()
-        route_lists = [(o.name, o.ids) for o in outcomes if o.ids]
-        scores, _ranks = _rrf_scores(route_lists, int(self.cfg.rrf_k))
-        candidate_ids = list(scores)
-        details = self._load_details(candidate_ids)
-        order = _rank_candidates(scores, details)
+        route_lists = [
+            (o.name, o.ids, o.ranks) for o in outcomes if o.ids
+        ]
+        scores, ranks = _rrf_scores(route_lists, int(self.cfg.rrf_k))
+        details = self._load_details(list(scores))
+        order = _rank_candidates(scores, gseq_map, details)
         fused_count = len(order)
         timings["fusion"] = round((time.perf_counter() - fuse_started) * 1000, 3)
 
-        # ---- MMR（默认关；开启时在融合池上迭代选样） --------------------------
-        mmr_degraded = False
-        if self.cfg.mmr_enabled and order:
-            order, mmr_degraded = self._apply_mmr(order, scores, final_k)
         selected = order[:final_k]
+        cycle_tails: dict[str, str] = {}
+        if not include_superseded:
+            selected, cycle_tails = self._expand_cycles(
+                selected, snapshot, gseq_map, details, scores, ranks, final_k
+            )
 
-        # ---- 作废剔除（防御性闸门） + R5 纠正后补 ----------------------------
-        voided_set = voided_mod.voided_id_set(self.db.read_conn)
-        dropped_scored = [mid for mid in selected if mid in voided_set]
-        selected = [mid for mid in selected if mid not in voided_set]
-        correction = self._correction_supplement(
-            outcomes, dropped_scored, selected, voided_set, final_k=final_k
-        )
-        scored_selected = list(selected)
-        all_ids = scored_selected + correction["ids"]
-
-        # ---- 会话邻域展开 ----------------------------------------------------
+        # ---- 会话展开（默认关；只能占用 FINAL_K 名额内） --------------------
         expand_started = time.perf_counter()
-        expansion = self._expand(
-            scored_selected,
-            details,
-            voided_set,
-            max_items=int(self.cfg.expand_max_items),
-            max_chars=int(self.cfg.expand_max_chars),
-            already=all_ids,
+        expansion = {"ids": [], "parents": {}, "details": {}, "truncated": 0}
+        if self.cfg.expand_enabled and len(selected) < final_k:
+            expansion = self._expand(
+                selected,
+                details,
+                snapshot,
+                gseq_map,
+                already=selected,
+                final_k=final_k,
+            )
+            details = {**details, **expansion["details"]}
+        timings["expansion"] = round(
+            (time.perf_counter() - expand_started) * 1000, 3
         )
-        timings["expansion"] = round((time.perf_counter() - expand_started) * 1000, 3)
+        if expansion["ids"]:
+            selected = selected + expansion["ids"]
+            # 展开项继承父项名次（不重新打分）：score 用父项 RRF 分，但不再算 via 票
+            for mid, parent in expansion["parents"].items():
+                scores[mid] = scores.get(parent, 0.0)
 
-        # ---- 组装输出（截断自报 + 总量上限） ---------------------------------
-        output_ids = all_ids + expansion["ids"]
-        details = {**details, **expansion["details"]}
-        chars = 0
-        items: list[dict] = []
-        truncated_items = 0
-        for position, mid in enumerate(output_ids):
-            detail = details.get(mid)
-            if detail is None:
-                continue
-            raw_content = detail["content"]
-            content = truncate_for_output(raw_content, mid)
-            if chars + len(content) > int(self.cfg.expand_max_chars):
-                truncated_items += len(output_ids) - position
-                break
-            chars += len(content)
-            item = {
-                "id": mid,
-                "content": content,
-                "content_truncated": len(raw_content) > TRUNCATE_LIMIT,
-                "recorded_at": detail["recorded_at"],
-                "session_id": detail["session_id"],
-                "seq": detail["seq"],
-                "score": round(scores[mid], 9) if mid in scores else None,
-                "routes": _sources_for(mid, route_lists),
-                "expanded": mid in expansion["parents"],
-                "expanded_from": expansion["parents"].get(mid),
-                "inherited_rank": None,
+        # ---- 出口断言：输出 ∩ hidden ⊆ 豁免集（admin 显式请求） --------------
+        if not include_superseded:
+            leaked = [mid for mid in selected if mid in snapshot.hidden]
+            if leaked:
+                self.stats.record_exit_drop(len(leaked))
+                logger.error(
+                    "检索出口断言失败：query_id=%s query=%r hidden 泄漏 %s",
+                    query_id,
+                    norm_query,
+                    leaked,
+                )
+                selected = [mid for mid in selected if mid not in snapshot.hidden]
+
+        # ---- 组装契约输出（score / createdAt / tags / 字符预算） --------------
+        if include_superseded:
+            # admin 显式请求：输出里的 hidden 成员也计入 N（且豁免出口断言）
+            hidden_matched_ids.update(mid for mid in selected if mid in snapshot.hidden)
+        hidden_count = len(hidden_matched_ids)
+        replaced_by: dict[str, list[tuple[str, str]]] = defaultdict(list)
+        for outcome in outcomes:
+            for hidden_id, head in outcome.hidden_hits:
+                replaced_by[head].append((hidden_id, outcome.name))
+        hidden_notice = (
+            f"〔另有 {hidden_count} 条相关记录已被纠正，未显示〕"
+            if hidden_count and not include_superseded
+            else None
+        )
+        items, truncated_items, chars = self._build_items(
+            selected,
+            details,
+            scores,
+            ranks,
+            gseq_map,
+            replaced_by,
+            expansion,
+            hidden_count,
+            hidden_notice,
+            snapshot,
+            cycle_tails,
+            hidden_visible=include_superseded,
+            vector_unavailable=any(
+                o.name == "vector" and (o.error or o.unavailable or o.skipped)
+                for o in outcomes
+            ),
+        )
+
+        if truncated_items:
+            notice = f"〔另有 {truncated_items} 条因字符预算未显示〕"
+            items = _append_tail_line(items, notice, self.cfg.total_max_chars)
+            chars = sum(len(item["content"]) for item in items)
+
+        if not items:
+            hint = self._route_hint(
+                outcomes, tokens, hidden_count, token_truncated
+            )
+            self.stats.record_no_match()
+            response = self._base_response(
+                query, session_id, query_id, started, outcomes, final_k
+            )
+            response.update(
+                {
+                    "count": 0,
+                    "items": [],
+                    "hint": hint,
+                    "hidden": {
+                        "size": len(snapshot.hidden),
+                        "matched": hidden_count,
+                    },
+                    "token_count": len(tokens),
+                    "token_truncated": token_truncated,
+                }
+            )
+            logger.info(
+                "search no_match %s",
+                json.dumps(
+                    {"query_id": query_id, "query_len": len(norm_query), "hint": hint},
+                    ensure_ascii=False,
+                ),
+            )
+            return response
+
+        response = self._base_response(
+            query, session_id, query_id, started, outcomes, final_k
+        )
+        response.update(
+            {
+                "count": len(items),
+                "items": items,
+                "hint": None,
+                "hidden": {"size": len(snapshot.hidden), "matched": hidden_count},
+                "token_count": len(tokens),
+                "token_truncated": token_truncated,
+                "output": {
+                    "max_items": final_k,
+                    "max_chars": int(self.cfg.total_max_chars),
+                    "item_max_chars": int(self.cfg.item_max_chars),
+                    "chars": chars,
+                    "truncated_items": truncated_items,
+                },
             }
-            if mid in correction["meta"]:
-                item["routes"] = ["correction"]
-                item["score"] = None  # 纠正者不参与 RRF 打分（§3.5）
-                item["inherited_rank"] = correction["meta"][mid]["inherited_rank"]
-                item["inherited_from"] = correction["meta"][mid]["inherited_from"]
-            items.append(item)
-        if len(items) > int(self.cfg.expand_max_items):
-            truncated_items += len(items) - int(self.cfg.expand_max_items)
-            items = items[: int(self.cfg.expand_max_items)]
-
+        )
         timings["total"] = round((time.perf_counter() - started) * 1000, 3)
-        self.stats.record_query(outcomes)
+        logger.info(
+            "search %s",
+            json.dumps(
+                {
+                    "event": "search",
+                    "query_id": query_id,
+                    "query_len": len(norm_query),
+                    "routes_enabled": list(self.routes),
+                    "route_raw": {o.name: o.raw_count for o in outcomes},
+                    "route_kept": {o.name: len(o.ids) for o in outcomes},
+                    "hidden_matched": hidden_count,
+                    "fused": fused_count,
+                    "final": len(items),
+                    "include_superseded": include_superseded,
+                    "elapsed_ms": timings,
+                },
+                ensure_ascii=False,
+            ),
+        )
+        return response
 
-        phrase_fallback = any(outcome.fallback for outcome in outcomes)
-        record = {
-            "event": "search",
-            "query_len": len(norm_query),
-            "routes_enabled": list(self.routes),
-            "route_raw": {o.name: o.raw_count for o in outcomes},
-            "route_dedup": {o.name: o.deduped_count for o in outcomes},
-            "route_truncated": {o.name: o.truncated_count for o in outcomes},
-            "route_empty": {o.name: not o.ids for o in outcomes},
-            "route_errors": {o.name: o.error for o in outcomes if o.error},
-            "recent_fallback": recent_fallback,
-            "phrase_to_or_fallback": phrase_fallback,
-            "fused": fused_count,
-            "selected": len(scored_selected),
-            "voided_dropped": len(dropped_scored),
-            "correction_candidates": correction["candidates"],
-            "correction_supplemented": len(correction["ids"]),
-            "correction_chain_dropped": correction["chain_dropped"],
-            "expanded": len(expansion["ids"]),
-            "expansion_truncated": expansion["truncated"],
-            "final": len(items),
-            "mmr": bool(self.cfg.mmr_enabled),
-            "mmr_degraded": mmr_degraded,
-            "degraded": self.degrade["degraded"],
-            "elapsed_ms": timings,
-        }
-        logger.info("search %s", json.dumps(record, ensure_ascii=False))
-
+    # ------------------------------------------------------------------ 组装
+    def _base_response(
+        self,
+        query: str,
+        session_id: str | None,
+        query_id: str,
+        started: float,
+        outcomes: list[RouteOutcome],
+        final_k: int,
+    ) -> dict:
         return {
             "query": query,
+            "query_id": query_id,
             "session_id": session_id,
-            "count": len(items),
-            "items": items,
+            "count": 0,
+            "items": [],
             "limit": final_k,
             "routes": {
                 o.name: {
                     "raw": o.raw_count,
+                    "kept": len(o.ids),
                     "skipped": o.skipped,
                     "error": o.error,
                     "unavailable": o.unavailable,
+                    "tokens": o.token_count,
+                    "hidden_replaced": len(o.hidden_hits),
                 }
                 for o in outcomes
             },
-            "fallback": {"recent": recent_fallback, "phrase_to_or": phrase_fallback},
-            "correction": {
-                "candidates": correction["candidates"],
-                "supplemented": len(correction["ids"]),
-                "chain_dropped": correction["chain_dropped"],
-            },
-            "expansion": {
-                "items": len(expansion["ids"]),
-                "truncated": expansion["truncated"],
-            },
-            "output": {
-                "max_items": int(self.cfg.expand_max_items),
-                "max_chars": int(self.cfg.expand_max_chars),
-                "truncated": bool(truncated_items),
-                "truncated_items": truncated_items,
-                "chars": chars,
-            },
             "degraded": self.degrade,
-            "elapsed_ms": timings,
+            "elapsed_ms": {"total": round((time.perf_counter() - started) * 1000, 3)},
         }
 
-    # ------------------------------------------------------------------ 内部
+    def _build_items(
+        self,
+        selected: list[str],
+        details: dict[str, dict],
+        scores: dict[str, float],
+        ranks: dict[str, dict[str, int]],
+        gseq_map: dict[str, int],
+        replaced_by: dict[str, list[tuple[str, str]]],
+        expansion: dict,
+        hidden_count: int,
+        hidden_notice: str | None,
+        snapshot: voided_mod.HiddenSnapshot,
+        cycle_tails: dict[str, str],
+        *,
+        hidden_visible: bool,
+        vector_unavailable: bool,
+    ) -> tuple[list[dict], int, int]:
+        final_k = int(self.cfg.final_k)
+        item_max = int(self.cfg.item_max_chars)
+        total_max = int(self.cfg.total_max_chars)
+        expanded_set = set(expansion["ids"])
+        parent_rank = {
+            parent: rank
+            for rank, parent in enumerate(
+                [mid for mid in selected if mid not in expanded_set], 1
+            )
+        }
+        items: list[dict] = []
+        chars = 0
+        truncated_items = 0
+        for position, mid in enumerate(selected):
+            detail = details.get(mid)
+            if detail is None:
+                continue
+            content = truncate_item(detail["content"], mid, item_max)
+            tags: list[str] = []
+            route_names = sorted(ranks.get(mid, {}))
+            for name in route_names:
+                tags.append(f"via:{name}")
+            origins = replaced_by.get(mid, [])
+            if origins:
+                # 一个存活纠正者可继承多个被作废项的名次；tag 上限内全部标出
+                for hidden_id, _route in origins:
+                    tags.append(f"superseded-by:{hidden_id}")
+            if mid in expanded_set:
+                tags.append("expanded")
+            if mid in snapshot.cycle_members:
+                tags.append("cycle")  # 循环裁决：不可达存活节点，不 hidden
+            if mid in snapshot.overlong_chain:
+                tags.append("chain-too-long")  # 20 跳触顶：不丢弃，显式标注
+            best_rank = min(ranks.get(mid, {}).values()) if ranks.get(mid) else None
+            if mid not in expanded_set and (
+                best_rank is None or best_rank > int(self.cfg.weak_best_rank)
+            ):
+                tags.append("weak")
+            if position == 0:
+                if hidden_count and not hidden_visible:
+                    tags.append(f"hidden:{hidden_count}")
+                if vector_unavailable:
+                    tags.append("vector-unavailable")
+            tags = _normalize_tags(tags)
+            if position == 0 and hidden_notice and not hidden_visible:
+                content = _ensure_tail(content, hidden_notice, item_max)
+            if mid in cycle_tails:
+                content = _ensure_tail(content, cycle_tails[mid], item_max)
+            parent = expansion["parents"].get(mid)
+            item = {
+                "id": mid,
+                "content": content,
+                "createdAt": iso_utc(detail["recorded_at"]),
+                "recorded_at": int(detail["recorded_at"]),
+                "score": round(float(scores.get(mid, 0.0)), 12),
+                "tags": tags,
+                "routes": route_names,
+                "content_truncated": len(detail["content"]) > len(content),
+                "session_id": detail["session_id"],
+                "seq": int(detail["seq"]),
+                "expanded": mid in expanded_set,
+                "expanded_from": parent,
+                "inherited_rank": parent_rank.get(parent) if parent else None,
+            }
+            if chars + len(content) > total_max:
+                truncated_items = len(selected) - position
+                break
+            chars += len(content)
+            items.append(item)
+            if len(items) >= final_k:
+                truncated_items = max(0, len(selected) - position - 1)
+                break
+        return items, truncated_items, chars
+
+    def _expand_cycles(
+        self,
+        selected: list[str],
+        snapshot: voided_mod.HiddenSnapshot,
+        gseq_map: dict[str, int],
+        details: dict[str, dict],
+        scores: dict[str, float],
+        ranks: dict[str, dict[str, int]],
+        final_k: int,
+    ) -> tuple[list[str], dict[str, str]]:
+        """历史环：环整体只算一票；正文最多展示 3 个最新成员，其余列 id 清单。
+
+        - 代表（gseq 最新）在路内替换阶段占住票；这里把代表展开成最多 3 个成员。
+        - 同一环的成员共享代表的名次 / RRF 分（不再重复计票）。
+        - 超出 3 个或被 FINAL_K 挤出的成员，id 清单拼进最后一个已展示成员的尾行。
+        """
+        comp_of: dict[str, list[str]] = {}
+        for comp in snapshot.cycle_components:
+            for member in comp:
+                comp_of[member] = comp
+        if not comp_of:
+            return selected, {}
+        expanded: list[str] = []
+        handled: set[tuple[str, ...]] = set()
+        tails: dict[str, str] = {}
+        for mid in selected:
+            comp = comp_of.get(mid)
+            key = tuple(comp) if comp is not None else ()
+            if comp is None or key in handled:
+                expanded.append(mid)
+                continue
+            handled.add(key)
+            members = sorted(comp, key=lambda m: -gseq_map.get(m, 0))
+            room = max(0, final_k - len(expanded))
+            take = members[: min(3, room)]
+            for member in take:
+                if member not in details:
+                    details.update(self._load_details([member]))
+                # 共享代表的名次与分数：环整体只算一票
+                scores[member] = scores.get(mid, 0.0)
+                ranks[member] = dict(ranks.get(mid, {}))
+                expanded.append(member)
+            omitted = [m for m in members if m not in take]
+            if omitted and take:
+                tails[take[-1]] = "〔循环裁决：同一环内其他成员 " + "、".join(omitted) + "〕"
+        return expanded[:final_k], tails
+
+    def _no_match_response(
+        self,
+        query: str,
+        session_id: str | None,
+        query_id: str,
+        started: float,
+        *,
+        outcomes: list[RouteOutcome],
+        token_count: int,
+        token_truncated: int,
+        hidden_size: int,
+        reason: str,
+    ) -> dict:
+        self.stats.record_no_match()
+        hint = self._route_hint(
+            outcomes, [""] * token_count, 0, token_truncated, reason=reason
+        )
+        response = self._base_response(
+            query, session_id, query_id, started, outcomes, int(self.cfg.final_k)
+        )
+        response.update(
+            {
+                "count": 0,
+                "items": [],
+                "hint": hint,
+                "hidden": {"size": hidden_size, "matched": 0},
+                "token_count": token_count,
+                "token_truncated": token_truncated,
+            }
+        )
+        logger.info(
+            "search no_match %s",
+            json.dumps({"query_id": query_id, "hint": hint}, ensure_ascii=False),
+        )
+        return response
+
+    def _route_hint(
+        self,
+        outcomes: list[RouteOutcome],
+        tokens: list[str],
+        hidden_count: int,
+        token_truncated: int,
+        *,
+        reason: str | None = None,
+    ) -> str:
+        """空结果 hint：必须以 NO_MATCH 开头 + 参与/降级路 + token 数。"""
+        statuses: list[str] = []
+        for outcome in outcomes:
+            if outcome.error:
+                statuses.append(f"{outcome.name}(error:{outcome.error})")
+            elif outcome.unavailable:
+                statuses.append(f"{outcome.name}(unavailable:{outcome.skipped})")
+            elif outcome.skipped:
+                statuses.append(f"{outcome.name}(skipped:{outcome.skipped})")
+            else:
+                statuses.append(f"{outcome.name}(ok)")
+        routes = "+".join(statuses) if statuses else "none"
+        parts = [
+            "NO_MATCH",
+            f"routes={routes}",
+            f"tokens={len(tokens)}" + (f"(+{token_truncated} 截断)" if token_truncated else ""),
+            f"hidden={hidden_count}",
+        ]
+        if self.degrade.get("degraded"):
+            parts.append(f"degraded={self.degrade.get('reason')}")
+        if reason:
+            parts.append(f"reason={reason}")
+        return "｜".join(parts)
+
+    # ------------------------------------------------------------------ 会话展开
+    def _expand(
+        self,
+        parents: list[str],
+        details: dict[str, dict],
+        snapshot: voided_mod.HiddenSnapshot,
+        gseq_map: dict[str, int],
+        *,
+        already: list[str],
+        final_k: int,
+    ) -> dict:
+        """同 session ±expand_window 条；过替换语义、继承父项名次、不占额外名额。"""
+        seen = set(already)
+        window = int(self.cfg.expand_window)
+        candidates: list[tuple[int, str, str]] = []  # (父名次, id, 父 id)
+        for rank, parent in enumerate(parents, 1):
+            detail = details.get(parent)
+            if detail is None:
+                continue
+            rows = self.db.read_conn.execute(
+                "SELECT id, gseq FROM memories WHERE session_id=? AND seq BETWEEN ? AND ? "
+                "AND id != ? ORDER BY gseq DESC",
+                (
+                    detail["session_id"],
+                    int(detail["seq"]) - window,
+                    int(detail["seq"]) + window,
+                    parent,
+                ),
+            ).fetchall()
+            for row in rows:
+                mid = row["id"]
+                if mid in snapshot.hidden:
+                    for head in snapshot.heads.get(mid, ()):
+                        if head not in seen:
+                            seen.add(head)
+                            candidates.append((rank, head, parent))
+                elif mid not in seen:
+                    seen.add(mid)
+                    candidates.append((rank, mid, parent))
+        candidates.sort(key=lambda item: (item[0], -gseq_map.get(item[1], 0)))
+        ids: list[str] = []
+        parents_map: dict[str, str] = {}
+        details_for_output: dict[str, dict] = {}
+        truncated = 0
+        remaining = max(0, final_k - len(already))
+        for rank, mid, parent in candidates:
+            if len(ids) >= remaining:
+                truncated += 1
+                continue
+            detail = details.get(mid) or self._load_details([mid]).get(mid)
+            if detail is None:
+                continue
+            ids.append(mid)
+            parents_map[mid] = parent
+            details_for_output[mid] = detail
+        return {
+            "ids": ids,
+            "parents": parents_map,
+            "details": details_for_output,
+            "truncated": truncated,
+        }
+
+    # ------------------------------------------------------------------ 详情
     def _load_details(self, ids: list[str]) -> dict[str, dict]:
         if not ids:
             return {}
         unique = list(dict.fromkeys(ids))
         placeholders = ",".join("?" * len(unique))
         rows = self.db.read_conn.execute(
-            "SELECT id, content, recorded_at, session_id, seq FROM memories "
+            "SELECT id, content, recorded_at, session_id, seq, gseq FROM memories "
             f"WHERE id IN ({placeholders})",
             unique,
         ).fetchall()
@@ -577,187 +962,38 @@ class RetrievalService:
             row["id"]: {
                 "id": row["id"],
                 "content": row["content"],
-                "recorded_at": row["recorded_at"],
+                "recorded_at": int(row["recorded_at"]),
                 "session_id": row["session_id"],
-                "seq": row["seq"],
+                "seq": int(row["seq"]),
+                "gseq": int(row["gseq"]),
             }
             for row in rows
         }
 
-    def _apply_mmr(
-        self, order: list[str], scores: dict[str, float], final_k: int
-    ) -> tuple[list[str], bool]:
-        """MMR：RRF 分先 min-max 归一化，用同一份归一化 embedding 的余弦做多样性。"""
-        lm = float(self.cfg.mmr_lambda)
-        pool = order[:MMR_POOL]
-        if not pool:
-            return order, False
-        values = [scores[mid] for mid in pool]
-        lo, hi = min(values), max(values)
-        relevance = {
-            mid: ((scores[mid] - lo) / (hi - lo) if hi > lo else 1.0 / (idx + 1))
-            for idx, mid in enumerate(pool)
-        }
-        vectors: dict[str, np.ndarray] = {}
-        try:
-            ids, matrix = self.index.load(self.db)
-            position = {mid: i for i, mid in enumerate(ids)}
-            for mid in pool:
-                idx = position.get(mid)
-                if idx is not None:
-                    vectors[mid] = matrix[idx]
-        except Exception:  # 向量不可用：MMR 退化为 λ*相关度（仍确定性），并标记
-            logger.exception("MMR 载入向量失败，退化处理")
-        degraded = len(vectors) < len(pool)
-        selected: list[str] = []
-        rest = list(pool)
-        while rest and len(selected) < min(len(pool), final_k):
-            best: str | None = None
-            best_value: float | None = None
-            for mid in rest:
-                divergence = 0.0
-                if vectors and mid in vectors:
-                    similarities = [
-                        float(np.dot(vectors[mid], vectors[other]))
-                        for other in selected
-                        if other in vectors
-                    ]
-                    divergence = max(similarities, default=0.0)
-                value = lm * relevance[mid] - (1.0 - lm) * divergence
-                if best_value is None or value > best_value + 1e-12:
-                    best, best_value = mid, value
-            if best is None:  # pragma: no cover - rest 非空时必选出
-                break
-            selected.append(best)
-            rest.remove(best)
-        return selected, degraded
+    # ------------------------------------------------------------------ canary
+    def run_canary(self) -> dict:
+        """金丝雀：抽单 CJK 段 ≥6 字的子串，对 bigram 路严格断言（不计统计）。"""
+        from .canary import run_canary
 
-    def _correction_supplement(
-        self,
-        outcomes: list[RouteOutcome],
-        dropped_scored: list[str],
-        selected: list[str],
-        voided_set: set[str],
-        *,
-        final_k: int,
-    ) -> dict:
-        """R5：对被作废而剔除的候选，沿 supersedes 拉纠正者继承名次。
-
-        可判定近似：某候选在任一路的「未过滤排名」≤ FINAL_K，视为「本会进入前 6」。
-        """
-        best_rank: dict[str, int] = {}
-        for outcome in outcomes:
-            for mid, rank in outcome.near_misses:
-                best_rank[mid] = min(best_rank.get(mid, 10**9), rank)
-        for mid in dropped_scored:
-            best_rank.setdefault(mid, final_k)
-        eligible = sorted(
-            ((rank, mid) for mid, rank in best_rank.items() if rank <= final_k),
-            key=lambda item: (item[0], item[1]),
+        report = run_canary(self, self.cfg)
+        self._canary_last = report
+        self._canary_history.append(report)
+        rates = [
+            report["failure_rate"],
+            *[
+                item["failure_rate"]
+                for item in list(self._canary_history)[:-1]
+            ],
+        ]
+        alert = len(rates) >= 2 and all(
+            r is not None and r >= float(self.cfg.canary_alert_rate)
+            for r in rates[:2]
         )
-        already = set(selected)
-        added: list[str] = []
-        meta: dict[str, dict] = {}
-        chain_dropped = 0
-        for rank, origin in eligible:
-            if origin in already:
-                continue
-            correctors, dropped = voided_mod.correction_chain(
-                self.db.read_conn, origin, max_hops=3, voided=voided_set
-            )
-            chain_dropped += dropped
-            for corrector in correctors:
-                if corrector in already:
-                    continue
-                already.add(corrector)
-                added.append(corrector)
-                meta[corrector] = {"inherited_rank": rank, "inherited_from": origin}
-            if not correctors and not dropped:
-                logger.info("纠正后补：被作废候选 %s 没有可用纠正者", origin)
-        if added:
-            logger.info(
-                "纠正后补：%d 个被作废候选 → 补入 %d 条（追链超限丢弃 %d 条）",
-                len(eligible),
-                len(added),
-                chain_dropped,
-            )
-        return {
-            "ids": added,
-            "meta": meta,
-            "candidates": len(eligible),
-            "chain_dropped": chain_dropped,
-        }
+        report["alert"] = bool(alert)
+        return report
 
-    def _expand(
-        self,
-        parents: list[str],
-        details: dict[str, dict],
-        voided_set: set[str],
-        *,
-        max_items: int,
-        max_chars: int,
-        already: list[str],
-    ) -> dict:
-        """会话邻域展开：同 session_id ±2 条，不占名额、继承父项名次、过作废过滤。"""
-        seen = set(already)
-        candidates: list[tuple[int, int, str, str]] = []  # (父项名次, recorded_at, id, 父 id)
-        for rank, parent in enumerate(parents, 1):
-            detail = details.get(parent)
-            if detail is None:
-                continue
-            rows = self.db.read_conn.execute(
-                voided_mod.VOIDED_CTE
-                + " SELECT m.id, m.recorded_at FROM memories m"
-                " WHERE m.session_id = ? AND m.seq BETWEEN ? AND ? AND m.seq != ?"
-                f" AND {voided_mod.NOT_VOIDED_SQL}"
-                " ORDER BY m.recorded_at DESC, m.id ASC",
-                (
-                    detail["session_id"],
-                    int(detail["seq"]) - EXPAND_WINDOW,
-                    int(detail["seq"]) + EXPAND_WINDOW,
-                    int(detail["seq"]),
-                ),
-            ).fetchall()
-            for row in rows:
-                mid = row["id"]
-                if mid in seen:
-                    continue
-                if mid in voided_set:  # 双保险：SQL 已过滤
-                    continue
-                seen.add(mid)
-                candidates.append((rank, int(row["recorded_at"]), mid, parent))
-        candidates.sort(key=lambda item: (item[0], -item[1], item[2]))
-        candidate_details = self._load_details([item[2] for item in candidates])
-        char_budget = sum(
-            len(truncate_for_output(details[mid]["content"], mid))
-            for mid in already
-            if mid in details
-        )
-        ids: list[str] = []
-        parent_map: dict[str, str] = {}
-        details_for_output: dict[str, dict] = {}
-        truncated = False
-        for _rank, _recorded_at, mid, parent in candidates:
-            if len(already) + len(ids) >= max_items:
-                truncated = True
-                break
-            detail = candidate_details.get(mid)
-            if detail is None:
-                continue
-            content_len = len(truncate_for_output(detail["content"], mid))
-            if char_budget + content_len > max_chars:
-                truncated = True
-                break
-            char_budget += content_len
-            ids.append(mid)
-            parent_map[mid] = parent
-            details_for_output[mid] = detail
-        return {
-            "ids": ids,
-            "parents": parent_map,
-            "details": details_for_output,
-            "truncated": truncated,
-        }
+    def canary_state(self) -> dict:
+        return self._canary_last or {"status": "not_run", "alert": False}
 
 
 # ---------------------------------------------------------------- 纯函数
@@ -772,35 +1008,118 @@ def _dedupe(ids: list[str]) -> list[str]:
     return out
 
 
+def _apply_route_replacement(
+    raw_ids: list[str],
+    hidden: set[str],
+    heads: dict[str, list[str]],
+    gseq_map: dict[str, int],
+    limit: int,
+    cycle_map: dict[str, str] | None = None,
+) -> tuple[list[str], list[int], list[tuple[str, str]]]:
+    """路内替换：hidden 命中 → live heads 占原始名次；同 id 取最佳名次。
+
+    - ``cycle_map``：历史环成员 → 代表（gseq 最新），环整体在路内只保留一票。
+    - 返回 (替换/去重后的 id 列表, 与 ids 平行的名次列表, [(被作废 id, head)])。
+      多个存活纠正者**并列继承** A 的同一个名次（不是各占一名）。
+    """
+    cycle_map = cycle_map or {}
+    entries: list[tuple[int, int, str]] = []  # (原始名次, gseq, id)
+    hidden_hits: list[tuple[str, str]] = []
+    for rank, mid in enumerate(raw_ids, 1):
+        if mid in hidden:
+            for head in heads.get(mid, ()):
+                entries.append((rank, int(gseq_map.get(head, 0)), head))
+                hidden_hits.append((mid, head))
+        elif mid in cycle_map:
+            rep = cycle_map[mid]
+            entries.append((rank, int(gseq_map.get(rep, 0)), rep))
+        else:
+            entries.append((rank, int(gseq_map.get(mid, 0)), mid))
+    # 名次 asc → gseq DESC（新者优先）
+    entries.sort(key=lambda item: (item[0], -item[1]))
+    seen: set[str] = set()
+    ids: list[str] = []
+    ranks: list[int] = []
+    for rank, _gseq, mid in entries:
+        if mid in seen:
+            continue
+        seen.add(mid)
+        ids.append(mid)
+        ranks.append(rank)
+        if len(ids) >= int(limit):
+            break
+    return ids, ranks, hidden_hits
+
+
 def _rrf_scores(
-    route_lists: list[tuple[str, list[str]]], k: int
+    route_lists,
+    k: int,
 ) -> tuple[dict[str, float], dict[str, dict[str, int]]]:
+    """RRF：每个 id 每路至多一票；route_lists 项可为 (name, ids) 或
+    (name, ids, ranks)，ranks 缺省按位置 1..n。"""
     scores: dict[str, float] = defaultdict(float)
     ranks: dict[str, dict[str, int]] = defaultdict(dict)
-    for name, ids in route_lists:
-        for rank, mid in enumerate(ids, 1):
+    for entry in route_lists:
+        name, ids = entry[0], entry[1]
+        rank_list = entry[2] if len(entry) > 2 else None
+        for position, mid in enumerate(ids):
+            rank = (
+                int(rank_list[position])
+                if rank_list is not None and position < len(rank_list)
+                else position + 1
+            )
             scores[mid] += 1.0 / (k + rank)
-            ranks[mid][name] = rank
+            ranks[mid][name] = min(ranks[mid].get(name, rank), rank)
     return dict(scores), dict(ranks)
 
 
 def _rank_candidates(
-    scores: dict[str, float], details: dict[str, dict]
+    scores: dict[str, float],
+    gseq_map: dict[str, int],
+    details: dict[str, dict],
 ) -> list[str]:
-    """固定 tie-break：RRF 分相同 → recorded_at 新者优先 → id 字典序（可复现）。"""
-    return sorted(
-        scores,
-        key=lambda mid: (
-            -scores[mid],
-            -(details[mid]["recorded_at"] if mid in details else 0),
-            mid,
-        ),
-    )
+    """固定 tie-break：RRF 分相同 → **gseq 大者优先**（新者优先）。"""
+
+    def gseq(mid: str) -> int:
+        if mid in gseq_map:
+            return gseq_map[mid]
+        detail = details.get(mid)
+        return int(detail["gseq"]) if detail else 0
+
+    return sorted(scores, key=lambda mid: (-scores[mid], -gseq(mid)))
 
 
-def _sources_for(memory_id: str, route_lists: list[tuple[str, list[str]]]) -> list[str]:
-    sources: list[str] = []
-    for name, ids in route_lists:
-        if memory_id in ids and name not in sources:
-            sources.append(name)
-    return sources
+def _normalize_tags(tags: list[str]) -> list[str]:
+    """状态 tag：不用逗号、去重保序、上限 8 个、每个 ≤300 字符。"""
+    out: list[str] = []
+    for tag in tags:
+        clean = str(tag).replace(",", ":").replace("，", ":")[:300]
+        if clean and clean not in out:
+            out.append(clean)
+    return out[:8]
+
+
+def _ensure_tail(content: str, notice: str, max_chars: int) -> str:
+    """把 notice 作为尾行拼进 content，仍保证总长 ≤max_chars。"""
+    tail = "\n" + notice
+    if len(content) + len(tail) <= max_chars:
+        return content + tail
+    keep = max(0, max_chars - len(tail))
+    return content[:keep] + tail
+
+
+def _append_tail_line(
+    items: list[dict], notice: str, total_max_chars: int
+) -> list[dict]:
+    if not items:
+        return items
+    first = items[0]
+    tail = "\n" + notice
+    content = first["content"]
+    if len(content) + len(tail) <= total_max_chars:
+        first["content"] = content + tail
+        return items
+    # 总预算已满：先压缩首条，再拼 notice
+    overflow = len(content) + len(tail) - total_max_chars
+    first["content"] = content[: max(0, len(content) - overflow)] + tail
+    return items

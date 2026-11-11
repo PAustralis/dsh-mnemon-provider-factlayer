@@ -196,3 +196,167 @@ def test_migrates_legacy_supersedes_table(tmp_path):
         )
     finally:
         database.close()
+
+
+# ---- v8 §6 gseq / 迁移 / VACUUM ----------------------------------------------
+
+LEGACY_MEMORIES_SQL = """
+CREATE TABLE memories (
+  id           TEXT PRIMARY KEY,
+  client_write_id TEXT NOT NULL UNIQUE,
+  content      TEXT NOT NULL,
+  recorded_at  INTEGER NOT NULL,
+  session_id   TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  event_time   TEXT,
+  event_time_precision TEXT CHECK (event_time_precision IN ('year','month','day','instant')),
+  source_client TEXT NOT NULL,
+  CHECK ((event_time IS NULL) = (event_time_precision IS NULL))
+);
+CREATE INDEX idx_memories_session ON memories(session_id, seq);
+CREATE INDEX idx_memories_time ON memories(recorded_at DESC);
+CREATE TRIGGER memories_no_update BEFORE UPDATE ON memories
+BEGIN SELECT RAISE(ABORT, 'memories is append-only: UPDATE forbidden'); END;
+CREATE TRIGGER memories_no_delete BEFORE DELETE ON memories
+BEGIN SELECT RAISE(ABORT, 'memories is append-only: DELETE forbidden'); END;
+CREATE VIRTUAL TABLE memories_fts USING fts5(
+  content, content='memories', content_rowid='rowid'
+);
+CREATE TRIGGER memories_fts_ai AFTER INSERT ON memories BEGIN
+  INSERT INTO memories_fts(rowid, content) VALUES (new.rowid, new.content);
+END;
+"""
+
+
+def test_memories_has_gseq_pk_and_id_unique(db):
+    cols = {
+        r["name"]: r
+        for r in db.read_conn.execute("PRAGMA table_info(memories)").fetchall()
+    }
+    assert cols["gseq"]["pk"] == 1
+    assert cols["gseq"]["type"] == "INTEGER"
+    assert cols["id"]["pk"] == 0
+    assert cols["id"]["notnull"] == 1
+    # id 仍是 UNIQUE
+    indexes = {
+        r["name"]: r
+        for r in db.read_conn.execute("PRAGMA index_list(memories)").fetchall()
+    }
+    assert any("memories_fts" not in name for name in indexes)
+
+
+def test_migrate_legacy_memories_fills_gseq_from_rowid(tmp_path):
+    from app.db import Database
+    from app.schema import init_db, migrate_memories_gseq
+
+    path = tmp_path / "legacy-memories.db"
+    raw = sqlite3.connect(path)
+    try:
+        raw.executescript(LEGACY_MEMORIES_SQL)
+        raw.executemany(
+            "INSERT INTO memories (id, client_write_id, content, recorded_at,"
+            " session_id, seq, source_client) VALUES (?,?,?,?,?,?,?)",
+            [
+                ("id-a", "cw-a", "first", 100, "s1", 0, "t"),
+                ("id-b", "cw-b", "second", 200, "s1", 1, "t"),
+                ("id-c", "cw-c", "third", 300, "s2", 0, "t"),
+            ],
+        )
+        raw.commit()
+    finally:
+        raw.close()
+
+    database = Database(str(path))
+    try:
+        assert migrate_memories_gseq(database) is True
+        init_db(database)
+        rows = database.read_conn.execute(
+            "SELECT gseq, id, seq FROM memories ORDER BY gseq"
+        ).fetchall()
+        assert [(r["gseq"], r["id"], r["seq"]) for r in rows] == [
+            (1, "id-a", 0),
+            (2, "id-b", 1),
+            (3, "id-c", 0),
+        ]
+        # seq 语义不变；id 仍是对外稳定标识
+        assert [r["seq"] for r in rows] == [0, 1, 0]
+        # FTS 已重建（external content rowid 稳定）
+        hit = database.read_conn.execute(
+            "SELECT COUNT(*) FROM memories_fts WHERE memories_fts MATCH 'second'"
+        ).fetchone()[0]
+        assert hit == 1
+        # 触发器与索引已重建
+        names = {
+            r[0]
+            for r in database.read_conn.execute(
+                "SELECT name FROM sqlite_master WHERE type IN ('trigger','index')"
+            )
+        }
+        assert {"memories_no_update", "memories_no_delete", "memories_fts_ai"} <= names
+        assert {"idx_memories_session", "idx_memories_time"} <= names
+        # sqlite_sequence 已推进到 max(gseq)，新写入从 4 开始
+        seq_value = database.read_conn.execute(
+            "SELECT seq FROM sqlite_sequence WHERE name='memories'"
+        ).fetchone()[0]
+        assert seq_value == 3
+        from app.write_path import create_memory
+
+        receipt = create_memory(
+            database,
+            client_write_id="cw-new",
+            content="fourth",
+            session_id="s1",
+            source_client="t",
+        )
+        assert receipt["seq"] == 2  # 会话内 seq 继续从 1 之后
+        gseq = database.read_conn.execute(
+            "SELECT gseq FROM memories WHERE id=?", (receipt["id"],)
+        ).fetchone()[0]
+        assert gseq == 4
+        # 迁移是幂等的
+        assert migrate_memories_gseq(database) is False
+    finally:
+        database.close()
+
+
+def test_vacuum_into_preserves_gseq(db, db_path, tmp_path):
+    from app.write_path import create_memory
+
+    ids = []
+    for i in range(5):
+        receipt = create_memory(
+            db,
+            client_write_id=f"cw-vac-{i}",
+            content=f"vacuum {i}",
+            session_id="sv",
+            source_client="t",
+        )
+        ids.append(receipt["id"])
+    before = [
+        (r["gseq"], r["id"])
+        for r in db.read_conn.execute("SELECT gseq, id FROM memories ORDER BY gseq")
+    ]
+    assert [g for g, _ in before] == [1, 2, 3, 4, 5]
+
+    dest = str(tmp_path / "vacuumed.db")
+    db.vacuum_into(dest)
+    conn = sqlite3.connect(dest)
+    try:
+        after = conn.execute("SELECT gseq, id FROM memories ORDER BY gseq").fetchall()
+        sequence = conn.execute(
+            "SELECT seq FROM sqlite_sequence WHERE name='memories'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    assert after == before
+    assert sequence == 5
+    assert [mid for _, mid in after] == ids
+
+
+def test_supersedes_pair_index_is_id_only(db):
+    row = db.read_conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='index' AND name='idx_supersedes_pair'"
+    ).fetchone()
+    sql = (row["sql"] or "").lower()
+    assert "id desc" in sql
+    assert "recorded_at" not in sql

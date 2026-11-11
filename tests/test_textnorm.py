@@ -1,4 +1,4 @@
-"""R2 文本构造：NFKC、零宽、单字+双字、标点/Latin/数字、查询构造器冻结。"""
+"""R2 文本构造（v8 §3）：NFKC、零宽、单混合列基线 bigrams、查询构造器冻结。"""
 
 from app import textnorm
 
@@ -14,70 +14,51 @@ def test_nfkc_fullwidth_to_halfwidth():
 def test_zero_width_chars_removed():
     raw = "喝\u200b茶\u200d\u2060\ufeff"
     assert textnorm.normalize(raw) == "喝茶"
-    assert textnorm.bigram_query_tokens(raw) == ["喝茶"]
+    assert textnorm.bigrams_of(raw) == ["喝茶"]
 
 
-def test_ngram_tokens_singles_and_bigrams_per_position():
-    assert textnorm.ngram_tokens("我爱北京") == [
-        "我",
-        "爱",
-        "北",
-        "京",
-        "我爱",
-        "爱北",
-        "北京",
-    ]
+def test_index_side_is_exactly_baseline_bigrams_of():
+    # CJK len>1 只产双字，不产单字；Latin 整段小写；全部同一列
+    assert textnorm.ngram_tokens("我爱北京") == ["我爱", "爱北", "北京"]
+    assert textnorm.ngram_text("我爱北京") == "我爱 爱北 北京"
 
 
-def test_single_char_cjk_segment():
+def test_single_char_cjk_segment_only_when_segment_len_is_one():
     assert textnorm.ngram_tokens("药") == ["药"]
-    assert textnorm.ngram_tokens("吃药") == ["吃", "药", "吃药"]
+    # “吃药”是 len==2 的 CJK 段 → 只产双字（不产单字）
+    assert textnorm.ngram_tokens("吃药") == ["吃药"]
 
 
 def test_latin_and_digit_runs_are_single_tokens():
-    assert textnorm.ngram_tokens("iPhone15 型号") == ["iphone15", "型", "号", "型号"]
-    assert textnorm.ngram_tokens("版本 v2.1.3") == [
-        "版",
-        "本",
-        "版本",
-        "v2.1.3",
-    ]
+    assert textnorm.ngram_tokens("iPhone15 型号") == ["iphone15", "型号"]
+    assert textnorm.ngram_tokens("版本 v2.1.3") == ["版本", "v2.1.3"]
 
 
 def test_punctuation_not_tokenized_and_blocks_crossing_bigrams():
     assert textnorm.segments("你好，世界！") == [("cjk", "你好"), ("cjk", "世界")]
-    # 不跨标点拼双字
-    assert textnorm.ngram_tokens("你好，世界") == [
-        "你",
-        "好",
-        "你好",
-        "世",
-        "界",
-        "世界",
-    ]
+    assert textnorm.ngram_tokens("你好，世界") == ["你好", "世界"]
 
 
 def test_query_builder_matches_frozen_baseline():
-    # recall_eval.py bigrams_of 的行为：CJK 段 ≥2 只取双字，Latin 小写
-    assert textnorm.bigram_query_tokens("吃药了吗") == ["吃药", "药了", "了吗"]
-    assert textnorm.bigram_query_tokens("药") == ["药"]
-    assert textnorm.bigram_query_tokens("iPhone15 型号") == ["iphone15", "型号"]
-    # 标点切段、不跨段拼双字
-    assert textnorm.bigram_query_tokens("你好，世界") == ["你好", "世界"]
+    # recall_eval.py bigrams_of：CJK 段 ≥2 只取双字，Latin 小写
+    assert textnorm.query_tokens("吃药了吗")[0] == ["吃药", "药了", "了吗"]
+    assert textnorm.query_tokens("药")[0] == ["药"]
+    assert textnorm.query_tokens("iPhone15 型号")[0] == ["iphone15", "型号"]
+    assert textnorm.query_tokens("你好，世界")[0] == ["你好", "世界"]
 
 
-def test_unigram_query_tokens():
-    assert textnorm.unigram_query_tokens("吃药了吗") == ["吃", "药", "了", "吗"]
-    assert textnorm.unigram_query_tokens("iPhone15 型号") == [
-        "iphone15",
-        "型",
-        "号",
-    ]
+def test_query_token_limit_200_and_truncation_count():
+    tokens = [f"t{i}" for i in range(250)]
+    uniq, truncated = textnorm.unique_tokens(tokens)
+    assert len(uniq) == 200
+    assert truncated == 50
+    assert textnorm.fts_match_expr(tokens) is not None
 
 
-def test_fts_match_expr_dedupes_and_strips_quotes():
-    assert textnorm.fts_match_expr(["a", "a", 'b"c', ""]) == '"a" OR "bc"'
+def test_fts_match_expr_escapes_quotes_and_never_builds_empty():
+    assert textnorm.fts_match_expr(["a", "a", 'b"c', ""]) == '"a" OR "b""c"'
     assert textnorm.fts_match_expr([]) is None
+    assert textnorm.fts_match_expr(["", " "]) is None
 
 
 def test_trigram_tokens():
@@ -95,30 +76,53 @@ def _seed_db(db, contents: list[str], session_id: str = "s1") -> list[str]:
     return ids
 
 
-def test_one_and_two_char_chinese_queries_hit(db):
+def test_two_char_and_longer_chinese_queries_hit(db):
     contents = ["明天去北京出差", "周末在家喝茶", "2026 年上半年我在上海"]
     ids = _seed_db(db, contents)
     service = make_service(db, routes=("bigram",))
 
-    for query in ("京", "北京", "出差"):
+    for query in ("北京", "出差", "北京出"):
         result = service.search(query)
         assert ids[0] in [item["id"] for item in result["items"]], query
 
-    one_char = service.search("茶")
-    assert ids[1] in [item["id"] for item in one_char["items"]]
+    assert ids[1] in [item["id"] for item in service.search("喝茶")["items"]]
+
+
+def test_one_char_query_cannot_hit_bigram_index(db):
+    """基线只在 CJK 段长度恰为 1 时产单字；「京」查不到「北京」的双字索引。"""
+    ids = _seed_db(db, ["明天去北京出差"])
+    result = make_service(db, routes=("bigram",)).search("京")
+    assert result["items"] == []
+    assert result["hint"].startswith("NO_MATCH")
+    assert ids[0] not in [item["id"] for item in result["items"]]
 
 
 def test_mixed_punctuation_latin_digits(db):
     ids = _seed_db(db, ["2026 年上半年我在上海，用 iPhone15 记录"])
     service = make_service(db, routes=("bigram",))
 
-    for query in ("上海", "iPhone15", "２０２６", "上半年，用"):
+    for query in ("上海", "iPhone15", "２０２６", "上半年"):
         hit = [i for i in service.search(query)["items"] if i["id"] == ids[0]]
         assert hit, query
 
 
 def test_zero_width_query_hits_clean_text(db):
     ids = _seed_db(db, ["我们周末一起去喝茶"])
-    service = make_service(db, routes=("bigram",))
-    result = service.search("喝\u200b茶")
+    result = make_service(db, routes=("bigram",)).search("喝\u200b茶")
+    assert ids[0] in [item["id"] for item in result["items"]]
+
+
+def test_punctuation_only_query_is_no_match_without_fts_error(db):
+    _seed_db(db, ["北京记录"])
+    result = make_service(db, routes=("bigram",)).search("，。！？")
+    assert result["items"] == []
+    assert result["hint"].startswith("NO_MATCH")
+    assert result["token_count"] == 0
+
+
+def test_fts_syntax_characters_do_not_raise_or_change_meaning(db):
+    ids = _seed_db(db, ["NEAR AND NOT 只是普通词"])
+    result = make_service(db, routes=("bigram",)).search('NEAR AND NOT * "')
+    # 不报错；被包成短语后要么命中普通词，要么 NO_MATCH，绝不触发 FTS5 语法错误
+    assert isinstance(result["items"], list)
     assert ids[0] in [item["id"] for item in result["items"]]

@@ -1,8 +1,15 @@
 """环境变量加载（全部配置走环境变量，见 .env.example；仓库不含真实地址/密钥）。
 
-第二层（检索层）按 docs/02-检索层设计.md §8 增加配置。环境变量名以设计表为准
-（``EMBEDDING_BACKEND`` / ``RETRIEVAL_ROUTES`` …），同时接受历史 ``DSH_`` 前缀别名
-（第一层已发布的 ``DSH_EMBEDDING_API_URL`` 等），设计名优先。
+第二层（检索层）按 docs/02-检索层设计 v8 §11 收敛：
+
+- 出厂 ``RETRIEVAL_ROUTES=bigram``（单混合列同构基线）；R1 向量默认关。
+- ``FINAL_K=4``、单条 ``ITEM_MAX_CHARS=1200``、总 ``TOTAL_MAX_CHARS=4800``
+  （contract strict-v1 默认 maxRankedResults=4；要 6 条需同时把策略配到 ≥6）。
+- 会话展开默认关；开启时只能占用 4 条名额内。
+- ``ADMIN_TOKEN`` 为空时 admin 端点仅接受回环请求。
+
+环境变量名以设计表为准（``EMBEDDING_BACKEND`` / ``RETRIEVAL_ROUTES`` …），同时接受
+历史 ``DSH_`` 前缀别名（第一层已发布的 ``DSH_EMBEDDING_API_URL`` 等），设计名优先。
 """
 
 from __future__ import annotations
@@ -11,10 +18,15 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-KNOWN_ROUTES = ("vector", "bigram", "trigram", "graph", "recent", "correction")
-# §8 默认：trigram 出厂关（v3.1：作融合信号边际低于显著性门槛）；
-# recent/correction 是常开的流水线步骤，出现在 RETRIEVAL_ROUTES 里仅作显式声明。
-DEFAULT_ROUTES = "vector,bigram"
+KNOWN_ROUTES = ("vector", "bigram", "trigram", "graph")
+# v8 §2：出厂唯一开启 bigram；vector 默认关，trigram/graph 不实现也不默认开。
+DEFAULT_ROUTES = "bigram"
+
+# 契约常量（v8 §5，P0）：provider-native → strict-v1 maxRankedResults 默认 4
+FINAL_K_DEFAULT = 4
+ITEM_MAX_CHARS_DEFAULT = 1200
+TOTAL_MAX_CHARS_DEFAULT = 4800
+SCORE_SEMANTICS = "provider-native"
 
 
 def _strip_quotes(value: str) -> str:
@@ -100,7 +112,8 @@ class Config:
     embedding_api_key: str = ""
     embedding_model: str = ""
     embedding_dim: str = "auto"      # "auto" 或正整数字符串
-    embedding_timeout_seconds: float = 30.0
+    embedding_timeout_seconds: float = 3.0
+    embedding_max_spend_usd: float = 0.50
 
     # ---- 检索层：LLM 生成（本层不实现生成，仅配置快照） ----
     llm_base_url: str = ""
@@ -108,18 +121,24 @@ class Config:
     llm_model: str = "deepseek-flash"
     llm_max_tokens: int = 3000
 
-    # ---- 检索层：路线与裁剪 ----
-    retrieval_routes: tuple[str, ...] = field(
-        default_factory=lambda: ("vector", "bigram")
-    )
-    mmr_enabled: bool = False
-    mmr_lambda: float = 0.7
+    # ---- 检索层：路线与裁剪（v8 §5/§11） ----
+    retrieval_routes: tuple[str, ...] = field(default_factory=lambda: ("bigram",))
     rrf_k: int = 60
     route_top_k: int = 50
-    final_k: int = 6
-    expand_max_items: int = 12
-    expand_max_chars: int = 12000
+    final_k: int = FINAL_K_DEFAULT
+    item_max_chars: int = ITEM_MAX_CHARS_DEFAULT
+    total_max_chars: int = TOTAL_MAX_CHARS_DEFAULT
+    expand_enabled: bool = False
+    expand_window: int = 1
+    expand_max_items: int = FINAL_K_DEFAULT
+    weak_best_rank: int = 3
     auto_degrade: bool = True
+
+    # ---- 检索层：运维 ----
+    admin_token: str = ""
+    canary_enabled: bool = True
+    canary_size: int = 20
+    canary_alert_rate: float = 0.20
 
     @property
     def embedding_dim_int(self) -> int | None:
@@ -129,28 +148,35 @@ class Config:
 
     @property
     def route_names(self) -> tuple[str, ...]:
-        """去重保序，只保留 recall 路线（recent/correction 是常开流水线步骤）。"""
+        """去重保序，只保留 recall 路线。"""
         out: list[str] = []
         for name in self.retrieval_routes:
-            if name in ("vector", "bigram", "trigram", "graph") and name not in out:
+            if name in KNOWN_ROUTES and name not in out:
                 out.append(name)
         return tuple(out)
 
     def snapshot(self) -> dict:
-        """生效配置快照（/health 用）：模型名/维度/启用路线/开关。"""
+        """生效配置快照（/health 用）：模型名/维度/启用路线/契约常量/开关。"""
         return {
             "embedding_backend": self.embedding_backend,
             "embedding_model": self.embedding_model,
             "embedding_dim": self.embedding_dim,
             "routes": list(self.retrieval_routes),
-            "mmr_enabled": self.mmr_enabled,
-            "mmr_lambda": self.mmr_lambda,
             "rrf_k": self.rrf_k,
             "route_top_k": self.route_top_k,
             "final_k": self.final_k,
+            "item_max_chars": self.item_max_chars,
+            "total_max_chars": self.total_max_chars,
+            "expand_enabled": self.expand_enabled,
+            "expand_window": self.expand_window,
             "expand_max_items": self.expand_max_items,
-            "expand_max_chars": self.expand_max_chars,
+            "weak_best_rank": self.weak_best_rank,
             "auto_degrade": self.auto_degrade,
+            "score_semantics": SCORE_SEMANTICS,
+            "admin_token_set": bool(self.admin_token),
+            "canary_enabled": self.canary_enabled,
+            "canary_size": self.canary_size,
+            "canary_alert_rate": self.canary_alert_rate,
             "llm_model": self.llm_model,
             "llm_max_tokens": self.llm_max_tokens,
         }
@@ -174,7 +200,9 @@ def parse_routes(raw: str) -> tuple[str, ...]:
 
 
 def load_config() -> Config:
-    raw_routes = _env_raw("RETRIEVAL_ROUTES", "DSH_RETRIEVAL_ROUTES", default=DEFAULT_ROUTES)
+    raw_routes = _env_raw(
+        "RETRIEVAL_ROUTES", "DSH_RETRIEVAL_ROUTES", default=DEFAULT_ROUTES
+    )
     return Config(
         db_path=_env_raw("DSH_FACT_DB_PATH", default="facts.db") or "facts.db",
         falkordb_url=_env_raw("DSH_FALKORDB_URL"),
@@ -195,25 +223,40 @@ def load_config() -> Config:
         embedding_model=_env_raw("EMBEDDING_MODEL", "DSH_EMBEDDING_MODEL"),
         embedding_dim=_env_raw("EMBEDDING_DIM", "DSH_EMBEDDING_DIM", default="auto"),
         embedding_timeout_seconds=_env_float(
-            "EMBEDDING_TIMEOUT_SECONDS", "DSH_EMBEDDING_TIMEOUT_SECONDS", default=30.0
+            "EMBEDDING_TIMEOUT_SECONDS", "DSH_EMBEDDING_TIMEOUT_SECONDS", default=3.0
+        ),
+        embedding_max_spend_usd=_env_float(
+            "EMBEDDING_MAX_SPEND_USD", "DSH_EMBEDDING_MAX_SPEND_USD", default=0.50
         ),
         llm_base_url=_env_raw("LLM_BASE_URL", "DSH_LLM_BASE_URL"),
         llm_api_key=_env_raw("LLM_API_KEY", "DSH_LLM_API_KEY"),
         llm_model=_env_raw("LLM_MODEL", "DSH_LLM_MODEL", default="deepseek-flash"),
         llm_max_tokens=_env_int("LLM_MAX_TOKENS", "DSH_LLM_MAX_TOKENS", default=3000),
         retrieval_routes=parse_routes(raw_routes),
-        mmr_enabled=_env_bool("MMR_ENABLED", "DSH_MMR_ENABLED", default=False),
-        mmr_lambda=_env_float("MMR_LAMBDA", "DSH_MMR_LAMBDA", default=0.7),
         rrf_k=_env_int("RRF_K", "DSH_RRF_K", default=60),
         route_top_k=_env_int("ROUTE_TOP_K", "DSH_ROUTE_TOP_K", default=50),
-        final_k=_env_int("FINAL_K", "DSH_FINAL_K", default=6),
+        final_k=_env_int("FINAL_K", "DSH_FINAL_K", default=FINAL_K_DEFAULT),
+        item_max_chars=_env_int(
+            "ITEM_MAX_CHARS", "DSH_ITEM_MAX_CHARS", default=ITEM_MAX_CHARS_DEFAULT
+        ),
+        total_max_chars=_env_int(
+            "TOTAL_MAX_CHARS", "DSH_TOTAL_MAX_CHARS", default=TOTAL_MAX_CHARS_DEFAULT
+        ),
+        expand_enabled=_env_bool(
+            "EXPAND_ENABLED", "EXPAND_SESSION", "DSH_EXPAND_ENABLED", default=False
+        ),
+        expand_window=_env_int("EXPAND_WINDOW", "DSH_EXPAND_WINDOW", default=1),
         expand_max_items=_env_int(
-            "EXPAND_MAX_ITEMS", "DSH_EXPAND_MAX_ITEMS", default=12
+            "EXPAND_MAX_ITEMS", "DSH_EXPAND_MAX_ITEMS", default=FINAL_K_DEFAULT
         ),
-        expand_max_chars=_env_int(
-            "EXPAND_MAX_CHARS", "DSH_EXPAND_MAX_CHARS", default=12000
-        ),
+        weak_best_rank=_env_int("WEAK_BEST_RANK", "DSH_WEAK_BEST_RANK", default=3),
         auto_degrade=_env_bool(
             "RETRIEVAL_AUTO_DEGRADE", "DSH_RETRIEVAL_AUTO_DEGRADE", default=True
+        ),
+        admin_token=_env_raw("ADMIN_TOKEN", "DSH_ADMIN_TOKEN"),
+        canary_enabled=_env_bool("CANARY_ENABLED", "DSH_CANARY_ENABLED", default=True),
+        canary_size=_env_int("CANARY_SIZE", "DSH_CANARY_SIZE", default=20),
+        canary_alert_rate=_env_float(
+            "CANARY_ALERT_RATE", "DSH_CANARY_ALERT_RATE", default=0.20
         ),
     )

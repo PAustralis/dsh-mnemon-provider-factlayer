@@ -1,20 +1,24 @@
 """全部建表 SQL + FTS5 虚表与触发器 + 迁移入口。
 
-依据 docs/01-事实层设计.md（定稿 v7 + 评审修订）：
+依据 docs/01-事实层设计.md（定稿 v7 + 评审修订）与 docs/02-检索层设计.md（v8）：
+
 - memories 只追加：用 RAISE(ABORT) 触发器在数据库层禁止 UPDATE/DELETE。
+- **全局单调序 ``gseq``**（v8 §6）：``gseq INTEGER PRIMARY KEY AUTOINCREMENT``，
+  是 rowid 别名；``id TEXT UNIQUE NOT NULL`` 保留为对外稳定标识；``seq`` 语义不变
+  （会话内 0 起连续序号）。tie-break 一律 ``gseq DESC``。
 - supersedes 语义为「撤销作废也走追加」：同一 (from_id,to_id) 可有多条边，
-  recorded_at 最新一条决定状态。主键为自增 ``id``（追加顺序），
-  (from_id,to_id,recorded_at) 仅为普通索引——同毫秒重复 revoke/supersede 不再撞 PK，
-  同毫秒时用 ``id`` 做 tie-break。
+  最新一条由自增 ``id`` 决定（**只按 id DESC**，不依赖 recorded_at——时钟回拨会选错边）。
 - 派生侧（derive_state / embeddings / entities / FTS5）全部可弃、可清空重建。
 
-迁移：本层早期版本把 (from_id,to_id,recorded_at) 当主键。init_db() 会检测旧结构，
-自动重建 supersedes 表并保留全部边记录（项目尚无生产数据，重建是安全做法）。
+迁移入口：``init_db()`` 先检测旧结构并重建（memories 的 gseq 主键、supersedes 的
+自增 id 主键、derive_state 的 stage CHECK、embeddings 的 model_id/dim 列），
+再幂等补齐其余结构。项目尚无生产数据时也可以「删库 + 派生重建」，见 README。
 """
 
 from __future__ import annotations
 
 import logging
+import sqlite3
 
 from .db import Database
 
@@ -22,7 +26,7 @@ logger = logging.getLogger("factlayer.schema")
 
 SUPERSEDES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS supersedes (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,  -- 追加顺序；同毫秒时用于 tie-break
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,  -- 追加顺序；最新边只按 id DESC
   from_id    TEXT NOT NULL,               -- 裁决记录 id
   to_id      TEXT NOT NULL,               -- 被作用记录 id
   kind       TEXT NOT NULL CHECK (kind IN ('supersede','revoke')),
@@ -41,24 +45,30 @@ CREATE TABLE IF NOT EXISTS derive_state (
 );
 """
 
-SCHEMA_SQL = f"""
--- 事实表：只追加，永不 UPDATE/DELETE
+# gseq 是 rowid 别名；id 只是对外稳定标识（UNIQUE NOT NULL）。
+MEMORIES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS memories (
-  id           TEXT PRIMARY KEY,
+  gseq         INTEGER PRIMARY KEY AUTOINCREMENT,  -- 全局单调序（VACUUM 不变）
+  id           TEXT UNIQUE NOT NULL,                -- 对外稳定标识
   client_write_id TEXT NOT NULL UNIQUE,
   content      TEXT NOT NULL,
   recorded_at  INTEGER NOT NULL,
   session_id   TEXT NOT NULL,
-  seq          INTEGER NOT NULL,
+  seq          INTEGER NOT NULL,                    -- 会话内 0 起连续序号（语义不变）
   event_time   TEXT,
   event_time_precision TEXT CHECK (event_time_precision IN ('year','month','day','instant')),
   source_client TEXT NOT NULL,
   CHECK ((event_time IS NULL) = (event_time_precision IS NULL))
 );
+"""
+
+MEMORIES_INDEX_SQL = """
 CREATE INDEX IF NOT EXISTS idx_memories_session ON memories(session_id, seq);
 CREATE INDEX IF NOT EXISTS idx_memories_time ON memories(recorded_at DESC);
+"""
 
--- 数据库层强制只追加：任何 UPDATE/DELETE 直接 ABORT
+# 数据库层强制只追加：任何 UPDATE/DELETE 直接 ABORT
+MEMORIES_TRIGGER_SQL = """
 CREATE TRIGGER IF NOT EXISTS memories_no_update
 BEFORE UPDATE ON memories
 BEGIN
@@ -69,19 +79,70 @@ BEFORE DELETE ON memories
 BEGIN
   SELECT RAISE(ABORT, 'memories is append-only: DELETE forbidden');
 END;
+"""
 
--- 作废边：追加式；最新边决定 (from_id,to_id) 状态
+# FTS5 全文索引（外部内容表，触发器同步；派生侧，可弃可重建）。
+# memories 的 rowid 就是 gseq（INTEGER PRIMARY KEY 别名），迁移回填时保持稳定。
+FTS_TABLE_SQL = """
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+  content,
+  content='memories',
+  content_rowid='rowid'
+);
+"""
+
+FTS_TRIGGER_SQL = """
+CREATE TRIGGER IF NOT EXISTS memories_fts_ai AFTER INSERT ON memories BEGIN
+  INSERT INTO memories_fts(rowid, content) VALUES (new.rowid, new.content);
+END;
+CREATE TRIGGER IF NOT EXISTS memories_fts_ad AFTER DELETE ON memories BEGIN
+  INSERT INTO memories_fts(memories_fts, rowid, content) VALUES('delete', old.rowid, old.content);
+END;
+CREATE TRIGGER IF NOT EXISTS memories_fts_au AFTER UPDATE ON memories BEGIN
+  INSERT INTO memories_fts(memories_fts, rowid, content) VALUES('delete', old.rowid, old.content);
+  INSERT INTO memories_fts(rowid, content) VALUES (new.rowid, new.content);
+END;
+"""
+
+# 单混合列（v8 §3）：与 research/recall/recall_eval.py::bigrams_of 同构。
+# 不拆 uni/bi 两列——拆列会改变 BM25 的 IDF 与文档长度归一，排序不再等价。
+NGRAM_TABLE_SQL = """
+-- R2 二元组影子列：NFKC 后与基线 bigrams_of 完全相同的 token 串（同一列）
+CREATE TABLE IF NOT EXISTS memories_ngrams (
+  memory_id  TEXT PRIMARY KEY,
+  ngram_text TEXT NOT NULL
+);
+-- R2 全文索引：unicode61 索引单列 ngram_text（rowid = memories.rowid = gseq）
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts_bigram USING fts5(
+  ngram_text,
+  tokenize='unicode61'
+);
+-- trigram 全文索引：独立虚表，可单独开关（v8 默认不启用；1–2 字查询在此路不可用）
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts_trigram USING fts5(
+  content,
+  tokenize='trigram'
+);
+"""
+
+SCHEMA_SQL = f"""
+{MEMORIES_TABLE_SQL}
+{MEMORIES_INDEX_SQL}
+{MEMORIES_TRIGGER_SQL}
+
+-- 作废边：追加式；最新边只按自增 id 决定 (from_id,to_id) 状态
 {SUPERSEDES_TABLE_SQL}
--- 每个 pair 取最新边的索引（recorded_at 同毫秒时按 id 决胜）
+-- 每个 pair 取最新边：只按 id DESC（recorded_at 不参与，时钟回拨会选错边）
 CREATE INDEX IF NOT EXISTS idx_supersedes_pair
-  ON supersedes(from_id, to_id, recorded_at DESC, id DESC);
-CREATE INDEX IF NOT EXISTS idx_supersedes_to ON supersedes(to_id, recorded_at DESC);
+  ON supersedes(from_id, to_id, id DESC);
+CREATE INDEX IF NOT EXISTS idx_supersedes_to ON supersedes(to_id, id DESC);
 
 -- 派生侧水位表（stage 含检索层的 fts：生成 ngrams + 写 FTS5，见 docs/02 §3.1）
 {DERIVE_STATE_TABLE_SQL}
 CREATE TABLE IF NOT EXISTS embeddings (
   memory_id TEXT PRIMARY KEY,
-  vector    BLOB NOT NULL
+  vector    BLOB NOT NULL,
+  model_id  TEXT NOT NULL DEFAULT '',
+  dim       INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS entities (
   memory_id TEXT NOT NULL,
@@ -91,23 +152,8 @@ CREATE TABLE IF NOT EXISTS entities (
 CREATE INDEX IF NOT EXISTS idx_entities ON entities(entity);
 
 -- FTS5 全文索引（外部内容表，触发器同步；派生侧，可弃可重建）
-CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
-  content,
-  content='memories',
-  content_rowid='rowid'
-);
-CREATE TRIGGER IF NOT EXISTS memories_fts_ai AFTER INSERT ON memories BEGIN
-  INSERT INTO memories_fts(rowid, content) VALUES (new.rowid, new.content);
-END;
--- memories 已被上方 RAISE 触发器禁止 UPDATE/DELETE，以下两个同步触发器
--- 仅保持外部内容表 FTS5 的标准形态，正常路径不会触达。
-CREATE TRIGGER IF NOT EXISTS memories_fts_ad AFTER DELETE ON memories BEGIN
-  INSERT INTO memories_fts(memories_fts, rowid, content) VALUES('delete', old.rowid, old.content);
-END;
-CREATE TRIGGER IF NOT EXISTS memories_fts_au AFTER UPDATE ON memories BEGIN
-  INSERT INTO memories_fts(memories_fts, rowid, content) VALUES('delete', old.rowid, old.content);
-  INSERT INTO memories_fts(rowid, content) VALUES (new.rowid, new.content);
-END;
+{FTS_TABLE_SQL}
+{FTS_TRIGGER_SQL}
 
 -- 元信息表（last_backup_at / embedding_model / embedding_dim / retrieval:eval）
 CREATE TABLE IF NOT EXISTS meta (
@@ -116,27 +162,140 @@ CREATE TABLE IF NOT EXISTS meta (
 );
 
 -- ---- 检索层派生结构（全部可弃、可重建；不在 memories 上加列） -------------
--- R2 二元组影子列：NFKC 后「单字 + 双字」空格分隔 token 串
-CREATE TABLE IF NOT EXISTS memories_ngrams (
-  memory_id  TEXT PRIMARY KEY,
-  ngram_text TEXT NOT NULL
-);
--- R2 全文索引：unicode61 索引 ngram_text（rowid = memories.rowid，事实层只追加故稳定）
-CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts_bigram USING fts5(
-  ngram_text,
-  tokenize='unicode61'
-);
--- R3 trigram 全文索引：独立虚表，可单独开关（1–2 字查询在此路不可用）
-CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts_trigram USING fts5(
-  content,
-  tokenize='trigram'
-);
+{NGRAM_TABLE_SQL}
 """
+
+# 旧表（v3.1 及以前）的 memories 结构：id TEXT PRIMARY KEY，无 gseq
+# （迁移函数按 rowid 回填，不依赖列顺序）
+
+
+def _table_columns(db: Database, table: str) -> dict[str, dict]:
+    rows = db.read_conn.execute(f"PRAGMA table_info({table})").fetchall()
+    return {row["name"]: dict(row) for row in rows}
 
 
 def _supersedes_columns(db: Database) -> dict[str, dict]:
-    rows = db.read_conn.execute("PRAGMA table_info(supersedes)").fetchall()
-    return {row["name"]: dict(row) for row in rows}
+    return _table_columns(db, "supersedes")
+
+
+def migrate_memories_gseq(db: Database) -> bool:
+    """把旧 ``memories(id TEXT PRIMARY KEY)`` 重建为 ``gseq INTEGER PRIMARY KEY``。
+
+    SQLite 改主键必须重建表。步骤（顺序即设计 §6）：
+    1. DROP 防写触发器与 FTS 触发器（否则重建期间 RAISE/同步触发器会挡路），
+       同时 DROP 旧索引与旧 FTS 表（索引名会跟着 RENAME 走，先清掉）；
+    2. ``ALTER TABLE memories RENAME TO memories_legacy``，建新表；
+    3. ``INSERT … SELECT`` 时按 rowid 显式填 gseq（旧 rowid 即全局追加顺序）；
+    4. 重建 FTS（external content，rowid 稳定后整体 rebuild）；
+    5. 重建索引与触发器；
+    6. 更新 sqlite_sequence，保证后续 AUTOINCREMENT 从 max(gseq)+1 开始。
+
+    返回是否执行了迁移。
+    """
+    cols = _table_columns(db, "memories")
+    if not cols:
+        return False  # 新库：由 SCHEMA_SQL 建新结构
+    if "gseq" in cols:
+        return False  # 已是新结构
+
+    logger.warning(
+        "detected legacy memories schema (id TEXT PRIMARY KEY); rebuilding with gseq"
+    )
+    with db.write_txn() as conn:
+        # 1. 清掉所有会干扰重建的触发器 / 索引 / FTS 表
+        for trigger in (
+            "memories_no_update",
+            "memories_no_delete",
+            "memories_fts_ai",
+            "memories_fts_ad",
+            "memories_fts_au",
+        ):
+            conn.execute(f"DROP TRIGGER IF EXISTS {trigger}")
+        conn.execute("DROP INDEX IF EXISTS idx_memories_session")
+        conn.execute("DROP INDEX IF EXISTS idx_memories_time")
+        conn.execute("DROP TABLE IF EXISTS memories_fts")
+
+        # 2. 旧表改名，建新表（不能 IF NOT EXISTS 之外再加 id 主键）
+        conn.execute("ALTER TABLE memories RENAME TO memories_legacy")
+        conn.execute(
+            """
+            CREATE TABLE memories (
+              gseq         INTEGER PRIMARY KEY AUTOINCREMENT,
+              id           TEXT UNIQUE NOT NULL,
+              client_write_id TEXT NOT NULL UNIQUE,
+              content      TEXT NOT NULL,
+              recorded_at  INTEGER NOT NULL,
+              session_id   TEXT NOT NULL,
+              seq          INTEGER NOT NULL,
+              event_time   TEXT,
+              event_time_precision TEXT
+                CHECK (event_time_precision IN ('year','month','day','instant')),
+              source_client TEXT NOT NULL,
+              CHECK ((event_time IS NULL) = (event_time_precision IS NULL))
+            )
+            """
+        )
+        # 3. 按旧 rowid 显式回填 gseq（顺序与旧追加顺序一致）
+        conn.execute(
+            "INSERT INTO memories "
+            "(gseq, id, client_write_id, content, recorded_at, session_id, seq, "
+            " event_time, event_time_precision, source_client) "
+            "SELECT rowid, id, client_write_id, content, recorded_at, session_id, seq, "
+            " event_time, event_time_precision, source_client "
+            "FROM memories_legacy ORDER BY rowid"
+        )
+        conn.execute("DROP TABLE memories_legacy")
+
+        # 4. 重建索引
+        conn.execute(
+            "CREATE INDEX idx_memories_session ON memories(session_id, seq)"
+        )
+        conn.execute(
+            "CREATE INDEX idx_memories_time ON memories(recorded_at DESC)"
+        )
+
+        # 5. 重建 FTS（external content rowid 稳定）+ 从事实表整体 rebuild
+        conn.execute(
+            "CREATE VIRTUAL TABLE memories_fts USING fts5("
+            "content, content='memories', content_rowid='rowid')"
+        )
+        conn.execute("INSERT INTO memories_fts(memories_fts) VALUES('rebuild')")
+
+        # 6. 重建触发器
+        for statement in _split_sql(FTS_TRIGGER_SQL):
+            conn.execute(statement)
+        for statement in _split_sql(MEMORIES_TRIGGER_SQL):
+            conn.execute(statement)
+
+        # 7. 更新 sqlite_sequence（显式 gseq 回填后保证后续自增不撞号）
+        max_gseq = conn.execute("SELECT COALESCE(MAX(gseq), 0) FROM memories").fetchone()[0]
+        updated = conn.execute(
+            "UPDATE sqlite_sequence SET seq=? WHERE name='memories'", (max_gseq,)
+        ).rowcount
+        if not updated:
+            conn.execute(
+                "INSERT INTO sqlite_sequence(name, seq) VALUES('memories', ?)",
+                (max_gseq,),
+            )
+
+    logger.warning("memories table rebuilt with gseq INTEGER PRIMARY KEY AUTOINCREMENT")
+    return True
+
+
+def _split_sql(script: str) -> list[str]:
+    """按 sqlite3.complete_statement 切分多语句脚本（BEGIN…END; 不被内部 ; 切开）。"""
+    statements: list[str] = []
+    buffer = ""
+    for line in script.splitlines(keepends=True):
+        if not buffer and not line.strip():
+            continue
+        buffer += line
+        if sqlite3.complete_statement(buffer):
+            statements.append(buffer.strip())
+            buffer = ""
+    if buffer.strip():
+        statements.append(buffer.strip())
+    return statements
 
 
 def migrate_supersedes_pk(db: Database) -> bool:
@@ -176,6 +335,25 @@ def migrate_supersedes_pk(db: Database) -> bool:
     return True
 
 
+def migrate_supersedes_pair_index(db: Database) -> bool:
+    """把 idx_supersedes_pair 的定义收敛为只按 ``id DESC``（不再含 recorded_at）。"""
+    row = db.read_conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='index' AND name='idx_supersedes_pair'"
+    ).fetchone()
+    if row is None:
+        return False  # 由 SCHEMA_SQL 建新索引
+    sql = (row["sql"] or "").lower()
+    if "recorded_at" not in sql and "id desc" in sql:
+        return False  # 已是新定义
+    logger.warning("detected legacy idx_supersedes_pair; rebuilding index by id DESC only")
+    with db.write_txn() as conn:
+        conn.execute("DROP INDEX IF EXISTS idx_supersedes_pair")
+        conn.execute(
+            "CREATE INDEX idx_supersedes_pair ON supersedes(from_id, to_id, id DESC)"
+        )
+    return True
+
+
 def migrate_derive_state_stages(db: Database) -> bool:
     """把旧 derive_state 的 stage CHECK 扩到含 'fts'（SQLite 不能 ALTER CHECK → 重建）。
 
@@ -201,10 +379,48 @@ def migrate_derive_state_stages(db: Database) -> bool:
     return True
 
 
+def migrate_embeddings_columns(db: Database) -> bool:
+    """embeddings 增加 ``model_id`` / ``dim``（v8 §7：按行存模型与维度）。
+
+    旧行回填 dim = len(vector)/4；model_id 取 meta.embedding_model（若有）。
+    """
+    cols = _table_columns(db, "embeddings")
+    if not cols:
+        return False  # 新库
+    if "model_id" in cols and "dim" in cols:
+        return False
+    model_row = db.read_conn.execute(
+        "SELECT value FROM meta WHERE key='embedding_model'"
+    ).fetchone()
+    stored_model = model_row["value"] if model_row is not None else ""
+    with db.write_txn() as conn:
+        if "model_id" not in cols:
+            conn.execute(
+                "ALTER TABLE embeddings ADD COLUMN model_id TEXT NOT NULL DEFAULT ''"
+            )
+        if "dim" not in cols:
+            conn.execute(
+                "ALTER TABLE embeddings ADD COLUMN dim INTEGER NOT NULL DEFAULT 0"
+            )
+        conn.execute(
+            "UPDATE embeddings SET dim = LENGTH(vector)/4 WHERE dim = 0 AND LENGTH(vector)%4 = 0"
+        )
+        if stored_model:
+            conn.execute(
+                "UPDATE embeddings SET model_id = ? WHERE model_id = ''",
+                (stored_model,),
+            )
+    logger.warning("embeddings table extended with model_id/dim columns")
+    return True
+
+
 def init_db(db: Database) -> None:
-    """迁移入口：先做 supersedes 主键 / derive_state stage 迁移，再幂等补齐其余结构。"""
+    """迁移入口：先重建旧结构，再幂等补齐其余结构。"""
+    migrate_memories_gseq(db)
     migrate_supersedes_pk(db)
+    migrate_supersedes_pair_index(db)
     migrate_derive_state_stages(db)
+    migrate_embeddings_columns(db)
     db.execute_script(SCHEMA_SQL)
 
 

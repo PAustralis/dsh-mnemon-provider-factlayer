@@ -1,15 +1,16 @@
 """derive_state 水位循环。
 
 stage ∈ {fts, embedding, entity, graph}：
-- ``fts``：生成 ``memories_ngrams``（单字+双字）并写 ``memories_fts_bigram`` /
-  ``memories_fts_trigram``（R2/R3 的索引；派生层，可弃可重建）。
-- ``embedding``：接了真实 provider 时算向量（L2 归一化 + model_id/dim 指纹）；
+- ``fts``：生成 ``memories_ngrams``（**与基线同构的单混合列**，见 app.textnorm）
+  并写 ``memories_fts_bigram`` / ``memories_fts_trigram``（派生层，可弃可重建）。
+- ``embedding``：接了真实 provider 时算向量（L2 归一化 + 按行存 model_id/dim）；
   没接 provider 时保持第一层的 stub 语义（``DSH_DERIVE_STUB_SUCCESS`` 控制成功/失败）。
-- ``entity`` / ``graph``：第一层 stub；R4 图邻居本层未接（见 retrieval.GraphRoute）。
+  写事务提交后增量刷新检索层的内存向量矩阵（``vector_index``）。
+- ``entity`` / ``graph``：第一层 stub；R4 图邻居本层未接。
 
-循环 = 找未完成条目（ORDER BY recorded_at LIMIT 50）→ 逐条 processor →
+循环 = 找未完成条目（ORDER BY gseq LIMIT 50）→ 逐条 processor →
 成功写 derive_state(done_at)，失败计失败次数不写 done（下轮重试，绝不静默跳过）。
-全量重建 = 清空派生层，循环自动补齐；事实层（memories）永不动。
+全量重建 = **一个写事务内**清空派生层并重算全部条目（数据量小）；事实层永不动。
 """
 
 from __future__ import annotations
@@ -20,7 +21,12 @@ from typing import Callable
 
 from . import textnorm
 from .db import Database
-from .embeddings import EmbeddingProvider, store_embedding
+from .embeddings import (
+    EmbeddingProvider,
+    VectorIndex,
+    store_embedding,
+    write_embedding_row,
+)
 from .write_path import now_ms
 
 logger = logging.getLogger("factlayer.derive")
@@ -41,7 +47,7 @@ def _make_stub(stage: str, stub_success: bool) -> Processor:
 
 
 def make_fts_processor(db: Database) -> Processor:
-    """stage=fts：写 ngrams + 两张 FTS5 虚表（重复执行幂等，可安全重建）。"""
+    """stage=fts：写单混合列 ngrams + 两张 FTS5 虚表（重复执行幂等，可安全重建）。"""
 
     def process(memory: dict) -> None:
         content = memory["content"]
@@ -49,7 +55,7 @@ def make_fts_processor(db: Database) -> Processor:
         trigram_text = textnorm.normalize(content)
         with db.write_txn() as conn:
             row = conn.execute(
-                "SELECT rowid FROM memories WHERE id=?", (memory["id"],)
+                "SELECT gseq FROM memories WHERE id=?", (memory["id"],)
             ).fetchone()
             if row is None:
                 raise RuntimeError(f"memory {memory['id']} 不存在，fts 派生中止")
@@ -78,6 +84,7 @@ def make_embedding_processor(
     db: Database,
     provider: EmbeddingProvider,
     configured_dim: int | None,
+    vector_index: VectorIndex | None = None,
 ) -> Processor:
     """stage=embedding：调 provider 算向量并入库（写库前 L2 归一化）。"""
 
@@ -91,6 +98,7 @@ def make_embedding_processor(
             vectors[0],
             model_id=provider.model_id,
             configured_dim=configured_dim,
+            index=vector_index,
         )
 
     return process
@@ -105,8 +113,12 @@ class DerivePipeline:
         embedding_provider: EmbeddingProvider | None = None,
         embedding_dim: int | None = None,
         fts_enabled: bool = True,
+        vector_index: VectorIndex | None = None,
     ) -> None:
         self.db = db
+        self.vector_index = vector_index
+        self.embedding_provider = embedding_provider
+        self.embedding_dim = embedding_dim
         self.failures: dict[str, int] = {stage: 0 for stage in STAGES}
         self._lock = threading.Lock()
         processors: dict[str, Processor] = {
@@ -119,7 +131,7 @@ class DerivePipeline:
             processors["fts"] = _make_stub("fts", stub_success)
         if embedding_provider is not None:
             processors["embedding"] = make_embedding_processor(
-                db, embedding_provider, embedding_dim
+                db, embedding_provider, embedding_dim, vector_index
             )
         self.processors: dict[str, Processor] = {
             stage: processors[stage] for stage in STAGES
@@ -134,9 +146,9 @@ class DerivePipeline:
     # -- 查询 ------------------------------------------------------------------
     def pending(self, stage: str, limit: int = BATCH_LIMIT) -> list[dict]:
         rows = self.db.read_conn.execute(
-            "SELECT m.*, m.rowid AS _rowid FROM memories m "
+            "SELECT m.*, m.gseq AS _gseq FROM memories m "
             "LEFT JOIN derive_state d ON d.memory_id = m.id AND d.stage = ? "
-            "WHERE d.memory_id IS NULL ORDER BY m.recorded_at LIMIT ?",
+            "WHERE d.memory_id IS NULL ORDER BY m.gseq LIMIT ?",
             (stage, limit),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -184,11 +196,29 @@ class DerivePipeline:
         return count
 
     # -- 全量重建 ---------------------------------------------------------------
-    def rebuild_all(self) -> None:
-        """全量重建 = 清空派生层（含 ngrams / 两张 FTS5），循环自动补齐。
+    def rebuild_all(self) -> dict[str, int]:
+        """全量重建：**一个写事务内**清空派生层并重算全部条目。
 
-        事实层 memories 永不动；derive_state 清空后 fts 与 embedding stage 会重跑。
+        - 事实层 memories 永不动。
+        - embedding 在事务外先算好（避免持写锁做网络调用），写库与其余派生在
+          同一事务内完成，查询永远看到完整旧/新索引。
+        - 成功后清空内存向量矩阵，下次检索全量载入（与 gseq 对齐）。
         """
+        rows = [
+            dict(row)
+            for row in self.db.read_conn.execute(
+                "SELECT * FROM memories ORDER BY gseq"
+            ).fetchall()
+        ]
+        vectors: dict[str, list[float]] = {}
+        if self.embedding_provider is not None:
+            for memory in rows:
+                result = self.embedding_provider.embed([memory["content"]])
+                if not result:
+                    raise RuntimeError("embedding provider 返回空结果")
+                vectors[memory["id"]] = result[0]
+
+        counts = {stage: 0 for stage in STAGES}
         with self.db.write_txn() as conn:
             conn.execute("DELETE FROM derive_state")
             conn.execute("DELETE FROM embeddings")
@@ -196,8 +226,51 @@ class DerivePipeline:
             conn.execute("DELETE FROM memories_ngrams")
             conn.execute("DELETE FROM memories_fts_bigram")
             conn.execute("DELETE FROM memories_fts_trigram")
-            # 维度/模型指纹也是派生元数据：重建后必须重新推断，否则新模型会被旧指纹挡住
-            conn.execute("DELETE FROM meta WHERE key IN ('embedding_model','embedding_dim')")
-        # TODO（后续层）: 清空 FalkorDB 图（本层不连接 FalkorDB）
+            # 维度/模型指纹也是派生元数据：重建后必须重新推断
+            conn.execute(
+                "DELETE FROM meta WHERE key IN ('embedding_model','embedding_dim')"
+            )
+            done_at = now_ms()
+            for memory in rows:
+                memory_id = memory["id"]
+                content = memory["content"]
+                rowid = int(memory["gseq"])
+                ngrams = textnorm.ngram_text(content)
+                trigram_text = textnorm.normalize(content)
+                conn.execute(
+                    "INSERT INTO memories_ngrams(memory_id, ngram_text) VALUES (?, ?)",
+                    (memory_id, ngrams),
+                )
+                conn.execute(
+                    "INSERT INTO memories_fts_bigram(rowid, ngram_text) VALUES (?, ?)",
+                    (rowid, ngrams),
+                )
+                conn.execute(
+                    "INSERT INTO memories_fts_trigram(rowid, content) VALUES (?, ?)",
+                    (rowid, trigram_text),
+                )
+                counts["fts"] += 1
+                if self.embedding_provider is not None:
+                    write_embedding_row(
+                        conn,
+                        memory_id,
+                        vectors[memory_id],
+                        model_id=self.embedding_provider.model_id,
+                        configured_dim=self.embedding_dim,
+                    )
+                    counts["embedding"] += 1
+                else:
+                    counts["embedding"] += 1  # stub 语义：无 provider 视为完成
+                counts["entity"] += 1
+                counts["graph"] += 1
+                for stage in STAGES:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO derive_state(memory_id, stage, done_at) "
+                        "VALUES (?,?,?)",
+                        (memory_id, stage, done_at),
+                    )
+        if self.vector_index is not None:
+            self.vector_index.invalidate()
         with self._lock:
             self.failures = {stage: 0 for stage in STAGES}
+        return counts

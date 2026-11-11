@@ -7,7 +7,6 @@ from tests.conftest import write_one
 def test_health_shape_and_last_backup_at(client, db, db_path):
     write_one(client, cwid="cw-h1", content="x", session_id="s1")
     health = client.get("/health").json()
-    # 第一层字段保持；第二层按设计 §5 追加 config / retrieval
     assert {
         "pending",
         "failures",
@@ -23,21 +22,31 @@ def test_health_shape_and_last_backup_at(client, db, db_path):
     assert health["last_backup_at"] is None
     assert health["last_backup_error"] is None
     assert health["backup_consecutive_failures"] == 0
-    # 生效配置快照：模型名 / 维度 / 启用路线 / 开关
+    # 生效配置快照：模型名 / 维度 / 启用路线 / 契约常量 / 开关
     assert health["config"]["embedding_model"] == ""
     assert health["config"]["embedding_dim"] == "auto"
     assert health["config"]["routes"] == ["bigram"]
     assert health["config"]["effective_routes"] == ["bigram"]
-    assert health["config"]["mmr_enabled"] is False
+    assert health["config"]["final_k"] == 4
+    assert health["config"]["item_max_chars"] == 1200
+    assert health["config"]["total_max_chars"] == 4800
+    assert health["config"]["score_semantics"] == "provider-native"
+    assert health["config"]["expand_enabled"] is False
     assert set(health["retrieval"]["routes"]) == {
         "vector",
         "bigram",
         "trigram",
         "graph",
-        "recent",
     }
     assert health["retrieval"]["routes"]["bigram"]["empty_rate"] is None
     assert health["retrieval"]["degraded"] is False
+    # v8 §5/F：hidden 大小、熔断状态、金丝雀
+    assert health["retrieval"]["hidden_size"] == 0
+    assert health["retrieval"]["circuit"]["circuit_open"] is False
+    assert health["retrieval"]["canary"]["status"] in {
+        "insufficient_samples",
+        "ok",
+    }
 
     resp = client.post("/admin/backup")
     assert resp.status_code == 200
@@ -47,6 +56,23 @@ def test_health_shape_and_last_backup_at(client, db, db_path):
     assert health["last_backup_error"] is None
     assert health["backup_consecutive_failures"] == 0
     assert any(backup_dir_for(db_path).glob("backup-*.db"))
+
+
+def test_health_hidden_size_reflects_voided_with_live_head(client):
+    a = write_one(client, cwid="cw-ha", content="旧说法", session_id="s1").json()
+    b = write_one(client, cwid="cw-hb", content="新说法", session_id="s2").json()
+    edge = client.post(
+        "/supersedes",
+        json={
+            "from_id": b["id"],
+            "to_id": a["id"],
+            "kind": "supersede",
+            "source_client": "t",
+        },
+    )
+    assert edge.status_code == 200
+    health = client.get("/health").json()
+    assert health["retrieval"]["hidden_size"] == 1
 
 
 def test_backup_creates_file_and_meta(db, db_path):

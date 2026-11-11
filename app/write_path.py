@@ -10,6 +10,8 @@ import uuid
 
 from fastapi import HTTPException
 
+from . import textnorm
+from . import voided as voided_mod
 from .db import Database
 
 logger = logging.getLogger("factlayer.write_path")
@@ -25,6 +27,9 @@ IDEMPOTENCY_FIELDS = (
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 _DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+# 写入层显式上限（v8 §3.1）：超限直接拒绝，而不是让派生层在超长文本上失败。
+CONTENT_MAX_CHARS = 100_000
 
 
 def _valid_date(text: str) -> bool:
@@ -83,6 +88,11 @@ def create_memory(
     """写入一条记忆。幂等：同 client_write_id 且比较字段一致 → 返回已有回执（duplicated:true）；
     不一致 → 409，绝不静默。"""
     validate_event_time(event_time, event_time_precision)
+    if len(content) > CONTENT_MAX_CHARS:
+        raise HTTPException(
+            status_code=413,
+            detail=f"content 超长（{len(content)} > {CONTENT_MAX_CHARS} 字符），已拒绝写入",
+        )
 
     with db.write_txn() as conn:
         row = conn.execute(
@@ -139,6 +149,27 @@ def create_memory(
                 source_client,
             ),
         )
+        # 写入即索引（v8 §3.1）：ngram 派生与事实写入同一事务，不允许「写进去了搜不到」。
+        # 仍保留 fts 派生水位（重复执行幂等），派生层可整体清空重跑。
+        rowid = conn.execute(
+            "SELECT gseq FROM memories WHERE id=?", (memory_id,)
+        ).fetchone()[0]
+        ngrams = textnorm.ngram_text(content)
+        conn.execute(
+            "INSERT OR REPLACE INTO memories_ngrams(memory_id, ngram_text) "
+            "VALUES (?, ?)",
+            (memory_id, ngrams),
+        )
+        conn.execute("DELETE FROM memories_fts_bigram WHERE rowid=?", (rowid,))
+        conn.execute(
+            "INSERT INTO memories_fts_bigram(rowid, ngram_text) VALUES (?, ?)",
+            (rowid, ngrams),
+        )
+        conn.execute("DELETE FROM memories_fts_trigram WHERE rowid=?", (rowid,))
+        conn.execute(
+            "INSERT INTO memories_fts_trigram(rowid, content) VALUES (?, ?)",
+            (rowid, textnorm.normalize(content)),
+        )
 
     return {
         "id": memory_id,
@@ -157,7 +188,11 @@ def record_supersede(
     source_client: str,
     reason: str | None = None,
 ) -> dict:
-    """追加一条作废边。from_id = 裁决记录 id，to_id = 被作用记录 id。"""
+    """追加一条作废边。from_id = 裁决记录 id，to_id = 被作用记录 id。
+
+    v8 §4.4：新增 **supersede** 边若在「最新边为 supersede 的图」上成环（含自环），
+    同一写事务内拒绝并返回 409；revoke 边不参与检测。
+    """
     if kind not in ("supersede", "revoke"):
         raise HTTPException(status_code=422, detail=f"kind 非法: {kind!r}")
     with db.write_txn() as conn:
@@ -169,6 +204,16 @@ def record_supersede(
                 raise HTTPException(
                     status_code=422, detail=f"{label}={mid!r} 在 memories 中不存在"
                 )
+        if kind == "supersede" and voided_mod.would_create_cycle(conn, from_id, to_id):
+            logger.warning(
+                "拒绝成环的 supersede 边：原始错误 cycle detected from=%s to=%s",
+                from_id,
+                to_id,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="该裁决会形成循环，已拒绝",
+            )
         recorded_at = now_ms()
         try:
             conn.execute(

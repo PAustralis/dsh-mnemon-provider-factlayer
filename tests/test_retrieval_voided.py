@@ -1,4 +1,4 @@
-"""作废过滤：per-pair 最新边（revoke 恢复 / 同毫秒顺序）、各路 top-50、会话展开不复活。"""
+"""作废：per-pair 最新边（只按 id）、hidden 原始名次/出口替换、展开不复活。"""
 
 from app import voided as voided_mod
 from app.read_path import is_voided
@@ -20,7 +20,8 @@ def test_revoke_restores_record_per_pair(db):
 
     assert is_voided(db, a) is True
     service = make_service(db, routes=("bigram",))
-    assert a not in [item["id"] for item in service.search("蓝色")["items"]]
+    ids = [item["id"] for item in service.search("蓝色")["items"]]
+    assert a not in ids and b in ids  # 路内替换：存活纠正者占 A 的名次
 
     add_edge(db, b, a, kind="revoke", recorded_at=200)
     assert is_voided(db, a) is False
@@ -31,7 +32,6 @@ def test_revoke_only_affects_its_own_pair(db):
     a = add_memory(db, "蓝色记录", session_id="s1")
     b = add_memory(db, "纠正者 B", session_id="s2")
     c = add_memory(db, "纠正者 C", session_id="s3")
-    # B、C 都作废 A；C 随后 revoke 只作用于 (C,A)，A 仍被 B 作废
     add_edge(db, b, a, kind="supersede", recorded_at=100)
     add_edge(db, c, a, kind="supersede", recorded_at=110)
     add_edge(db, c, a, kind="revoke", recorded_at=120)
@@ -46,14 +46,14 @@ def test_same_millisecond_revoke_then_supersede_is_ordered_by_id(db):
     add_edge(db, b, a, kind="supersede", recorded_at=500)  # 后插入 id 更大 → 最新=supersede
     assert is_voided(db, a) is True
 
-    add_memory(db, "第二条", recorded_at=600)  # 无关，仅避免空库
     c = add_memory(db, "待恢复记录", session_id="s4")
     add_edge(db, b, c, kind="supersede", recorded_at=500)
     add_edge(db, b, c, kind="revoke", recorded_at=500)  # 后插入 revoke → 最新=revoke
     assert is_voided(db, c) is False
 
 
-def test_voided_record_not_in_any_route_top_50(db):
+def test_raw_route_includes_hidden_but_output_replaces(db):
+    """v8 §4.2：各路取含 hidden 的原始 top-K；hidden 只在路内替换/出口处理。"""
     from tests.fake_embedding import HashingEmbeddingProvider
 
     provider = HashingEmbeddingProvider()
@@ -64,44 +64,66 @@ def test_voided_record_not_in_any_route_top_50(db):
     build_derived(db, embedding_provider=provider)
 
     service = make_service(
-        db, routes=("vector", "bigram", "trigram", "recent"), provider=provider
+        db, routes=("vector", "bigram", "trigram"), provider=provider
     )
-    for route_name in ("bigram", "trigram", "recent"):
-        outcome = getattr(service, f"{route_name}_route")("北京项目计划书", 50)
-        assert target not in outcome.ids, route_name
-    vector_outcome = service.vector_route("北京项目计划书", 50)
-    assert target not in vector_outcome.ids
-    # 未作废的同类记录仍在
-    assert any(mid in vector_outcome.ids for mid in others) or vector_outcome.ids
+    # 原始 top-K 必须包含被作废项（不得在 SQL/mask 阶段排除）
+    bigram_raw = service.bigram_route("北京项目计划书", 50).raw_ids
+    assert target in bigram_raw
+    vector_raw = service.vector_route("北京项目计划书", 50).raw_ids
+    assert target in vector_raw
+
+    result = service.search("北京项目计划书")
+    ids = [item["id"] for item in result["items"]]
+    assert target not in ids
+    assert corrector in ids
+    item = next(i for i in result["items"] if i["id"] == corrector)
+    assert f"superseded-by:{target}" in item["tags"]
+    assert item["score"] > 0  # 继承名次后参与 RRF 计分（不是旧 R5 的 score=None）
+    # 未作废的同类记录仍在候选池
+    assert any(mid in bigram_raw for mid in others)
 
 
-def test_voided_neighbor_not_revived_by_session_expansion(db):
-    parent, neighbor, alive = add_session(
-        db,
-        ["北京出差计划", "被作废的邻域记录", "正常邻域记录"],
-        session_id="session-x",
+def test_hidden_count_appended_to_first_content_and_tag(db):
+    target = add_memory(db, "北京项目计划书", session_id="s1")
+    corrector = add_memory(db, "计划书改期了", session_id="s9")
+    add_edge(db, corrector, target, kind="supersede", recorded_at=100)
+    build_derived(db)
+    result = make_service(db, routes=("bigram",)).search("北京项目计划书")
+    assert result["hidden"]["matched"] == 1
+    assert "hidden:1" in result["items"][0]["tags"]
+    assert "另有 1 条相关记录已被纠正" in result["items"][0]["content"]
+
+
+def test_session_expansion_default_off(db):
+    parent, neighbor, _alive = add_session(
+        db, ["北京出差计划", "同一会话的邻域记录", "另一条邻域"], session_id="session-x"
     )
-    add_edge(db, "x", neighbor, kind="supersede", recorded_at=100)  # from_id 不要求存在
     build_derived(db)
     service = make_service(db, routes=("bigram",))
+    assert service.cfg.expand_enabled is False
+    ids = [item["id"] for item in service.search("北京出差")["items"]]
+    assert parent in ids
+    assert neighbor not in ids
+
+
+def test_session_expansion_on_uses_replacement_and_stays_within_final_k(db):
+    parent, neighbor = add_session(
+        db, ["北京出差计划", "会被作废的邻域"], session_id="session-y"
+    )
+    corrector = add_memory(db, "邻域的正确版本", session_id="other")
+    add_edge(db, corrector, neighbor, kind="supersede", recorded_at=100)
+    build_derived(db)
+    service = make_service(
+        db, routes=("bigram",), expand_enabled=True, expand_window=1
+    )
     result = service.search("北京出差")
     ids = [item["id"] for item in result["items"]]
     assert parent in ids
-    assert neighbor not in ids
-    assert alive in ids  # 展开本身仍然工作
-
-
-def test_expansion_candidate_passes_void_filter_sql(db):
-    """直接验证展开 SQL 片段也走共享 CTE（不是天真 NOT IN）。"""
-    parent, neighbor = add_session(
-        db, ["北京出差计划", "会被 revoked 的邻域"], session_id="session-y"
-    )
-    add_edge(db, "b", neighbor, kind="supersede", recorded_at=100)
-    add_edge(db, "b", neighbor, kind="revoke", recorded_at=200)
-    build_derived(db)
-    service = make_service(db, routes=("bigram",))
-    result = service.search("北京出差")
-    assert neighbor in [item["id"] for item in result["items"]]
+    assert corrector in ids  # 展开候选也过替换语义
+    assert len(ids) <= 4  # 只能占用 FINAL_K 名额内
+    expanded = next(i for i in result["items"] if i["id"] == corrector)
+    assert "expanded" in expanded["tags"]
+    assert expanded["inherited_rank"] == 1
 
 
 def test_voided_helpers_agree_on_multi_edge_pairs(db):

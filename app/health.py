@@ -1,7 +1,9 @@
-"""/health 报告：派生水位、备份状态、生效配置快照、各路最近空结果率与向量降级计数。"""
+"""/health 报告：派生水位、备份状态、生效配置快照、hidden 大小、各路空结果率、熔断、金丝雀。"""
 
 from __future__ import annotations
 
+from . import voided as voided_mod
+from .contract import PROVIDER_MANIFEST
 from .db import Database
 from .derive import STAGES, DerivePipeline
 from .schema import get_meta
@@ -22,8 +24,12 @@ def last_backup_at(db: Database) -> int | None:
 def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None, retrieval=None) -> dict:
     """备份状态来自调度器；没有调度器（测试/只读用法）时报告「无失败」。
 
-    检索层接入后（``retrieval`` 非 None）额外暴露：生效配置快照（模型名/维度/
-    启用路线/开关）、各路最近空结果率、向量降级/错误计数、自动降级状态。
+    检索层接入后（``retrieval`` 非 None）额外暴露（v8 §5/F）：
+    - 生效配置快照（模型名/维度/启用路线/契约常量/开关）
+    - hidden 大小（全系统唯一口径）
+    - 各路最近空结果率、被隐藏替换计数、出口断言丢弃计数
+    - 向量路熔断状态
+    - 金丝雀最近结果（由 /health 调用 run_canary 填入）
     """
     run_state = (
         backup_scheduler.status()
@@ -43,6 +49,10 @@ def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None,
         stats = retrieval.stats.snapshot()
         stats["degraded"] = bool(retrieval.degrade.get("degraded"))
         stats["degrade_reason"] = retrieval.degrade.get("reason")
+        stats["hidden_size"] = len(voided_mod.hidden_id_set(db.read_conn))
+        stats["circuit"] = retrieval.vector_state()
+        stats["canary"] = retrieval.canary_state()
         report["config"] = snapshot
         report["retrieval"] = stats
+        report["provider_manifest"] = PROVIDER_MANIFEST
     return report

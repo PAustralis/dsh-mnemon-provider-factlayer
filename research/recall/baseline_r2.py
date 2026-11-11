@@ -254,7 +254,11 @@ def run_factory(corpus, queries, routes="bigram"):
         for item in queries:
             if cfg.route_names == ("bigram",):
                 outcome = service.bigram_route(item["query"], TOP_K)
-                ranking = [id_to_index[mid] for mid in outcome.ids if mid in id_to_index]
+                ranking = [
+                    id_to_index[mid]
+                    for mid in outcome.raw_ids
+                    if mid in id_to_index
+                ]
             else:
                 result = service.search(item["query"])
                 ranking = [
@@ -277,15 +281,16 @@ def check_query_builder(corpus, queries):
     mismatches = []
     for item in queries:
         # 查询侧：原型 bigrams_of 允许重复，真正进 FTS 的是去重后的表达式
-        factory = textnorm.fts_match_expr(textnorm.bigram_query_tokens(item["query"]))
+        tokens, _truncated = textnorm.query_tokens(item["query"])
+        factory = textnorm.fts_match_expr(tokens)
         proto = proto_fts_match_expr(proto_bigrams_of(item["query"]))
         if factory != proto:
             mismatches.append((item["sid"], item["query"], proto, factory))
     if mismatches:
         return mismatches
-    # 索引侧：关掉单字后必须与原型 bigrams_of 逐 token 相同
+    # 索引侧：单混合列必须与原型 bigrams_of 逐 token 相同
     for row in corpus:
-        factory = textnorm.ngram_tokens(row["text"], include_unigrams=False)
+        factory = textnorm.ngram_tokens(row["text"])
         proto = proto_bigrams_of(proto_norm(row["text"]))
         if factory != proto:
             mismatches.append(
