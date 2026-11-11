@@ -7,19 +7,37 @@ from tests.conftest import write_one
 def test_health_shape_and_last_backup_at(client, db, db_path):
     write_one(client, cwid="cw-h1", content="x", session_id="s1")
     health = client.get("/health").json()
-    assert set(health) == {
+    # 第一层字段保持；第二层按设计 §5 追加 config / retrieval
+    assert {
         "pending",
         "failures",
         "last_backup_at",
         "last_backup_error",
         "backup_consecutive_failures",
-    }
-    assert set(health["pending"]) == {"embedding", "entity", "graph"}
+        "config",
+        "retrieval",
+    } <= set(health)
+    assert set(health["pending"]) == {"fts", "embedding", "entity", "graph"}
     assert health["pending"]["embedding"] == 1
-    assert health["failures"] == {"embedding": 0, "entity": 0, "graph": 0}
+    assert health["failures"] == {"fts": 0, "embedding": 0, "entity": 0, "graph": 0}
     assert health["last_backup_at"] is None
     assert health["last_backup_error"] is None
     assert health["backup_consecutive_failures"] == 0
+    # 生效配置快照：模型名 / 维度 / 启用路线 / 开关
+    assert health["config"]["embedding_model"] == ""
+    assert health["config"]["embedding_dim"] == "auto"
+    assert health["config"]["routes"] == ["bigram"]
+    assert health["config"]["effective_routes"] == ["bigram"]
+    assert health["config"]["mmr_enabled"] is False
+    assert set(health["retrieval"]["routes"]) == {
+        "vector",
+        "bigram",
+        "trigram",
+        "graph",
+        "recent",
+    }
+    assert health["retrieval"]["routes"]["bigram"]["empty_rate"] is None
+    assert health["retrieval"]["degraded"] is False
 
     resp = client.post("/admin/backup")
     assert resp.status_code == 200

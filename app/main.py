@@ -1,13 +1,14 @@
 """FastAPI 装配（工厂模式，import 无副作用）。
 
 端点：POST /memories、GET /memories/{id}、GET /memories（按 session）、
-POST /supersedes、GET /health，以及本层运维辅助 POST /derive/tick、
-POST /admin/rebuild、POST /admin/backup。部署固定单 worker：
+POST /supersedes、GET /health、POST /search（检索层），以及运维辅助
+POST /derive/tick、POST /admin/rebuild、POST /admin/backup。部署固定单 worker：
 
     python -m app.main
     python -m uvicorn app.main:create_app --factory --workers 1
 
-模块级不再创建 ``app``：``import app.main`` 不会建库、不会产生 facts.db。
+模块级不创建 ``app``：``import app.main`` 不会建库、不会产生 facts.db。
+配置错误（如启用 vector 路线但 EMBEDDING_MODEL 为空）在 ``create_app`` 时即抛错。
 """
 
 from __future__ import annotations
@@ -22,10 +23,17 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .backup import BackupScheduler
-from .config import load_config
+from .config import Config, load_config
 from .db import Database
 from .derive import DerivePipeline
+from .embeddings import (
+    EmbeddingConfigError,
+    EmbeddingModelMismatch,
+    EmbeddingProvider,
+    build_provider,
+)
 from .health import health_report
+from .retrieval import RetrievalService
 from .schema import init_db
 from .write_path import create_memory, record_supersede
 from . import read_path
@@ -53,11 +61,60 @@ class SupersedeIn(BaseModel):
     source_client: str = Field(min_length=1)
 
 
-def create_app(db_path: str | None = None) -> FastAPI:
+class SearchIn(BaseModel):
+    query: str = Field(min_length=1)
+    session_id: str | None = None
+    limit: int | None = Field(default=None, ge=1, le=50)
+
+
+def validate_config(cfg: Config, embedding_provider: EmbeddingProvider | None) -> None:
+    """配置错误必须在启动时暴露（§8 硬规则 4），不允许拖到查询时。"""
+    if cfg.rrf_k <= 0:
+        raise EmbeddingConfigError(f"RRF_K 必须为正整数（当前 {cfg.rrf_k}）")
+    if cfg.route_top_k <= 0:
+        raise EmbeddingConfigError(f"ROUTE_TOP_K 必须为正整数（当前 {cfg.route_top_k}）")
+    if cfg.final_k <= 0:
+        raise EmbeddingConfigError(f"FINAL_K 必须为正整数（当前 {cfg.final_k}）")
+    if cfg.expand_max_items <= 0 or cfg.expand_max_chars <= 0:
+        raise EmbeddingConfigError(
+            "EXPAND_MAX_ITEMS / EXPAND_MAX_CHARS 必须为正整数"
+        )
+    if not (0.0 <= cfg.mmr_lambda <= 1.0):
+        raise EmbeddingConfigError(f"MMR_LAMBDA 必须在 [0,1]（当前 {cfg.mmr_lambda}）")
+    if cfg.embedding_dim_int is None:
+        pass  # auto：首次调用推断
+    if "vector" in cfg.route_names:
+        if embedding_provider is not None:
+            if not getattr(embedding_provider, "model_id", ""):
+                raise EmbeddingConfigError("注入的 embedding provider 缺少 model_id")
+        elif not cfg.embedding_model.strip():
+            raise EmbeddingConfigError(
+                "启用 vector 路线（RETRIEVAL_ROUTES 含 vector）但 EMBEDDING_MODEL 为空；"
+                "请设置 EMBEDDING_MODEL，或把 vector 从 RETRIEVAL_ROUTES 移除。"
+            )
+        else:
+            build_provider(cfg)  # 校验后端 / 依赖（local-onnx import 失败即报错）
+
+
+def create_app(
+    db_path: str | None = None,
+    *,
+    embedding_provider: EmbeddingProvider | None = None,
+) -> FastAPI:
     cfg = load_config()
+    provider = embedding_provider
+    if provider is None and "vector" in cfg.route_names:
+        provider = build_provider(cfg)  # 配置/依赖错误在此暴露
+    validate_config(cfg, provider)
     db = Database(db_path or cfg.db_path)
     init_db(db)
-    pipeline = DerivePipeline(db, stub_success=cfg.derive_stub_success)
+    pipeline = DerivePipeline(
+        db,
+        stub_success=cfg.derive_stub_success,
+        embedding_provider=provider,
+        embedding_dim=cfg.embedding_dim_int,
+    )
+    retrieval = RetrievalService(db, cfg, provider)
     backup_scheduler = BackupScheduler(
         db,
         interval_seconds=cfg.backup_interval_seconds,
@@ -105,6 +162,7 @@ def create_app(db_path: str | None = None) -> FastAPI:
     app.state.db = db
     app.state.pipeline = pipeline
     app.state.config = cfg
+    app.state.retrieval = retrieval
     app.state.backup_scheduler = backup_scheduler
 
     @app.exception_handler(sqlite3.Error)
@@ -171,17 +229,36 @@ def create_app(db_path: str | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="memory not found")
         return {"id": memory_id, "superseded": read_path.is_voided(db, memory_id)}
 
+    @app.post("/search")
+    def post_search(payload: SearchIn) -> dict:
+        try:
+            return retrieval.search(
+                payload.query,
+                session_id=payload.session_id,
+                limit=payload.limit,
+            )
+        except EmbeddingModelMismatch as exc:
+            detail = exc.message
+            if "/admin/rebuild" not in detail:
+                detail += " 请执行 POST /admin/rebuild 重建向量后重试。"
+            raise HTTPException(status_code=409, detail=detail) from None
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
+
     @app.get("/health")
     def get_health() -> dict:
-        return health_report(db, pipeline, backup_scheduler)
+        return health_report(db, pipeline, backup_scheduler, retrieval)
 
     @app.post("/derive/tick")
     def derive_tick() -> dict:
-        return pipeline.tick()
+        processed = pipeline.tick()
+        retrieval.invalidate_caches()
+        return processed
 
     @app.post("/admin/rebuild")
     def admin_rebuild() -> dict:
         pipeline.rebuild_all()
+        retrieval.invalidate_caches()
         return {"ok": True}
 
     @app.post("/admin/backup")

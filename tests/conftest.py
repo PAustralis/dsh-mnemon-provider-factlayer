@@ -29,8 +29,11 @@ def db(db_path):
 def client(db_path, monkeypatch):
     # 测试里关闭后台线程，避免自动备份与 /health 断言互相干扰；
     # 调度逻辑在 tests/test_backup.py 里单独测。
+    # 检索层默认只开 bigram：vector 路线需要 EMBEDDING_MODEL / 网络，
+    # 向量相关测试自己注入假 provider（见 tests/test_vectors.py）。
     monkeypatch.setenv("DSH_DERIVE_LOOP_ENABLED", "0")
     monkeypatch.setenv("DSH_BACKUP_INTERVAL_SECONDS", "0")
+    monkeypatch.setenv("RETRIEVAL_ROUTES", "bigram")
     app = create_app(db_path=db_path)
     with TestClient(app) as c:
         yield c

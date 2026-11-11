@@ -32,6 +32,15 @@ CREATE TABLE IF NOT EXISTS supersedes (
 );
 """
 
+DERIVE_STATE_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS derive_state (
+  memory_id TEXT NOT NULL,
+  stage     TEXT NOT NULL CHECK (stage IN ('fts','embedding','entity','graph')),
+  done_at   INTEGER NOT NULL,
+  PRIMARY KEY (memory_id, stage)
+);
+"""
+
 SCHEMA_SQL = f"""
 -- 事实表：只追加，永不 UPDATE/DELETE
 CREATE TABLE IF NOT EXISTS memories (
@@ -68,13 +77,8 @@ CREATE INDEX IF NOT EXISTS idx_supersedes_pair
   ON supersedes(from_id, to_id, recorded_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_supersedes_to ON supersedes(to_id, recorded_at DESC);
 
--- 派生侧水位表
-CREATE TABLE IF NOT EXISTS derive_state (
-  memory_id TEXT NOT NULL,
-  stage     TEXT NOT NULL CHECK (stage IN ('embedding','entity','graph')),
-  done_at   INTEGER NOT NULL,
-  PRIMARY KEY (memory_id, stage)
-);
+-- 派生侧水位表（stage 含检索层的 fts：生成 ngrams + 写 FTS5，见 docs/02 §3.1）
+{DERIVE_STATE_TABLE_SQL}
 CREATE TABLE IF NOT EXISTS embeddings (
   memory_id TEXT PRIMARY KEY,
   vector    BLOB NOT NULL
@@ -105,10 +109,27 @@ CREATE TRIGGER IF NOT EXISTS memories_fts_au AFTER UPDATE ON memories BEGIN
   INSERT INTO memories_fts(rowid, content) VALUES (new.rowid, new.content);
 END;
 
--- 元信息表（如 last_backup_at）
+-- 元信息表（last_backup_at / embedding_model / embedding_dim / retrieval:eval）
 CREATE TABLE IF NOT EXISTS meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
+);
+
+-- ---- 检索层派生结构（全部可弃、可重建；不在 memories 上加列） -------------
+-- R2 二元组影子列：NFKC 后「单字 + 双字」空格分隔 token 串
+CREATE TABLE IF NOT EXISTS memories_ngrams (
+  memory_id  TEXT PRIMARY KEY,
+  ngram_text TEXT NOT NULL
+);
+-- R2 全文索引：unicode61 索引 ngram_text（rowid = memories.rowid，事实层只追加故稳定）
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts_bigram USING fts5(
+  ngram_text,
+  tokenize='unicode61'
+);
+-- R3 trigram 全文索引：独立虚表，可单独开关（1–2 字查询在此路不可用）
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts_trigram USING fts5(
+  content,
+  tokenize='trigram'
 );
 """
 
@@ -155,9 +176,35 @@ def migrate_supersedes_pk(db: Database) -> bool:
     return True
 
 
+def migrate_derive_state_stages(db: Database) -> bool:
+    """把旧 derive_state 的 stage CHECK 扩到含 'fts'（SQLite 不能 ALTER CHECK → 重建）。
+
+    旧表只有 ('embedding','entity','graph')；重建时保留全部水位行。返回是否执行了迁移。
+    """
+    row = db.read_conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='derive_state'"
+    ).fetchone()
+    if row is None or not row["sql"]:
+        return False  # 新库
+    if "'fts'" in row["sql"] or '"fts"' in row["sql"]:
+        return False
+    logger.warning("detected legacy derive_state stage CHECK; rebuilding to include 'fts'")
+    with db.write_txn() as conn:
+        conn.execute("ALTER TABLE derive_state RENAME TO derive_state_legacy")
+        conn.execute(DERIVE_STATE_TABLE_SQL)
+        conn.execute(
+            "INSERT INTO derive_state(memory_id, stage, done_at) "
+            "SELECT memory_id, stage, done_at FROM derive_state_legacy"
+        )
+        conn.execute("DROP TABLE derive_state_legacy")
+    logger.warning("derive_state table rebuilt with 'fts' stage")
+    return True
+
+
 def init_db(db: Database) -> None:
-    """迁移入口：先做 supersedes 主键迁移，再按 IF NOT EXISTS 幂等补齐其余结构。"""
+    """迁移入口：先做 supersedes 主键 / derive_state stage 迁移，再幂等补齐其余结构。"""
     migrate_supersedes_pk(db)
+    migrate_derive_state_stages(db)
     db.execute_script(SCHEMA_SQL)
 
 

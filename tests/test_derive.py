@@ -16,15 +16,15 @@ def _seed(client, n=3):
 def test_pending_counts_then_tick_completes(client, db):
     ids = _seed(client)
     pipe = DerivePipeline(db, stub_success=True)
-    for stage in ("embedding", "entity", "graph"):
+    for stage in ("fts", "embedding", "entity", "graph"):
         assert pipe.pending_count(stage) == 3
     processed = pipe.tick()
-    assert processed == {"embedding": 3, "entity": 3, "graph": 3}
-    for stage in ("embedding", "entity", "graph"):
+    assert processed == {"fts": 3, "embedding": 3, "entity": 3, "graph": 3}
+    for stage in ("fts", "embedding", "entity", "graph"):
         assert pipe.pending_count(stage) == 0
         assert pipe.failures[stage] == 0
     done = db.read_conn.execute("SELECT COUNT(*) FROM derive_state").fetchone()[0]
-    assert done == 9  # 3 条 × 3 stage
+    assert done == 12  # 3 条 × 4 stage
 
 
 def test_failed_processor_counts_and_stays_pending(db):
@@ -67,11 +67,14 @@ def test_rebuild_all_clears_derived_and_refills(db, client):
     ids = _seed(client)
     pipe = DerivePipeline(db, stub_success=True)
     pipe.tick()
-    assert pipe.pending_count("embedding") == 0
+    assert pipe.pending_count("fts") == 0
     pipe.rebuild_all()
-    for stage in ("embedding", "entity", "graph"):
+    for stage in ("fts", "embedding", "entity", "graph"):
         assert pipe.pending_count(stage) == 3
     assert db.read_conn.execute("SELECT COUNT(*) FROM derive_state").fetchone()[0] == 0
+    assert db.read_conn.execute("SELECT COUNT(*) FROM memories_ngrams").fetchone()[0] == 0
+    assert db.read_conn.execute("SELECT COUNT(*) FROM memories_fts_bigram").fetchone()[0] == 0
+    assert db.read_conn.execute("SELECT COUNT(*) FROM memories_fts_trigram").fetchone()[0] == 0
     # 重建后再塞入派生数据，二次 rebuild 应清空
     with db.write_txn() as conn:
         conn.execute("INSERT INTO embeddings VALUES (?,?)", (ids[0], b"x"))
@@ -87,7 +90,8 @@ def test_derive_tick_endpoint_and_health_integration(client):
     _seed(client, n=2)
     before = client.get("/health").json()
     assert before["pending"]["embedding"] == 2
+    assert before["pending"]["fts"] == 2
     processed = client.post("/derive/tick").json()
     assert processed["embedding"] == 2
     after = client.get("/health").json()
-    assert after["pending"] == {"embedding": 0, "entity": 0, "graph": 0}
+    assert after["pending"] == {"fts": 0, "embedding": 0, "entity": 0, "graph": 0}

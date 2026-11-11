@@ -135,6 +135,8 @@ def test_background_thread_runs_due_backup(tmp_path, monkeypatch):
     monkeypatch.setattr(main_mod, "DERIVE_LOOP_INTERVAL_SECONDS", 0.05)
     monkeypatch.setenv("DSH_DERIVE_LOOP_ENABLED", "0")
     monkeypatch.setenv("DSH_BACKUP_INTERVAL_SECONDS", "3600")
+    # 检索层默认路线含 vector，需要 embedding 配置；此测试只关心备份线程。
+    monkeypatch.setenv("RETRIEVAL_ROUTES", "bigram")
 
     db_path = str(tmp_path / "facts.db")
     app = main_mod.create_app(db_path=db_path)
