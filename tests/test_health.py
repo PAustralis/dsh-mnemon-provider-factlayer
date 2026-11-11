@@ -7,17 +7,27 @@ from tests.conftest import write_one
 def test_health_shape_and_last_backup_at(client, db, db_path):
     write_one(client, cwid="cw-h1", content="x", session_id="s1")
     health = client.get("/health").json()
-    assert set(health) == {"pending", "failures", "last_backup_at"}
+    assert set(health) == {
+        "pending",
+        "failures",
+        "last_backup_at",
+        "last_backup_error",
+        "backup_consecutive_failures",
+    }
     assert set(health["pending"]) == {"embedding", "entity", "graph"}
     assert health["pending"]["embedding"] == 1
     assert health["failures"] == {"embedding": 0, "entity": 0, "graph": 0}
     assert health["last_backup_at"] is None
+    assert health["last_backup_error"] is None
+    assert health["backup_consecutive_failures"] == 0
 
     resp = client.post("/admin/backup")
     assert resp.status_code == 200
     health = client.get("/health").json()
     assert isinstance(health["last_backup_at"], int)
     assert health["last_backup_at"] > 0
+    assert health["last_backup_error"] is None
+    assert health["backup_consecutive_failures"] == 0
     assert any(backup_dir_for(db_path).glob("backup-*.db"))
 
 

@@ -3,17 +3,36 @@
 依据 docs/01-事实层设计.md（定稿 v7 + 评审修订）：
 - memories 只追加：用 RAISE(ABORT) 触发器在数据库层禁止 UPDATE/DELETE。
 - supersedes 语义为「撤销作废也走追加」：同一 (from_id,to_id) 可有多条边，
-  recorded_at 最新一条决定状态，故主键为 (from_id, to_id, recorded_at)。
-  （设计文档表结构写 PRIMARY KEY (from_id,to_id)，与「追加 + 取最新边」自相矛盾，
-  本实现按语义取三列主键，见报告偏差说明。）
+  recorded_at 最新一条决定状态。主键为自增 ``id``（追加顺序），
+  (from_id,to_id,recorded_at) 仅为普通索引——同毫秒重复 revoke/supersede 不再撞 PK，
+  同毫秒时用 ``id`` 做 tie-break。
 - 派生侧（derive_state / embeddings / entities / FTS5）全部可弃、可清空重建。
+
+迁移：本层早期版本把 (from_id,to_id,recorded_at) 当主键。init_db() 会检测旧结构，
+自动重建 supersedes 表并保留全部边记录（项目尚无生产数据，重建是安全做法）。
 """
 
 from __future__ import annotations
 
+import logging
+
 from .db import Database
 
-SCHEMA_SQL = """
+logger = logging.getLogger("factlayer.schema")
+
+SUPERSEDES_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS supersedes (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,  -- 追加顺序；同毫秒时用于 tie-break
+  from_id    TEXT NOT NULL,               -- 裁决记录 id
+  to_id      TEXT NOT NULL,               -- 被作用记录 id
+  kind       TEXT NOT NULL CHECK (kind IN ('supersede','revoke')),
+  reason     TEXT,
+  recorded_at INTEGER NOT NULL,
+  source_client TEXT NOT NULL
+);
+"""
+
+SCHEMA_SQL = f"""
 -- 事实表：只追加，永不 UPDATE/DELETE
 CREATE TABLE IF NOT EXISTS memories (
   id           TEXT PRIMARY KEY,
@@ -43,15 +62,10 @@ BEGIN
 END;
 
 -- 作废边：追加式；最新边决定 (from_id,to_id) 状态
-CREATE TABLE IF NOT EXISTS supersedes (
-  from_id    TEXT NOT NULL,
-  to_id      TEXT NOT NULL,
-  kind       TEXT NOT NULL CHECK (kind IN ('supersede','revoke')),
-  reason     TEXT,
-  recorded_at INTEGER NOT NULL,
-  source_client TEXT NOT NULL,
-  PRIMARY KEY (from_id, to_id, recorded_at)
-);
+{SUPERSEDES_TABLE_SQL}
+-- 每个 pair 取最新边的索引（recorded_at 同毫秒时按 id 决胜）
+CREATE INDEX IF NOT EXISTS idx_supersedes_pair
+  ON supersedes(from_id, to_id, recorded_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_supersedes_to ON supersedes(to_id, recorded_at DESC);
 
 -- 派生侧水位表
@@ -99,8 +113,51 @@ CREATE TABLE IF NOT EXISTS meta (
 """
 
 
+def _supersedes_columns(db: Database) -> dict[str, dict]:
+    rows = db.read_conn.execute("PRAGMA table_info(supersedes)").fetchall()
+    return {row["name"]: dict(row) for row in rows}
+
+
+def migrate_supersedes_pk(db: Database) -> bool:
+    """把旧的主键 (from_id,to_id,recorded_at) 重建为自增 id 主键。返回是否执行了迁移。
+
+    旧表每个 (from_id,to_id,recorded_at) 至多一行（旧主键约束），所以复制不会丢边。
+    """
+    cols = _supersedes_columns(db)
+    if not cols:
+        return False  # 新库：由 SCHEMA_SQL 建新结构
+    if "id" in cols and cols["id"]["pk"] == 1:
+        return False  # 已是新结构
+
+    logger.warning(
+        "detected legacy supersedes schema (pk without AUTOINCREMENT id); rebuilding table"
+    )
+    has_id = "id" in cols
+    with db.write_txn() as conn:
+        conn.execute("ALTER TABLE supersedes RENAME TO supersedes_legacy")
+        conn.execute(SUPERSEDES_TABLE_SQL)
+        if has_id:
+            conn.execute(
+                "INSERT INTO supersedes "
+                "(id, from_id, to_id, kind, reason, recorded_at, source_client) "
+                "SELECT id, from_id, to_id, kind, reason, recorded_at, source_client "
+                "FROM supersedes_legacy ORDER BY id"
+            )
+        else:
+            conn.execute(
+                "INSERT INTO supersedes "
+                "(from_id, to_id, kind, reason, recorded_at, source_client) "
+                "SELECT from_id, to_id, kind, reason, recorded_at, source_client "
+                "FROM supersedes_legacy ORDER BY recorded_at"
+            )
+        conn.execute("DROP TABLE supersedes_legacy")
+    logger.warning("supersedes table rebuilt with AUTOINCREMENT id primary key")
+    return True
+
+
 def init_db(db: Database) -> None:
-    """迁移入口：库不存在则建；已存在则按 IF NOT EXISTS 幂等补齐。"""
+    """迁移入口：先做 supersedes 主键迁移，再按 IF NOT EXISTS 幂等补齐其余结构。"""
+    migrate_supersedes_pk(db)
     db.execute_script(SCHEMA_SQL)
 
 

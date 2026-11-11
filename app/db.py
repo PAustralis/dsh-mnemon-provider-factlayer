@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 import threading
 from contextlib import contextmanager
 from pathlib import Path
+
+logger = logging.getLogger("factlayer.db")
 
 PRAGMAS = (
     "PRAGMA journal_mode=WAL;",
@@ -51,19 +54,42 @@ class Database:
             self._read_local.conn = conn
         return conn
 
+    def _commit(self, conn: sqlite3.Connection) -> None:
+        """独立方法便于测试注入 COMMIT 失败（sqlite3.Connection 实例不可 monkeypatch）。"""
+        conn.execute("COMMIT")
+
+    def _rollback(self, conn: sqlite3.Connection) -> None:
+        """尽最大努力回滚。连接若已被 SQLite 自动回滚（in_transaction=False）则跳过。"""
+        if not conn.in_transaction:
+            return
+        try:
+            conn.execute("ROLLBACK")
+        except sqlite3.Error:
+            # 回滚都失败时保留原始异常（调用方 raise），只记录服务端日志
+            logger.exception("ROLLBACK failed after transaction error")
+
     @contextmanager
     def write_txn(self):
-        """串行写事务：BEGIN IMMEDIATE ... COMMIT/ROLLBACK。"""
+        """串行写事务：BEGIN IMMEDIATE ... COMMIT/ROLLBACK。
+
+        COMMIT 失败（磁盘满 / IO 错误）时也必须 ROLLBACK：否则连接停在打开事务态，
+        之后所有 BEGIN IMMEDIATE 都会报 "cannot start a transaction within a transaction"，
+        写入永久失败到进程重启。
+        """
         with self._write_lock:
             conn = self._write_conn
             conn.execute("BEGIN IMMEDIATE")
             try:
                 yield conn
             except BaseException:
-                conn.execute("ROLLBACK")
+                self._rollback(conn)
                 raise
             else:
-                conn.execute("COMMIT")
+                try:
+                    self._commit(conn)
+                except BaseException:
+                    self._rollback(conn)
+                    raise
 
     def execute_script(self, script: str) -> None:
         """executescript 会自带隐式提交，不能嵌在 write_txn 里；仅建库/迁移用。"""

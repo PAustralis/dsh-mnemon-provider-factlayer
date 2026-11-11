@@ -26,7 +26,11 @@ def db(db_path):
 
 
 @pytest.fixture
-def client(db_path):
+def client(db_path, monkeypatch):
+    # 测试里关闭后台线程，避免自动备份与 /health 断言互相干扰；
+    # 调度逻辑在 tests/test_backup.py 里单独测。
+    monkeypatch.setenv("DSH_DERIVE_LOOP_ENABLED", "0")
+    monkeypatch.setenv("DSH_BACKUP_INTERVAL_SECONDS", "0")
     app = create_app(db_path=db_path)
     with TestClient(app) as c:
         yield c

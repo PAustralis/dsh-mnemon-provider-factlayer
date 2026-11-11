@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
 import time
@@ -10,6 +11,8 @@ import uuid
 from fastapi import HTTPException
 
 from .db import Database
+
+logger = logging.getLogger("factlayer.write_path")
 
 # 幂等比较字段：同 client_write_id 重试时，这些字段必须完全一致
 IDEMPOTENCY_FIELDS = (
@@ -174,10 +177,13 @@ def record_supersede(
                 "VALUES (?,?,?,?,?,?)",
                 (from_id, to_id, kind, reason, recorded_at, source_client),
             )
-        except sqlite3.IntegrityError as exc:  # 同毫秒重复提交同一条边
+        except sqlite3.IntegrityError:
+            # 原始 SQLite 错误只进服务端日志；HTTP 响应不泄露数据库细节。
+            logger.exception("supersede insert integrity error")
             raise HTTPException(
-                status_code=409, detail=f"该边已存在（同毫秒重复提交）: {exc}"
-            ) from exc
+                status_code=409,
+                detail="该作废边与现有记录冲突，请重试（服务端已记录原始错误）",
+            ) from None
     return {
         "from_id": from_id,
         "to_id": to_id,

@@ -104,3 +104,95 @@ def test_no_update_delete_statement_in_app_code():
     assert not offenders, offenders
     # SCHEMA_SQL 中的 FTS 同步触发器是外部内容表标准形态，且 UPDATE/DELETE 已被
     # RAISE(ABORT) 触发器拦截（见上），不构成事实层写路径。
+
+
+# ---- supersedes schema / 迁移 ------------------------------------------------
+
+LEGACY_SUPERSEDES_SQL = """
+CREATE TABLE supersedes (
+  from_id    TEXT NOT NULL,
+  to_id      TEXT NOT NULL,
+  kind       TEXT NOT NULL CHECK (kind IN ('supersede','revoke')),
+  reason     TEXT,
+  recorded_at INTEGER NOT NULL,
+  source_client TEXT NOT NULL,
+  PRIMARY KEY (from_id, to_id, recorded_at)
+);
+CREATE INDEX idx_supersedes_to ON supersedes(to_id, recorded_at DESC);
+"""
+
+
+def test_supersedes_uses_autoincrement_id_pk(db):
+    cols = {
+        r["name"]: r
+        for r in db.read_conn.execute("PRAGMA table_info(supersedes)").fetchall()
+    }
+    assert cols["id"]["pk"] == 1
+    # 旧三列主键必须降级为普通列
+    assert cols["from_id"]["pk"] == 0
+    assert cols["to_id"]["pk"] == 0
+    assert cols["recorded_at"]["pk"] == 0
+
+
+def test_migrates_legacy_supersedes_table(tmp_path):
+    from app.db import Database
+    from app.schema import init_db, migrate_supersedes_pk
+
+    path = tmp_path / "legacy.db"
+    raw = sqlite3.connect(path)
+    try:
+        raw.executescript(LEGACY_SUPERSEDES_SQL)
+        raw.executemany(
+            "INSERT INTO supersedes "
+            "(from_id, to_id, kind, reason, recorded_at, source_client) "
+            "VALUES (?,?,?,?,?,?)",
+            [
+                ("a", "b", "supersede", "old", 100, "t"),
+                ("a", "b", "revoke", None, 200, "t"),
+            ],
+        )
+        raw.commit()
+    finally:
+        raw.close()
+
+    database = Database(str(path))
+    try:
+        assert migrate_supersedes_pk(database) is True
+        init_db(database)
+
+        cols = {
+            r["name"]: r
+            for r in database.read_conn.execute(
+                "PRAGMA table_info(supersedes)"
+            ).fetchall()
+        }
+        assert cols["id"]["pk"] == 1
+
+        rows = database.read_conn.execute(
+            "SELECT id, from_id, to_id, kind, recorded_at FROM supersedes ORDER BY id"
+        ).fetchall()
+        assert [r["kind"] for r in rows] == ["supersede", "revoke"]
+        assert [r["recorded_at"] for r in rows] == [100, 200]
+
+        # 旧主键下会撞 PK 的同毫秒第三条边，现在可以正常追加
+        with database.write_txn() as conn:
+            conn.execute(
+                "INSERT INTO supersedes "
+                "(from_id, to_id, kind, reason, recorded_at, source_client) "
+                "VALUES (?,?,?,?,?,?)",
+                ("a", "b", "supersede", None, 200, "t"),
+            )
+        assert (
+            database.read_conn.execute("SELECT COUNT(*) FROM supersedes").fetchone()[0]
+            == 3
+        )
+
+        # 迁移幂等：再次 init_db 不重建、不丢数据
+        assert migrate_supersedes_pk(database) is False
+        init_db(database)
+        assert (
+            database.read_conn.execute("SELECT COUNT(*) FROM supersedes").fetchone()[0]
+            == 3
+        )
+    finally:
+        database.close()

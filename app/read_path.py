@@ -63,10 +63,10 @@ def list_memories_by_session(
 
 
 def latest_edge_for_pair(db: Database, from_id: str, to_id: str) -> dict | None:
-    """对 (from_id,to_id) 取 recorded_at 最新一条边。"""
+    """对 (from_id,to_id) 取最新一条边；同毫秒按自增 id（追加顺序）决胜。"""
     row = db.read_conn.execute(
         "SELECT * FROM supersedes WHERE from_id=? AND to_id=? "
-        "ORDER BY recorded_at DESC LIMIT 1",
+        "ORDER BY recorded_at DESC, id DESC LIMIT 1",
         (from_id, to_id),
     ).fetchone()
     if row is None:
@@ -82,11 +82,15 @@ def latest_edge_for_pair(db: Database, from_id: str, to_id: str) -> dict | None:
 
 
 def is_voided(db: Database, to_id: str) -> bool:
-    """某条当前是否作废：对每个 (from_id,to_id) 取最新边，
-    任一最新边为 supersede → 作废；全部为 revoke 或无边 → 未作废。"""
+    """某条当前是否作废（逐 pair 语义）。
+
+    对每个 (from_id,to_id) 分别取最新边（ORDER BY recorded_at DESC, id DESC）；
+    任一最新边为 supersede → 作废；全部为 revoke 或无边 → 未作废。
+    B 对 A 的 revoke 只作用于 (B,A) 这一 pair，不能撤销 C 对 A 的 supersede。
+    """
     rows = db.read_conn.execute(
         "SELECT from_id, kind FROM supersedes WHERE to_id=? "
-        "ORDER BY recorded_at DESC",
+        "ORDER BY recorded_at DESC, id DESC",
         (to_id,),
     ).fetchall()
     latest_by_pair: dict[str, str] = {}
