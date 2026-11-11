@@ -10,6 +10,10 @@
  * - 有超过 30s 的旧结果 → **立即返回旧值**并在后台重验（失败静默，保留旧值）；
  * - 无缓存 → 发起请求，并发调用共享同一个 in-flight Promise。
  *
+ * 缓存**只收 `status:"ready"` 且不在重建的 payload**：`starting` / `rebuilding`
+ * 是暂时态，缓存 30s 会让冷启动后的 Memory 页持续显示不健康（第三层审查 #3）。
+ * 非 ready 结果照常返回给调用方，只是每次重新请求（跑完即恢复）。
+ *
  * 错误分类（`ShimError.kind`）：`config` / `network` / `timeout` / `rebuilding` /
  * `server` / `client` / `invalid-response`。适配器据此区分「明确没写成」与
  * 「结果未知，可能已写入」。
@@ -137,7 +141,7 @@ export class FactlayerClient {
       this.timeouts.status,
     )
       .then((payload) => {
-        if (generation === this.statusGeneration) {
+        if (generation === this.statusGeneration && isCacheableHealth(payload)) {
           this.statusCache = { payload, at: this.now() };
         }
         return payload;
@@ -261,20 +265,39 @@ function httpError(status: number, payload: unknown): ShimError {
   const detail =
     asString(record?.detail) ?? asString(record?.message) ?? asString(record?.error);
   if (status === 503) {
-    const code = asString(record?.error);
-    // 重建期：shim 返回 {"error":"rebuilding","message":"索引重建中，请稍后"}。
-    if (code === 'rebuilding' || code === undefined) {
+    // 只有 shim 自己明确写出的 `{"error":"rebuilding"}` 才代表索引重建中。
+    // 反向代理/网关的普通 503（HTML 错误页 → parseJson 回退成字符串）没有
+    // error code，必须按通用服务不可用处理，否则 status() 会把网关故障
+    // 一直显示成「索引重建中，请稍后」（第三层审查 #1）。
+    if (asString(record?.error) === 'rebuilding') {
       return new ShimError(
         'rebuilding',
         asString(record?.message) ?? '索引重建中，请稍后',
         { status },
       );
     }
+    const unavailable = 'factlayer 服务暂时不可用（HTTP 503）';
+    return new ShimError(
+      'server',
+      detail === undefined ? unavailable : `${unavailable}: ${detail}`,
+      { status },
+    );
   }
   const suffix = detail === undefined ? '' : `: ${detail}`;
   return status >= 500
     ? new ShimError('server', `factlayer HTTP ${status}${suffix}`, { status })
     : new ShimError('client', `factlayer HTTP ${status}${suffix}`, { status });
+}
+
+/**
+ * 只有「健康数据完整」的 payload 才值得缓存 30s：`status:"ready"` 且不在重建。
+ * `starting` 与 `rebuilding` 都是暂时态，缓存它们会让 Memory 页在状态恢复后
+ * 仍显示最长 30s 的不健康（第三层审查 #3）。
+ */
+function isCacheableHealth(payload: unknown): boolean {
+  const record = asRecord(payload);
+  if (record === undefined) return false;
+  return record.status === 'ready' && record.rebuilding !== true;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

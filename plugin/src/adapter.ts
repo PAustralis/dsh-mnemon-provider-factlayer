@@ -124,7 +124,9 @@ export class FactlayerAdapter implements MemoryProviderAdapter {
   // ---------------------------------------------------------------- status
   /**
    * `GET /health` → `ProviderSpaceStatus`。
-   * 超时 → `{healthy:false, error:"starting"}`；503 → `"rebuilding"`。
+   * 超时 → `{healthy:false, error:"starting"}`；只有 shim 明确返回
+   * `{"error":"rebuilding"}` 的 503 才映射成 `"rebuilding"`，网关的普通 503
+   * 走 `statusError` 的通用「服务暂时不可用」文案（第三层审查 #1）。
    * 配置缺失/网络错误 → unhealthy + 人话原因（`status` 永不抛错，否则空间永远显示异常）。
    */
   async status(body: MemorySpace): Promise<ProviderSpaceStatus> {

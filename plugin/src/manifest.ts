@@ -1,7 +1,9 @@
 /**
  * `MemorySpaceProviderManifest`（docs/06 §2/§8、docs/05 §6.1）。
  *
- * 16 个字段写全；三处身份一致：`manifest.typeId` === 子模块 `id` === `adapter.id`。
+ * 15 个字段写全（`summaryI18nKey` 不写：本包没有配套 locale 文件，
+ * 指向不存在的 i18n key 会让 UI 回退到原始 key；该字段可选，直接省略）。
+ * 三处身份一致：`manifest.typeId` === 子模块 `id` === `adapter.id`。
  * 逐项校验里最容易踩的四个：
  * 1. `apiVersion` 是固定字面量，抄自本机已装官方 provider 用的常量
  *    （`MEMORY_SPACE_PROVIDER_API_VERSION`，见 contract.ts 注释）。
@@ -91,7 +93,6 @@ export const FACTLAYER_MANIFEST: MemorySpaceProviderManifest = {
   icon: { kind: 'glyph', value: 'FL' },
   summary:
     'Factlayer shim：只追加的事实层 + 混合检索（RRF），按 provider-native 顺序返回；写入是同步落盘的精确写。',
-  summaryI18nKey: 'overview.providerSummary.factlayer',
   origin: 'third-party',
   // 数据在 shim 自己的 SQLite 里、DSH 只经 HTTP 访问：按「远端服务」声明更保守，
   // 不会被 local-only 的 placement 规则误选（docs/06 §3 只要求数据边界如实）。

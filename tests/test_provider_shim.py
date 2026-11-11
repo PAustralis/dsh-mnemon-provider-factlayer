@@ -124,6 +124,15 @@ def test_health_rebuilding_flag_is_read_from_gate_not_snapshot():
 
 
 def test_health_returns_starting_before_first_snapshot(db_path, monkeypatch):
+    """``starting`` 只出现在「快照尚未就绪」时，不是常态。
+
+    真实部署里 ``lifespan`` 调 ``health_cache.start()``，默认 ``prime=True``
+    **同步**算出一份快照后才启动刷新线程，所以正常启动的进程第一次
+    /health 就是 ready。``starting`` 主要出现在首轮 ``_compute_health`` 失败
+    （库锁、迁移未完成等）导致 ``refresh_now()`` 返回 None 时；本测试把
+    ``start()`` 换掉（压根不 prime）是为了稳定复现「缓存未就绪」这个分支，
+    不依赖后台线程时序。
+    """
     _hermetic_env(monkeypatch)
     app = create_app(db_path=db_path)
     cache = app.state.health_cache
@@ -208,6 +217,43 @@ def test_rebuilding_blocks_search_and_memories_with_explicit_503(client, db):
         gate.end()
     # 解除后恢复服务（旧索引完整可用，不是半张）
     assert client.post("/search", json={"query": "重建前写入"}).status_code == 200
+
+
+def test_rebuilding_blocks_admin_search_and_supersedes(client, db):
+    """重建期 ``/admin/search`` 与 ``/supersedes`` 也必须 503（第三层审查 #2）。
+
+    ``/supersedes`` 选方案 (a)（直接 503）：写边若落在「重建读快照」之后，派生
+    层会少算一次作废，产生「边已写、检索却按旧图作答」的派生不一致。与
+    ``/memories`` 保持同一语义（明确 503、客户端可重试），比方案 (b)「先写边
+    再标 rebuild_in_progress、依赖后续 derive 补齐」少一个静默不一致窗口。
+    """
+    first = write_one(
+        client, cwid="cw-rb-edge-a", content="旧结论", session_id="s-rb"
+    ).json()
+    second = write_one(
+        client, cwid="cw-rb-edge-b", content="新结论", session_id="s-rb"
+    ).json()
+    payload = {
+        "from_id": first["id"],
+        "to_id": second["id"],
+        "kind": "supersede",
+        "source_client": "test-client",
+    }
+    gate = client.app.state.rebuild_gate
+    gate.begin()
+    try:
+        _assert_rebuilding_503(client.get("/admin/search", params={"query": "结论"}))
+        _assert_rebuilding_503(client.post("/supersedes", json=payload))
+        # 写边确实没落盘（不是静默吞掉）
+        assert (
+            db.read_conn.execute("SELECT COUNT(*) FROM supersedes").fetchone()[0] == 0
+        )
+    finally:
+        gate.end()
+    # 解除后两者恢复：admin 检索 200，写边正常追加
+    assert client.get("/admin/search", params={"query": "结论"}).status_code == 200
+    assert client.post("/supersedes", json=payload).status_code == 200
+    assert db.read_conn.execute("SELECT COUNT(*) FROM supersedes").fetchone()[0] == 1
 
 
 def test_admin_rebuild_sets_flag_during_work_and_clears_after(client, monkeypatch):

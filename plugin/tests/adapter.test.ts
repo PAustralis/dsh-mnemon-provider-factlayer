@@ -335,6 +335,21 @@ describe('search 结果映射', () => {
     await expect(adapter.search(SPACE, { query: 'q' })).rejects.toThrow(/items 数组/u);
   });
 
+  it('畸形 JSON（200 + HTML）→ invalid-response，不冒充空结果', async () => {
+    const recorder = recordingFetch(
+      () =>
+        new Response('<html><body>proxy error page</body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html' },
+        }),
+    );
+    const { adapter } = makeAdapter({ createClient: clientFactory(recorder.fetch) });
+
+    await expect(adapter.search(SPACE, { query: 'q' })).rejects.toMatchObject({
+      kind: 'invalid-response',
+    } satisfies Partial<ShimError>);
+  });
+
   it('shim 503（重建期）→ 抛 rebuilding，不返回空数组', async () => {
     const recorder = recordingFetch(() =>
       jsonResponse({ error: 'rebuilding', message: '索引重建中，请稍后' }, 503),
@@ -374,6 +389,23 @@ describe('status', () => {
       healthy: false,
       error: 'rebuilding',
     });
+  });
+
+  it('网关 503（无 rebuilding 标记）→ unhealthy 通用文案，不显示「索引重建中」', async () => {
+    const recorder = recordingFetch(
+      () =>
+        new Response('<html><body>503 Service Unavailable</body></html>', {
+          status: 503,
+          headers: { 'content-type': 'text/html' },
+        }),
+    );
+    const { adapter } = makeAdapter({ createClient: clientFactory(recorder.fetch) });
+
+    const status = await adapter.status(SPACE);
+
+    expect(status.healthy).toBe(false);
+    expect(status.error).toMatch(/服务暂时不可用/u);
+    expect(status.error).not.toMatch(/rebuilding|索引重建/u);
   });
 
   it('shim 的 starting / rebuilding 标志都映射成 unhealthy', async () => {

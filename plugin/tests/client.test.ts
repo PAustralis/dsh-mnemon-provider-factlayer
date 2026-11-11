@@ -76,6 +76,46 @@ describe('status stale-while-revalidate', () => {
     expect(a).toBe(b);
   });
 
+  it('starting 不写缓存：连续两次调用各发一次请求（冷启动不被锁死 30s）', async () => {
+    let clock = 0;
+    const recorder = recordingFetch(() => jsonResponse({ status: 'starting' }));
+    const client = new FactlayerClient({
+      baseUrl: 'http://shim.test',
+      fetch: recorder.fetch,
+      now: () => clock,
+    });
+
+    await client.health();
+    clock += 1; // 若被缓存，这里仍在 30s 窗口内
+    await client.health();
+
+    expect(recorder.calls).toHaveLength(2);
+  });
+
+  it('rebuilding 不写缓存；ready 之后才复用', async () => {
+    let clock = 0;
+    let rebuilding = true;
+    const recorder = recordingFetch(() =>
+      jsonResponse({ status: 'ready', rebuilding }),
+    );
+    const client = new FactlayerClient({
+      baseUrl: 'http://shim.test',
+      fetch: recorder.fetch,
+      now: () => clock,
+    });
+
+    await client.health();
+    await client.health(); // 重建中不复用
+    expect(recorder.calls).toHaveLength(2);
+
+    rebuilding = false;
+    await client.health(); // 第一次 ready：真查并写缓存
+    expect(recorder.calls).toHaveLength(3);
+    clock += STATUS_STALE_MS - 1;
+    await client.health(); // 30s 内复用
+    expect(recorder.calls).toHaveLength(3);
+  });
+
   it('invalidateStatus 后下一次重新请求（用户点了「重新连接」）', async () => {
     let clock = 0;
     const recorder = recordingFetch(() => jsonResponse({ status: 'ready' }));
@@ -124,6 +164,38 @@ describe('错误分类', () => {
     await expect(client.search({ query: 'q' })).rejects.toMatchObject({
       kind: 'rebuilding',
       message: '索引重建中，请稍后',
+      status: 503,
+    } satisfies Partial<ShimError>);
+  });
+
+  it('503 但没有 error code（网关）→ server + 通用「服务暂时不可用」，不误判重建', async () => {
+    const client = new FactlayerClient({
+      baseUrl: 'http://shim.test',
+      fetch: () =>
+        Promise.resolve(jsonResponse({ detail: 'upstream connect error' }, 503)),
+    });
+    const error = (await client.search({ query: 'q' }).catch((e: unknown) => e)) as ShimError;
+
+    expect(error).toBeInstanceOf(ShimError);
+    expect(error.kind).toBe('server');
+    expect(error.status).toBe(503);
+    expect(error.message).toContain('服务暂时不可用');
+    expect(error.message).not.toContain('索引重建');
+  });
+
+  it('503 + HTML body（parseJson 回退成字符串）→ server，不误判重建', async () => {
+    const client = new FactlayerClient({
+      baseUrl: 'http://shim.test',
+      fetch: () =>
+        Promise.resolve(
+          new Response('<html><body>503 Service Unavailable</body></html>', {
+            status: 503,
+            headers: { 'content-type': 'text/html' },
+          }),
+        ),
+    });
+    await expect(client.search({ query: 'q' })).rejects.toMatchObject({
+      kind: 'server',
       status: 503,
     } satisfies Partial<ShimError>);
   });

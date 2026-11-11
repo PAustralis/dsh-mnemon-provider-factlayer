@@ -17,8 +17,9 @@ admin 端点由 ``ADMIN_TOKEN`` 保护：非空时要求 ``X-Admin-Token`` 或
 1. ``GET /spaces`` 只读配置，O(1)，不查库（discover 的 externalId 来源）。
 2. ``GET /health`` 只读后台快照（``HealthCache``，每 5s 刷新），请求里不跑聚合；
    快照未就绪时返回 ``{"status": "starting"}``。
-3. ``POST /admin/rebuild`` 期间置 rebuilding 标志，``POST /search`` 与
-   ``/memories``（读与写）一律 503 ``rebuilding``，绝不返回部分结果。
+3. ``POST /admin/rebuild`` 期间置 rebuilding 标志，``POST /search``、``/memories``
+   （读与写）、``/admin/search`` 与 ``/supersedes``（写边）一律 503 ``rebuilding``，
+   绝不返回部分结果；``/health`` 与 ``/spaces`` 仍 O(1) 可读。
 
 模块级不创建 ``app``：``import app.main`` 不会建库、不会产生 facts.db。
 **出厂默认 vector 单路**（docs/02 §2 / §9.3）：embedding 已配置但无效时仍在
@@ -334,6 +335,12 @@ def create_app(
 
     @app.post("/supersedes")
     def post_supersede(payload: SupersedeIn) -> dict:
+        # 重建期同样关闭写边：supersede 边若落在「重建读快照」之后，派生层会
+        # 少算一次作废，产生「边已写、检索却按旧图作答」的派生不一致。与
+        # /memories 保持同一语义（明确 503，客户端可重试），不选「先写边、
+        # 依赖下一次 derive 补齐」——那会留下一个静默的不一致窗口
+        # （第三层审查 #2，方案 a）。
+        rebuild_gate.raise_if_rebuilding()
         return record_supersede(
             db,
             from_id=payload.from_id,
@@ -394,7 +401,8 @@ def create_app(
     def admin_rebuild(request: Request) -> dict:
         _require_admin(request)
         # 触发即置 rebuilding=True（线程安全标志），完成/失败都清除；
-        # 期间 /search 与 /memories 返回 503，绝不让读者看到半张索引。
+        # 期间读端点与写端点（含 /admin/search 与 /supersedes）返回 503，
+        # 绝不让读者看到半张索引、也不让写边落在读快照之后。
         with rebuild_gate.rebuilding():
             counts = pipeline.rebuild_all()
             retrieval.invalidate_caches()
@@ -409,6 +417,9 @@ def create_app(
     ) -> dict:
         """运维/评测端点：模型路径不可达的 include_superseded 只在这里可用。"""
         _require_admin(request)
+        # 重建期同样 503：admin 检索读的是同一张索引，不能拿半张结果做运维/评测
+        # 结论（第三层审查 #2）。
+        rebuild_gate.raise_if_rebuilding()
         try:
             return retrieval.search(
                 query,

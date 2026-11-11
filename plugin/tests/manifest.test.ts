@@ -19,7 +19,6 @@ const MANIFEST_KEYS = [
   'label',
   'icon',
   'summary',
-  'summaryI18nKey',
   'origin',
   'locality',
   'workspaceBinding',
@@ -30,9 +29,10 @@ const MANIFEST_KEYS = [
 ].sort();
 
 describe('manifest', () => {
-  it('16 字段齐全（含可选 icon / summaryI18nKey）', () => {
+  it('15 字段齐全（可选 summaryI18nKey 省略：没有配套 locale 文件）', () => {
     expect(Object.keys(FACTLAYER_MANIFEST).sort()).toEqual(MANIFEST_KEYS);
-    expect(Object.keys(FACTLAYER_MANIFEST)).toHaveLength(16);
+    expect(Object.keys(FACTLAYER_MANIFEST)).toHaveLength(15);
+    expect(FACTLAYER_MANIFEST).not.toHaveProperty('summaryI18nKey');
   });
 
   it('apiVersion 是官方常量，不是自造字符串', () => {

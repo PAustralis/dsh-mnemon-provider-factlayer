@@ -10,16 +10,17 @@
  *   导出（官方 9 个 provider 全是 `import ... from "dsh-mnemon-source-memory-spaces/provider-sdk"`）；
  * - `dsh-mnemon` 主入口**没有**重新导出它（grep 无命中）。
  *
- * 因此按 `dsh-mnemon` → `dsh-mnemon-source-memory-spaces/provider-sdk` 顺序探测：
- * 既满足「动态 import('dsh-mnemon')」的要求，也能在真实宿主里装配成功。
+ * 因此按 `dsh-mnemon-source-memory-spaces/provider-sdk` → `dsh-mnemon` 顺序探测：
+ * 已核实前者是真实导出面，先试它可避免每次装配都白 evaluate 一遍
+ * `dsh-mnemon` 主入口的 core；后者保留为回退（宿主若将来重新导出也能命中）。
  */
 
 import type { DefineMemorySpaceProvider } from './contract.js';
 
-/** 探测顺序；第一个是 06/任务要求的 dsh-mnemon，第二个是 0.5.37 实际导出面。 */
+/** 探测顺序；第一个是 0.5.37 的实际导出面，第二个是 06/任务的装配要求（保留回退）。 */
 const SDK_CANDIDATES: string[] = [
-  'dsh-mnemon',
   'dsh-mnemon-source-memory-spaces/provider-sdk',
+  'dsh-mnemon',
 ];
 
 export class ProviderSdkUnavailableError extends Error {
