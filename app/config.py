@@ -144,6 +144,12 @@ class Config:
     canary_size: int = 20
     canary_alert_rate: float = 0.20
 
+    # ---- 对接层（docs/06 v3） ----
+    # provider discover 的固定空间标识；remember 的 session_id 也用同一个值。
+    factlayer_space_id: str = "factlayer-default"
+    # /health 后台快照刷新间隔（秒）；请求路径只读缓存，绝不查询聚合。
+    health_refresh_seconds: float = 5.0
+
     @property
     def embedding_dim_int(self) -> int | None:
         from .embeddings import parse_configured_dim
@@ -262,5 +268,12 @@ def load_config() -> Config:
         canary_size=_env_int("CANARY_SIZE", "DSH_CANARY_SIZE", default=20),
         canary_alert_rate=_env_float(
             "CANARY_ALERT_RATE", "DSH_CANARY_ALERT_RATE", default=0.20
+        ),
+        factlayer_space_id=_env_raw(
+            "FACTLAYER_SPACE_ID", "DSH_FACTLAYER_SPACE_ID", default="factlayer-default"
+        )
+        or "factlayer-default",
+        health_refresh_seconds=_env_float(
+            "HEALTH_REFRESH_SECONDS", "DSH_HEALTH_REFRESH_SECONDS", default=5.0
         ),
     )

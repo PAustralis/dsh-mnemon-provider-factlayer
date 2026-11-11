@@ -27,6 +27,7 @@ dsh-mnemon 的记忆 provider 后端：一个 FastAPI shim，对上暴露 mnemon
 
 - **第一层（事实层）**：建库（只追加触发器 + FTS5）、写入路径（服务端 id/seq、client_write_id 幂等、409）、读取（按 id 全文 / 按会话截断输出）、supersedes 作废边、派生水位循环、自动备份调度（VACUUM INTO + 原子替换）、`/health`。设计见 [docs/01-事实层设计.md](docs/01-事实层设计.md)。
 - **第二层（检索层，v8 + 2026-11-11 重测）**：出厂默认 **R1 vector 单路**（真实 embedding 重测 R@6=**0.8729**；bigram 基线 0.4875 仅作向量不可用时的降级路，**不做 RRF 融合**——等权融合只有 0.6833）；`gseq` 全局单调序；hidden 唯一口径（20 跳、可达存活链头）；路内替换；单路直出（score 仍 1/(60+rank)）→ FINAL_K=4；契约输出（数值 score、ISO 8601 UTC createdAt、tags 状态通道、1200/4800 字符预算）。设计见 [docs/02-检索层设计.md](docs/02-检索层设计.md)、重测报告 [docs/04-embedding重测报告.md](docs/04-embedding重测报告.md)、契约映射 [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md)。
+- **第三层（对接层，`plugin/` + shim 侧 `/spaces` / O(1) `/health`）**：一个极薄的 TypeScript provider 适配器包 `dsh-mnemon-provider-factlayer`（`defineMemorySpaceProvider` + `host.install`），把 mnemon 契约的 `discover/status/search/remember/list/graph` 逐方法翻译成对 shim 的一次 HTTP 调用；shim 侧新增 `GET /spaces`、`/health` 后台快照、重建期 503。设计见 [docs/06-对接层设计.md](docs/06-对接层设计.md)、接口契约 [docs/05-provider接口契约.md](docs/05-provider接口契约.md)。安装与配置见 [plugin/README.md](plugin/README.md)。
 
 ## 运行
 
@@ -40,7 +41,14 @@ python -m pytest       # 运行测试
 
 `app.main` 不再在模块级创建 `app`（工厂模式）：`import app.main` 无副作用，不会在当前目录生成 `facts.db`。启动后后台线程每 `DSH_BACKUP_INTERVAL_SECONDS`（默认 86400，设 0 关闭）检查一次 `last_backup_at`，到期自动备份；备份失败会在 `/health` 的 `last_backup_error` / `backup_consecutive_failures` 暴露，完整堆栈只写服务端日志。
 
-主要端点：`POST /memories`、`GET /memories/{id}`（全文）、`GET /memories?session_id=`（输出处截断至 1200 字符并标注）、`POST /supersedes`、`POST /search`、`GET /health`、`POST /derive/tick`，以及 admin 端点 `GET /admin/search`（`include_superseded=1`，模型路径不可达）、`POST /admin/rebuild`、`POST /admin/canary`、`POST /admin/backup`。
+主要端点：`POST /memories`、`GET /memories/{id}`（全文）、`GET /memories?session_id=`（输出处截断至 1200 字符并标注）、`POST /supersedes`、`POST /search`、`GET /health`、`GET /spaces`（对接层 discover），以及 admin 端点 `GET /admin/search`（`include_superseded=1`，模型路径不可达）、`POST /admin/rebuild`、`POST /admin/canary`、`POST /admin/backup`。
+
+对接层（第三层，`plugin/`）的 shim 侧约定（docs/06 v3）：
+
+- **`GET /spaces`**：`[{"id": "<FACTLAYER_SPACE_ID>", "name": "factlayer"}]`，只读配置、O(1)，不查库。适配器的 `externalId` 与 `connection.memoryBodyId` 都取这个值。
+- **`GET /health` 是后台快照**：后台线程每 `HEALTH_REFRESH_SECONDS`（默认 5）刷新 pending / 索引缺口 / 备份状态 / 熔断 / 金丝雀，请求只读缓存（O(1)）；快照未就绪时返回 `{"status": "starting"}`，重建期带 `rebuilding: true`。
+- **重建期不静默返回部分结果**：`POST /admin/rebuild` 触发即置 rebuilding 标志，期间 `POST /search` 与 `/memories`（读/写）返回 `503 {"error":"rebuilding","message":"索引重建中，请稍后"}`，完成/失败后恢复。
+- **`/search` 不按 `session_id` 过滤**（session 只用于写入分组与会话展开），因此 A 机写入、B 机也能搜到。
 
 admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 或 `Authorization: Bearer <token>`；为空时只接受回环访问（含 TestClient）。
 
@@ -55,6 +63,8 @@ admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 
 | `RETRIEVAL_AUTO_DEGRADE` | `false` | 设计 §12 不做运行时质量自动降级；仅离线评测复现时显式打开 |
 | `ADMIN_TOKEN` | 空 | 空则 admin 端点仅回环 |
 | `EMBEDDING_MAX_SPEND_USD` | `0.50` | 向量重建预算上限 |
+| `FACTLAYER_SPACE_ID` | `factlayer-default` | provider discover 的固定空间标识；`remember` 的 `session_id` 同值 |
+| `HEALTH_REFRESH_SECONDS` | `5` | `/health` 后台快照刷新间隔；请求路径 O(1) 只读缓存 |
 
 ## 迁移说明
 
@@ -114,3 +124,6 @@ python research/recall/baseline_r2.py     # 原型 + 出厂实现分别跑 R@6
 - [docs/01-事实层设计.md](docs/01-事实层设计.md) —— 事实层（第一层）
 - [docs/02-检索层设计.md](docs/02-检索层设计.md) —— 检索层（第二层，v8）
 - [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md) —— 检索输出到 mnemon provider 契约的映射
+- [docs/05-provider接口契约.md](docs/05-provider接口契约.md) —— provider 完整接口契约（第三层实现手册）
+- [docs/06-对接层设计.md](docs/06-对接层设计.md) —— 对接层设计 v3（装配形状 / 能力键名 / 密钥路径 / session_id / O(1) health / 重建期语义）
+- [plugin/README.md](plugin/README.md) —— `dsh-mnemon-provider-factlayer` 安装、配置与两台机器一致性说明

@@ -1,0 +1,9 @@
+# pnpm 11 把 pnpm 专属配置移到了这里（.npmrc 只留 npm 兼容项）。
+# 本包只做「本地类型镜像 + 运行时动态 import」：不把 peer 实际装进 node_modules，
+# dsh-mnemon / dsh-mnemon-source-memory-spaces 由宿主 profile 提供。
+autoInstallPeers: false
+# vitest 依赖 esbuild 的 postinstall（下载/校验平台二进制）；只放行这一个。
+allowBuilds:
+  esbuild: true
+# pnpm exec 前不再做隐式 install 检查（先显式 install 即可）。
+verifyDepsBeforeRun: false

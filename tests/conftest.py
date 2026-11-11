@@ -67,3 +67,14 @@ def write_one(client, *, session_id="s1", content="hello", cwid=None, **kw):
     for key in ("salt", "i"):
         payload.pop(key, None)
     return client.post("/memories", json=payload)
+
+
+def prime_health(client) -> dict:
+    """刷新 /health 快照后返回该 JSON。
+
+    /health 是后台每 5s 刷新的**快照**（O(1) 读取，docs/06 §7.1），所以凡是
+    「写库/备份之后立刻断言 /health」的测试都要先显式刷新一次，否则读到的是
+    上一轮快照（这正是 O(1) 的代价，不是回归）。
+    """
+    client.app.state.health_cache.refresh_now()
+    return client.get("/health").json()

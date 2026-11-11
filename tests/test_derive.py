@@ -1,7 +1,7 @@
 """derive 水位循环：推进、失败计数、全量重建（单写事务）。"""
 
 from app.derive import DerivePipeline
-from tests.conftest import write_one
+from tests.conftest import prime_health, write_one
 
 
 def _seed(client, n=3):
@@ -125,10 +125,10 @@ def test_rebuild_failure_keeps_old_derived_index(db, client):
 
 def test_derive_tick_endpoint_and_health_integration(client):
     _seed(client, n=2)
-    before = client.get("/health").json()
+    before = prime_health(client)
     assert before["pending"]["embedding"] == 2
     assert before["pending"]["fts"] == 2
     processed = client.post("/derive/tick").json()
     assert processed["embedding"] == 2
-    after = client.get("/health").json()
+    after = prime_health(client)
     assert after["pending"] == {"fts": 0, "embedding": 0, "entity": 0, "graph": 0}

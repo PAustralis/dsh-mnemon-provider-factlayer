@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.backup import BackupScheduler, backup_dir_for, run_backup
 from app.health import last_backup_at
+from tests.conftest import prime_health
 
 
 # ---- 原子替换 ----------------------------------------------------------------
@@ -117,14 +118,14 @@ def test_manual_backup_failure_exposed_in_health(client, monkeypatch):
     assert "disk I/O" not in resp.text and "secret" not in resp.text
     assert "备份失败" in resp.json()["detail"]
 
-    health = client.get("/health").json()
+    health = prime_health(client)
     assert health["backup_consecutive_failures"] == 1
     assert "OperationalError" in health["last_backup_error"]
 
     # 恢复后手动备份成功，健康状态清零
     monkeypatch.setattr(backup_mod, "run_backup", original)
     assert client.post("/admin/backup").status_code == 200
-    health = client.get("/health").json()
+    health = prime_health(client)
     assert health["backup_consecutive_failures"] == 0
     assert health["last_backup_error"] is None
 
@@ -135,6 +136,9 @@ def test_background_thread_runs_due_backup(tmp_path, monkeypatch):
     monkeypatch.setattr(main_mod, "DERIVE_LOOP_INTERVAL_SECONDS", 0.05)
     monkeypatch.setenv("DSH_DERIVE_LOOP_ENABLED", "0")
     monkeypatch.setenv("DSH_BACKUP_INTERVAL_SECONDS", "3600")
+    # /health 是后台快照（默认 5s 一刷）；这个测试在 5 秒内轮询，必须把刷新
+    # 间隔一起缩短，否则读到的永远是启动时那份「还没有备份」的快照。
+    monkeypatch.setenv("HEALTH_REFRESH_SECONDS", "0.05")
     # 检索层默认路线含 vector，需要 embedding 配置；此测试只关心备份线程。
     monkeypatch.setenv("RETRIEVAL_ROUTES", "bigram")
 

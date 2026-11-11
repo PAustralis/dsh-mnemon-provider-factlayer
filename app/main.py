@@ -1,9 +1,9 @@
 """FastAPI 装配（工厂模式，import 无副作用）。
 
 端点：POST /memories、GET /memories/{id}、GET /memories（按 session）、
-POST /supersedes、GET /health、POST /search（检索层），以及运维辅助
-POST /derive/tick、POST /admin/rebuild、POST /admin/backup、GET /admin/search、
-POST /admin/canary。部署固定单 worker：
+POST /supersedes、GET /health、POST /search（检索层）、GET /spaces（对接层
+discover），以及运维辅助 POST /derive/tick、POST /admin/rebuild、
+POST /admin/backup、GET /admin/search、POST /admin/canary。部署固定单 worker：
 
     python -m app.main
     python -m uvicorn app.main:create_app --factory --workers 1
@@ -11,6 +11,14 @@ POST /admin/canary。部署固定单 worker：
 admin 端点由 ``ADMIN_TOKEN`` 保护：非空时要求 ``X-Admin-Token`` 或
 ``Authorization: Bearer <token>``；为空时只接受回环请求（含 TestClient）。
 ``include_superseded`` 在模型路径上不可达，只由 ``GET /admin/search`` 提供。
+
+第三层（docs/06 v3）的三条硬约束：
+
+1. ``GET /spaces`` 只读配置，O(1)，不查库（discover 的 externalId 来源）。
+2. ``GET /health`` 只读后台快照（``HealthCache``，每 5s 刷新），请求里不跑聚合；
+   快照未就绪时返回 ``{"status": "starting"}``。
+3. ``POST /admin/rebuild`` 期间置 rebuilding 标志，``POST /search`` 与
+   ``/memories``（读与写）一律 503 ``rebuilding``，绝不返回部分结果。
 
 模块级不创建 ``app``：``import app.main`` 不会建库、不会产生 facts.db。
 **出厂默认 vector 单路**（docs/02 §2 / §9.3）：embedding 已配置但无效时仍在
@@ -42,6 +50,13 @@ from .embeddings import (
     build_provider,
 )
 from .health import health_report
+from .health_cache import HealthCache
+from .rebuild_gate import (
+    REBUILDING_ERROR,
+    REBUILDING_MESSAGE,
+    RebuildGate,
+    RebuildingInProgress,
+)
 from .retrieval import RetrievalService
 from .schema import init_db
 from .write_path import create_memory, record_supersede
@@ -164,6 +179,30 @@ def create_app(
         interval_seconds=cfg.backup_interval_seconds,
         keep=cfg.backup_keep,
     )
+    # 重建期闸门 + /health 快照缓存都在进程内：重建只有一个，/health 只读缓存。
+    rebuild_gate = RebuildGate()
+
+    def _compute_health() -> dict:
+        """/health 的全部昂贵统计：只在后台刷新线程（或启动 prime）里执行。"""
+        report = health_report(db, pipeline, backup_scheduler, retrieval)
+        if cfg.canary_enabled:
+            # 金丝雀查询不计入检索统计（直接走 bigram_route）
+            try:
+                report["retrieval"]["canary"] = retrieval.run_canary()
+            except Exception:  # 金丝雀失败不影响 /health 其余字段
+                logger.exception("canary failed")
+                report["retrieval"]["canary"] = {
+                    "status": "error",
+                    "alert": False,
+                }
+        return report
+
+    health_cache = HealthCache(
+        _compute_health,
+        interval_seconds=cfg.health_refresh_seconds,
+        rebuilding=rebuild_gate,
+        on_thread_stop=db.close_thread_read_conn,
+    )
 
     stop_event = threading.Event()
     loop_thread: threading.Thread | None = None
@@ -185,6 +224,8 @@ def create_app(
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         nonlocal loop_thread
+        # 先 prime 一份快照（启动即可回答 /health），再起周期刷新线程。
+        health_cache.start()
         if loop_needed:
             loop_thread = threading.Thread(
                 target=_loop, name="derive-backup-loop", daemon=True
@@ -197,6 +238,7 @@ def create_app(
                 cfg.backup_interval_seconds,
             )
         yield
+        health_cache.stop()
         stop_event.set()
         if loop_thread is not None:
             loop_thread.join(timeout=30)
@@ -208,6 +250,8 @@ def create_app(
     app.state.config = cfg
     app.state.retrieval = retrieval
     app.state.backup_scheduler = backup_scheduler
+    app.state.rebuild_gate = rebuild_gate
+    app.state.health_cache = health_cache
 
     def _admin_allowed(request: Request) -> bool:
         """ADMIN_TOKEN 非空 → 校验 token；为空 → 只接受回环（含 TestClient）。"""
@@ -235,8 +279,30 @@ def create_app(
             status_code=500, content={"detail": "内部存储错误，服务端已记录日志"}
         )
 
+    @app.exception_handler(RebuildingInProgress)
+    def _rebuilding_handler(
+        _request: Request, _exc: RebuildingInProgress
+    ) -> JSONResponse:
+        """重建期：明确 503，绝不用空数组/半张索引冒充正常结果。"""
+        return JSONResponse(
+            status_code=503,
+            content={"error": REBUILDING_ERROR, "message": REBUILDING_MESSAGE},
+        )
+
+    @app.get("/spaces")
+    def get_spaces() -> list[dict]:
+        """provider discover 的命名空间列表（O(1)，只读配置，不查库）。
+
+        固定单空间：id 取 ``FACTLAYER_SPACE_ID``（默认 ``factlayer-default``）。
+        discover 的 externalId 就是这个值，remember 的 session_id 也取同一个值
+        （由适配器从空间 connection 里读），因此两台机器天然一致。
+        """
+        return [{"id": cfg.factlayer_space_id, "name": "factlayer"}]
+
     @app.post("/memories")
     def post_memory(payload: MemoryIn) -> dict:
+        # 重建期不接收写入：新记忆若落在「重建读快照」之后，会缺派生行（搜不到）。
+        rebuild_gate.raise_if_rebuilding()
         return create_memory(
             db,
             client_write_id=payload.client_write_id,
@@ -260,6 +326,7 @@ def create_app(
         limit: int = Query(50, ge=1, le=200),
         offset: int = Query(0, ge=0),
     ) -> dict:
+        rebuild_gate.raise_if_rebuilding()
         records = read_path.list_memories_by_session(
             db, session_id, limit=limit, offset=offset, truncate=True
         )
@@ -291,6 +358,10 @@ def create_app(
 
     @app.post("/search")
     def post_search(payload: SearchIn) -> dict:
+        # 重建期：明确 503（docs/06 §7.1），不返回部分结果。
+        # 注意 /search **不按 session_id 过滤**：session_id 只用于写入分组与会话展开，
+        # 契约里也没有「按会话检索」的概念（docs/06 §5）。这里保留字段仅作回显。
+        rebuild_gate.raise_if_rebuilding()
         try:
             return retrieval.search(
                 payload.query,
@@ -307,18 +378,11 @@ def create_app(
 
     @app.get("/health")
     def get_health() -> dict:
-        report = health_report(db, pipeline, backup_scheduler, retrieval)
-        if cfg.canary_enabled:
-            # 金丝雀查询不计入检索统计（直接走 bigram_route）
-            try:
-                report["retrieval"]["canary"] = retrieval.run_canary()
-            except Exception:  # 金丝雀失败不影响 /health 其余字段
-                logger.exception("canary failed")
-                report["retrieval"]["canary"] = {
-                    "status": "error",
-                    "alert": False,
-                }
-        return report
+        """只读后台快照（O(1)）：请求里不跑聚合查询、不加锁、不触发派生。"""
+        snapshot = health_cache.snapshot()
+        if snapshot is None:
+            return {"status": "starting"}
+        return snapshot
 
     @app.post("/derive/tick")
     def derive_tick() -> dict:
@@ -329,8 +393,11 @@ def create_app(
     @app.post("/admin/rebuild")
     def admin_rebuild(request: Request) -> dict:
         _require_admin(request)
-        counts = pipeline.rebuild_all()
-        retrieval.invalidate_caches()
+        # 触发即置 rebuilding=True（线程安全标志），完成/失败都清除；
+        # 期间 /search 与 /memories 返回 503，绝不让读者看到半张索引。
+        with rebuild_gate.rebuilding():
+            counts = pipeline.rebuild_all()
+            retrieval.invalidate_caches()
         return {"ok": True, "counts": counts}
 
     @app.get("/admin/search")

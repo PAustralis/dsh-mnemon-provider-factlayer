@@ -1,12 +1,12 @@
 """/health 形态 + 备份：VACUUM INTO、last_backup_at、保留最近 N 份。"""
 
 from app.backup import backup_dir_for, run_backup
-from tests.conftest import write_one
+from tests.conftest import prime_health, write_one
 
 
 def test_health_shape_and_last_backup_at(client, db, db_path):
     write_one(client, cwid="cw-h1", content="x", session_id="s1")
-    health = client.get("/health").json()
+    health = prime_health(client)
     assert {
         "pending",
         "failures",
@@ -50,7 +50,7 @@ def test_health_shape_and_last_backup_at(client, db, db_path):
 
     resp = client.post("/admin/backup")
     assert resp.status_code == 200
-    health = client.get("/health").json()
+    health = prime_health(client)
     assert isinstance(health["last_backup_at"], int)
     assert health["last_backup_at"] > 0
     assert health["last_backup_error"] is None
@@ -71,7 +71,7 @@ def test_health_hidden_size_reflects_voided_with_live_head(client):
         },
     )
     assert edge.status_code == 200
-    health = client.get("/health").json()
+    health = prime_health(client)
     assert health["retrieval"]["hidden_size"] == 1
 
 

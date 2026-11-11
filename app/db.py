@@ -101,10 +101,18 @@ class Database:
         with self._write_lock:
             self._write_conn.execute("VACUUM INTO ?", (dest,))
 
-    def close(self) -> None:
-        with self._write_lock:
-            self._write_conn.close()
+    def close_thread_read_conn(self) -> None:
+        """关闭**当前线程**的复用读连接（后台线程退出前调用，避免句柄泄漏）。
+
+        ``close()`` 只能关掉调用者线程的连接；任何自建线程（健康快照刷新等）
+        必须在自己的线程里调用本方法。
+        """
         conn = getattr(self._read_local, "conn", None)
         if conn is not None:
             conn.close()
             self._read_local.conn = None
+
+    def close(self) -> None:
+        with self._write_lock:
+            self._write_conn.close()
+        self.close_thread_read_conn()
