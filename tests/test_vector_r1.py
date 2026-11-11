@@ -1,4 +1,8 @@
-"""v8 §7 / F：R1 默认关、按行 model_id+dim、无向量行排除、写后增量刷新、熔断。"""
+"""v8 §7 / F：R1 默认路、按行 model_id+dim、无向量行排除、写后增量刷新、熔断、降级。
+
+2026-11-11 真实 embedding 重测后默认改为 vector 单路；bigram 只在向量不可用时
+降级（docs/04）。
+"""
 
 from __future__ import annotations
 
@@ -12,24 +16,51 @@ from tests.fake_embedding import FailingEmbeddingProvider, HashingEmbeddingProvi
 from tests.retrieval_helpers import add_memory, build_derived, make_service
 
 
-def test_r1_is_off_by_default():
+def test_vector_is_default_route(monkeypatch):
+    monkeypatch.delenv("RETRIEVAL_ROUTES", raising=False)
+    monkeypatch.delenv("DSH_RETRIEVAL_ROUTES", raising=False)
     cfg = load_config()
-    assert "vector" not in cfg.route_names
-    assert cfg.route_names == ("bigram",)
+    assert cfg.route_names == ("vector",)
     assert cfg.embedding_max_spend_usd == 0.50
 
 
-def test_enabling_vector_without_model_fails_at_startup(tmp_path, monkeypatch):
-    from app.embeddings import EmbeddingConfigError
+def test_vector_without_model_starts_in_degraded_mode(tmp_path, monkeypatch):
+    """未配置 embedding 不再拒绝启动：查询时降级 bigram，并在 degraded/tags 标明。"""
     from app.main import create_app
 
     monkeypatch.setenv("RETRIEVAL_ROUTES", "vector")
-    monkeypatch.delenv("EMBEDDING_MODEL", raising=False)
-    monkeypatch.delenv("DSH_EMBEDDING_MODEL", raising=False)
+    for name in (
+        "EMBEDDING_MODEL",
+        "DSH_EMBEDDING_MODEL",
+        "EMBEDDING_BASE_URL",
+        "DSH_EMBEDDING_BASE_URL",
+        "DSH_EMBEDDING_API_URL",
+    ):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("DSH_DERIVE_LOOP_ENABLED", "0")
     monkeypatch.setenv("DSH_BACKUP_INTERVAL_SECONDS", "0")
-    with pytest.raises(EmbeddingConfigError):
-        create_app(db_path=str(tmp_path / "vector-without-model.db"))
+
+    app = create_app(db_path=str(tmp_path / "vector-degraded.db"))
+    try:
+        target = create_memory(
+            app.state.db,
+            client_write_id="cw-degraded",
+            content="北京出差记录",
+            session_id="s1",
+            source_client="t",
+        )["id"]
+        for _ in range(10):
+            if app.state.pipeline.pending_count("fts") == 0:
+                break
+            app.state.pipeline.tick()
+        result = app.state.retrieval.search("北京出差记录")
+        assert target in [item["id"] for item in result["items"]]
+        assert result["degraded"]["degraded"] is True
+        assert result["routes"]["vector"]["unavailable"] is True
+        assert "vector-unavailable" in result["items"][0]["tags"]
+        assert "bigram" in result["routes"]
+    finally:
+        app.state.db.close()
 
 
 def test_embeddings_store_model_id_and_dim_per_row(db):
@@ -53,6 +84,64 @@ def test_vector_route_returns_semantic_neighbour(db):
     result = service.search("向量语义近邻")
     # 哈希 provider 对同一文本给同一向量，命中自身
     assert semantic in [item["id"] for item in result["items"]]
+
+
+def test_vector_single_route_skips_rrf_and_keeps_rank_score(db):
+    """单路不做 RRF 求和：score 仍是名次公式，且不会偷偷跑 bigram。"""
+    provider = HashingEmbeddingProvider()
+    add_memory(db, "北京记录", session_id="s1")
+    build_derived(db, embedding_provider=provider)
+    service = make_service(db, routes=("vector",), provider=provider)
+    result = service.search("北京记录")
+    assert result["items"]
+    assert set(result["routes"]) == {"vector"}  # 没有降级、没有融合第二路
+    assert result["degraded"]["degraded"] is False
+    assert result["items"][0]["score"] == round(1 / 61, 12)
+
+
+def test_vector_without_provider_degrades_to_bigram(db):
+    target = add_memory(db, "北京记录", session_id="s1")
+    build_derived(db)  # 只有 FTS，没有向量
+    service = make_service(db, routes=("vector",), provider=None)
+    result = service.search("北京记录")
+    assert target in [item["id"] for item in result["items"]]
+    assert set(result["routes"]) == {"vector", "bigram"}
+    assert result["routes"]["vector"]["unavailable"] is True
+    assert result["degraded"]["degraded"] is True
+    assert "vector-unavailable" in result["items"][0]["tags"]
+
+
+def test_vector_empty_index_degrades_to_bigram(db):
+    provider = HashingEmbeddingProvider()
+    target = add_memory(db, "北京记录", session_id="s1")
+    build_derived(db)  # 有 FTS、无 embedding 行
+    service = make_service(db, routes=("vector",), provider=provider)
+    result = service.search("北京记录")
+    assert target in [item["id"] for item in result["items"]]
+    assert result["routes"]["vector"]["skipped"] == "empty_embedding_index"
+    assert result["degraded"]["degraded"] is True
+
+
+def test_vector_circuit_open_degrades_to_bigram_single_route(db):
+    provider = HashingEmbeddingProvider()
+    target = add_memory(db, "北京记录", session_id="s1")
+    build_derived(db, embedding_provider=provider)
+
+    class FailingSameModel(FailingEmbeddingProvider):
+        model_id = provider.model_id
+
+    failing = FailingSameModel()
+    service = make_service(db, routes=("vector",), provider=failing)
+    for _ in range(3):
+        result = service.search("北京记录")
+        assert target in [item["id"] for item in result["items"]]
+        assert result["degraded"]["degraded"] is True
+    assert service.vector_state()["circuit_open"] is True
+    calls_after_open = failing.calls
+    result = service.search("北京记录")
+    assert result["routes"]["vector"]["skipped"] == "circuit_open"
+    assert failing.calls == calls_after_open
+    assert target in [item["id"] for item in result["items"]]
 
 
 def test_no_embedding_row_is_excluded_from_r1_candidates(db):

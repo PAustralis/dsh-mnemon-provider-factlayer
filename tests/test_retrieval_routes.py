@@ -54,7 +54,9 @@ def test_trigram_default_off_per_v8(db, monkeypatch):
     monkeypatch.delenv("RETRIEVAL_ROUTES", raising=False)
     monkeypatch.delenv("DSH_RETRIEVAL_ROUTES", raising=False)
     cfg = load_config()
-    assert cfg.route_names == ("bigram",)
+    # 2026-11-11 真实 embedding 重测后默认向量单路；trigram 仍默认关
+    assert cfg.route_names == ("vector",)
+    assert "trigram" not in cfg.route_names
 
 
 def test_auto_degrade_defaults_off_per_design_s12(db, monkeypatch):

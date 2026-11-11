@@ -27,6 +27,10 @@ env/
 .coverage
 htmlcov/
 
+# 真实 embedding 评测缓存（花钱产物，本地保留，不入库）
+research/recall/.embedding_cache.json
+research/recall/.embedding_cache.tmp
+
 # 编辑器 / 系统
 .idea/
 .vscode/

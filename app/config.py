@@ -2,7 +2,8 @@
 
 第二层（检索层）按 docs/02-检索层设计 v8 §11 收敛：
 
-- 出厂 ``RETRIEVAL_ROUTES=bigram``（单混合列同构基线）；R1 向量默认关。
+- 出厂 ``RETRIEVAL_ROUTES=vector``（R1 真实 embedding 于 2026-11-11 重测达标，
+  R@6 0.8729；二元组仅作向量不可用时的降级路，见 docs/04）。
 - ``FINAL_K=4``、单条 ``ITEM_MAX_CHARS=1200``、总 ``TOTAL_MAX_CHARS=4800``
   （contract strict-v1 默认 maxRankedResults=4；要 6 条需同时把策略配到 ≥6）。
 - 会话展开默认关；开启时只能占用 4 条名额内。
@@ -19,8 +20,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 KNOWN_ROUTES = ("vector", "bigram", "trigram", "graph")
-# v8 §2：出厂唯一开启 bigram；vector 默认关，trigram/graph 不实现也不默认开。
-DEFAULT_ROUTES = "bigram"
+# 2026-11-11 真实 embedding 重测：向量单路 R@6=0.8729（bigram 0.4875，等权融合
+# 0.6833 反而更差），因此出厂默认 vector 单路；bigram 只在向量不可用时降级。
+DEFAULT_ROUTES = "vector"
 
 # 契约常量（v8 §5，P0）：provider-native → strict-v1 maxRankedResults 默认 4
 FINAL_K_DEFAULT = 4

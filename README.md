@@ -26,7 +26,7 @@ dsh-mnemon 的记忆 provider 后端：一个 FastAPI shim，对上暴露 mnemon
 ## 当前状态
 
 - **第一层（事实层）**：建库（只追加触发器 + FTS5）、写入路径（服务端 id/seq、client_write_id 幂等、409）、读取（按 id 全文 / 按会话截断输出）、supersedes 作废边、派生水位循环、自动备份调度（VACUUM INTO + 原子替换）、`/health`。设计见 [docs/01-事实层设计.md](docs/01-事实层设计.md)。
-- **第二层（检索层，v8）**：出厂只开 **R2 bigram**（与 `research/recall/recall_eval.py::bigrams_of` 同构的单混合列，R@6=0.4875）；`gseq` 全局单调序；hidden 唯一口径（20 跳、可达存活链头）；路内替换；RRF(k=60) → FINAL_K=4；契约输出（数值 score、ISO 8601 UTC createdAt、tags 状态通道、1200/4800 字符预算）。设计见 [docs/02-检索层设计.md](docs/02-检索层设计.md)、契约映射 [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md)。
+- **第二层（检索层，v8 + 2026-11-11 重测）**：出厂默认 **R1 vector 单路**（真实 embedding 重测 R@6=**0.8729**；bigram 基线 0.4875 仅作向量不可用时的降级路，**不做 RRF 融合**——等权融合只有 0.6833）；`gseq` 全局单调序；hidden 唯一口径（20 跳、可达存活链头）；路内替换；单路直出（score 仍 1/(60+rank)）→ FINAL_K=4；契约输出（数值 score、ISO 8601 UTC createdAt、tags 状态通道、1200/4800 字符预算）。设计见 [docs/02-检索层设计.md](docs/02-检索层设计.md)、重测报告 [docs/04-embedding重测报告.md](docs/04-embedding重测报告.md)、契约映射 [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md)。
 
 ## 运行
 
@@ -48,7 +48,7 @@ admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 
 
 | 环境变量 | 默认 | 说明 |
 |---|---|---|
-| `RETRIEVAL_ROUTES` | `bigram` | 出厂唯一开启；`vector` 默认关（R1 需 `EMBEDDING_MODEL`） |
+| `RETRIEVAL_ROUTES` | `vector` | 默认向量单路；bigram 仅在向量不可用/未配置时降级（需 `EMBEDDING_MODEL`） |
 | `FINAL_K` | `4` | 契约 strict-v1 默认 maxRankedResults=4 |
 | `ITEM_MAX_CHARS` / `TOTAL_MAX_CHARS` | `1200` / `4800` | 单条 / 总字符预算 |
 | `EXPAND_ENABLED` | `false` | 会话展开默认关；开启时只占 FINAL_K 名额内 |

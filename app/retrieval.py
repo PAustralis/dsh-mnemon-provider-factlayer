@@ -4,6 +4,12 @@
 
 v8 语义（docs/02 检索层设计）：
 
+- **出厂默认 vector 单路**（2026-11-11 真实 embedding 重测：R@6 0.8729，优于
+  bigram 0.4875，也优于等权 RRF 融合 0.6833）；单路**不做 RRF 求和**，直接按
+  路线名次输出（score 仍为 ``1/(k+rank)``，契约数值语义不变）。
+- **向量不可用时降级 bigram**（embedding 未配置 / provider 缺失 / 熔断 / 空索引 /
+  查询异常）：本次查询追加 bigram 路、不融合，响应 ``degraded`` 置真，非空结果
+  首条带 ``tags:["vector-unavailable"]``，空结果 hint 里列路状态。
 - **各路取含 hidden 的原始 top-K**：SQL / mask 阶段不排除 hidden；排除只发生在出口。
 - **路内替换（RRF 之前）**：命中 A ∈ hidden → 用 A 的 live head（可多个）占 A 的
   原始名次，A 移出该路；路内同 id 取最佳名次、每路至多一票；按
@@ -394,6 +400,7 @@ class RetrievalService:
         if limit is not None:
             final_k = max(1, min(final_k, int(limit)))
         route_limit = int(self.cfg.route_top_k)
+        degrade = dict(self.degrade)
 
         tokens, token_truncated = textnorm.query_tokens(norm_query)
         snapshot = voided_mod.hidden_snapshot(self.db.read_conn)
@@ -438,6 +445,37 @@ class RetrievalService:
                     (time.perf_counter() - route_started) * 1000, 3
                 )
             outcomes.append(outcome)
+
+        # ---- 向量单路降级：不融合，直接追加 bigram 结果 ----------------------
+        # 触发条件：vector 路不可用（未配置 provider / 熔断 / 空索引 / 查询异常）。
+        # 只有 ``routes == ("vector",)`` 时降级；显式配置多路仍按原 RRF 融合。
+        if tuple(self.routes) == ("vector",) and outcomes:
+            vector_outcome = outcomes[0]
+            fallback_reason = (
+                vector_outcome.error
+                or vector_outcome.skipped
+                or ("unavailable" if vector_outcome.unavailable else None)
+            )
+            if fallback_reason:
+                logger.warning(
+                    "vector 单路不可用（%s），本次查询降级 bigram", fallback_reason
+                )
+                fallback_started = time.perf_counter()
+                try:
+                    fallback_outcome = self.bigram_route(norm_query, route_limit)
+                except Exception as exc:  # pragma: no cover - FTS 正常不会失败
+                    logger.exception("bigram 降级路失败")
+                    fallback_outcome = RouteOutcome(
+                        name="bigram", error=f"{type(exc).__name__}: {exc}"
+                    )
+                timings["route_bigram_fallback"] = round(
+                    (time.perf_counter() - fallback_started) * 1000, 3
+                )
+                outcomes.append(fallback_outcome)
+                degrade = {
+                    "degraded": True,
+                    "reason": f"vector 不可用（{fallback_reason}），已降级 bigram",
+                }
 
         # ---- 路内替换（RRF 之前） -------------------------------------------
         repl_started = time.perf_counter()
@@ -487,7 +525,22 @@ class RetrievalService:
         route_lists = [
             (o.name, o.ids, o.ranks) for o in outcomes if o.ids
         ]
-        scores, ranks = _rrf_scores(route_lists, int(self.cfg.rrf_k))
+        rrf_k = int(self.cfg.rrf_k)
+        if len(route_lists) == 1:
+            # 单路不融合：直接按该路名次定序（score 保持 1/(k+rank)，契约不变）。
+            name, ids, route_ranks = route_lists[0]
+            scores = {}
+            ranks = {}
+            for position, mid in enumerate(ids):
+                rank = (
+                    int(route_ranks[position])
+                    if position < len(route_ranks)
+                    else position + 1
+                )
+                scores[mid] = 1.0 / (rrf_k + rank)
+                ranks[mid] = {name: rank}
+        else:
+            scores, ranks = _rrf_scores(route_lists, rrf_k)
         details = self._load_details(list(scores))
         order = _rank_candidates(scores, gseq_map, details)
         fused_count = len(order)
@@ -578,11 +631,17 @@ class RetrievalService:
 
         if not items:
             hint = self._route_hint(
-                outcomes, tokens, hidden_count, token_truncated
+                outcomes, tokens, hidden_count, token_truncated, degrade=degrade
             )
             self.stats.record_no_match()
             response = self._base_response(
-                query, session_id, query_id, started, outcomes, final_k
+                query,
+                session_id,
+                query_id,
+                started,
+                outcomes,
+                final_k,
+                degrade=degrade,
             )
             response.update(
                 {
@@ -607,7 +666,13 @@ class RetrievalService:
             return response
 
         response = self._base_response(
-            query, session_id, query_id, started, outcomes, final_k
+            query,
+            session_id,
+            query_id,
+            started,
+            outcomes,
+            final_k,
+            degrade=degrade,
         )
         response.update(
             {
@@ -657,6 +722,7 @@ class RetrievalService:
         started: float,
         outcomes: list[RouteOutcome],
         final_k: int,
+        degrade: dict | None = None,
     ) -> dict:
         return {
             "query": query,
@@ -677,7 +743,7 @@ class RetrievalService:
                 }
                 for o in outcomes
             },
-            "degraded": self.degrade,
+            "degraded": self.degrade if degrade is None else degrade,
             "elapsed_ms": {"total": round((time.perf_counter() - started) * 1000, 3)},
         }
 
@@ -831,13 +897,25 @@ class RetrievalService:
         token_truncated: int,
         hidden_size: int,
         reason: str,
+        degrade: dict | None = None,
     ) -> dict:
         self.stats.record_no_match()
         hint = self._route_hint(
-            outcomes, [""] * token_count, 0, token_truncated, reason=reason
+            outcomes,
+            [""] * token_count,
+            0,
+            token_truncated,
+            reason=reason,
+            degrade=degrade,
         )
         response = self._base_response(
-            query, session_id, query_id, started, outcomes, int(self.cfg.final_k)
+            query,
+            session_id,
+            query_id,
+            started,
+            outcomes,
+            int(self.cfg.final_k),
+            degrade=degrade,
         )
         response.update(
             {
@@ -863,6 +941,7 @@ class RetrievalService:
         token_truncated: int,
         *,
         reason: str | None = None,
+        degrade: dict | None = None,
     ) -> str:
         """空结果 hint：必须以 NO_MATCH 开头 + 参与/降级路 + token 数。"""
         statuses: list[str] = []
@@ -882,8 +961,9 @@ class RetrievalService:
             f"tokens={len(tokens)}" + (f"(+{token_truncated} 截断)" if token_truncated else ""),
             f"hidden={hidden_count}",
         ]
-        if self.degrade.get("degraded"):
-            parts.append(f"degraded={self.degrade.get('reason')}")
+        active_degrade = self.degrade if degrade is None else degrade
+        if active_degrade.get("degraded"):
+            parts.append(f"degraded={active_degrade.get('reason')}")
         if reason:
             parts.append(f"reason={reason}")
         return "｜".join(parts)

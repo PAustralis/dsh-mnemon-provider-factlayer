@@ -13,7 +13,10 @@ admin 端点由 ``ADMIN_TOKEN`` 保护：非空时要求 ``X-Admin-Token`` 或
 ``include_superseded`` 在模型路径上不可达，只由 ``GET /admin/search`` 提供。
 
 模块级不创建 ``app``：``import app.main`` 不会建库、不会产生 facts.db。
-配置错误（如启用 vector 路线但 EMBEDDING_MODEL 为空）在 ``create_app`` 时即抛错。
+**出厂默认 vector 单路**（docs/02 §2 / §9.3）：embedding 已配置但无效时仍在
+``create_app`` 报错；**未配置**（EMBEDDING_MODEL / EMBEDDING_BASE_URL 为空）时不再
+拒绝启动，检索在每次查询时降级 bigram，并在 ``degraded`` / ``vector-unavailable``
+tag / NO_MATCH hint 里标明（docs/04）。
 """
 
 from __future__ import annotations
@@ -73,8 +76,21 @@ class SearchIn(BaseModel):
     limit: int | None = Field(default=None, ge=1, le=50)
 
 
+def _embedding_configured(cfg: Config) -> bool:
+    """embedding 是否「配置了」（不检查可用性；可用性由 build_provider / 运行期暴露）。"""
+    if not cfg.embedding_model.strip():
+        return False
+    if cfg.embedding_backend == "openai-compat" and not cfg.embedding_base_url.strip():
+        return False
+    return True
+
+
 def validate_config(cfg: Config, embedding_provider: EmbeddingProvider | None) -> None:
-    """配置错误必须在启动时暴露（§8 硬规则 4），不允许拖到查询时。"""
+    """配置错误必须在启动时暴露（§8 硬规则 4），不允许拖到查询时。
+
+    例外（docs/04）：vector 路线启用但 embedding **未配置**时允许降级 bigram，
+    不再拒绝启动；配置了却构建失败仍由 ``create_app`` 的 ``build_provider`` 抛错。
+    """
     if cfg.rrf_k <= 0:
         raise EmbeddingConfigError(f"RRF_K 必须为正整数（当前 {cfg.rrf_k}）")
     if cfg.route_top_k <= 0:
@@ -93,13 +109,11 @@ def validate_config(cfg: Config, embedding_provider: EmbeddingProvider | None) -
         if embedding_provider is not None:
             if not getattr(embedding_provider, "model_id", ""):
                 raise EmbeddingConfigError("注入的 embedding provider 缺少 model_id")
-        elif not cfg.embedding_model.strip():
-            raise EmbeddingConfigError(
-                "启用 vector 路线（RETRIEVAL_ROUTES 含 vector）但 EMBEDDING_MODEL 为空；"
-                "请设置 EMBEDDING_MODEL，或把 vector 从 RETRIEVAL_ROUTES 移除。"
-            )
         else:
-            build_provider(cfg)  # 校验后端 / 依赖（local-onnx import 失败即报错）
+            logger.warning(
+                "vector 路线已启用但 embedding 未配置/不可用；检索将降级 bigram"
+                "（配置 EMBEDDING_BASE_URL / EMBEDDING_MODEL 后自动启用向量路）"
+            )
 
 
 def create_app(
@@ -110,7 +124,13 @@ def create_app(
     cfg = load_config()
     provider = embedding_provider
     if provider is None and "vector" in cfg.route_names:
-        provider = build_provider(cfg)  # 配置/依赖错误在此暴露
+        if _embedding_configured(cfg):
+            provider = build_provider(cfg)  # 配置/依赖错误在此暴露
+        else:
+            logger.warning(
+                "vector 路线已启用但 embedding 未配置（EMBEDDING_MODEL / "
+                "EMBEDDING_BASE_URL 为空）；检索将降级 bigram"
+            )
     validate_config(cfg, provider)
     db = Database(db_path or cfg.db_path)
     # 先共用同一个向量内存矩阵，再构造流水线（构造函数不碰库）：这样 init_db 的
