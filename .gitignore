@@ -35,6 +35,9 @@ node_modules/
 .pnpm-store/
 *.tsbuildinfo
 
+# 干装测试临时脚本（plugin/.dryrun，本地运行，不入库）
+.dryrun/
+
 # 真实 embedding 评测缓存（花钱产物，本地保留，不入库）
 research/recall/.embedding_cache.json
 research/recall/.embedding_cache.tmp
