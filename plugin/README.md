@@ -214,8 +214,9 @@ provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + fa
 1. **`defineMemorySpaceProvider` 的 import 来源**：任务要求动态 `import('dsh-mnemon')`；实测
    `dsh-mnemon@0.5.37` 主入口**没有**导出它（官方 9 个 provider 都从
    `dsh-mnemon-source-memory-spaces/provider-sdk` import）。实现按
-   `dsh-mnemon` → `dsh-mnemon-source-memory-spaces/provider-sdk` 顺序探测，两者都没有时抛
-   「需要安装 dsh-mnemon」。`peerDependencies` 同时声明了这两个包（以及 `@deepseek-ai/cordis`）。
+   `dsh-mnemon-source-memory-spaces/provider-sdk` → `dsh-mnemon` 顺序探测（先试真源，再回退，
+   避免先无谓地求值一遍 `dsh-mnemon` 主入口），两者都没有时抛「需要安装 dsh-mnemon」。
+   `peerDependencies` 同时声明了这两个包（以及 `@deepseek-ai/cordis`）。
 2. **入口使用顶层 `await`**：动态 import 必须在模块求值期完成，default export 才能真正经过
    `defineMemorySpaceProvider` 包装。Node ≥ 20 的 ESM loader 原生支持；本仓库为让本包能在
    profile 里解析 peer，`node_modules/dsh-mnemon` 与 `dsh-mnemon-source-memory-spaces` 保留为
