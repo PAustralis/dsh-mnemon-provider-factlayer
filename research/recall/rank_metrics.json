@@ -1,0 +1,5368 @@
+{
+ "generated_at": "2026-11-12T05:20:07.229683+00:00",
+ "route": "vector",
+ "final_k_prod": 4,
+ "eval_final_k": 6,
+ "route_top_k": 50,
+ "corpus": {
+  "docs": 119,
+  "queries": 40,
+  "gold_pairs": 119
+ },
+ "cache": {
+  "cache_path": "E:\\dsh-mnemon-provider-graphiti\\research\\recall\\.embedding_cache.json",
+  "model": "qwen3.7-text-embedding",
+  "dim": 1024,
+  "texts": 159,
+  "cache_hits": 159,
+  "cache_misses": 0,
+  "api_calls": 0,
+  "note": "只读 .embedding_cache.json；不 import httpx、不构造 provider"
+ },
+ "metrics": {
+  "r1": 0.34375,
+  "r3": 0.7541666666666667,
+  "r4": 0.8125,
+  "r6": 0.8729166666666668,
+  "r20": 0.9270833333333333,
+  "mrr": 0.9258333333333333,
+  "r20_minus_r4": 0.11458333333333326,
+  "hits4_mean": 2.15,
+  "hits4_total": 86,
+  "any_hit1": 0.875,
+  "any_hit4": 0.975
+ },
+ "metrics_ci95": {
+  "r1": {
+   "mean": 0.34375,
+   "ci95": [
+    0.29369791666666667,
+    0.39375
+   ],
+   "se": 0.02519236926155511,
+   "n_resamples": 2000,
+   "seed": 20261111
+  },
+  "r3": {
+   "mean": 0.7541666666666667,
+   "ci95": [
+    0.6603645833333334,
+    0.8479166666666667
+   ],
+   "se": 0.04854901013550134,
+   "n_resamples": 2000,
+   "seed": 20261111
+  },
+  "r4": {
+   "mean": 0.8125,
+   "ci95": [
+    0.7166666666666666,
+    0.9041666666666666
+   ],
+   "se": 0.04810721094341597,
+   "n_resamples": 2000,
+   "seed": 20261111
+  },
+  "r6": {
+   "mean": 0.8729166666666668,
+   "ci95": [
+    0.79375,
+    0.94375
+   ],
+   "se": 0.03885855395958704,
+   "n_resamples": 2000,
+   "seed": 20261111
+  },
+  "r20": {
+   "mean": 0.9270833333333333,
+   "ci95": [
+    0.8583333333333334,
+    0.9833333333333334
+   ],
+   "se": 0.03253863091635353,
+   "n_resamples": 2000,
+   "seed": 20261111
+  },
+  "mrr": {
+   "mean": 0.9258333333333333,
+   "ci95": [
+    0.86,
+    0.975
+   ],
+   "se": 0.030813855595733665,
+   "n_resamples": 2000,
+   "seed": 20261111
+  },
+  "r20_minus_r4": {
+   "mean": 0.11458333333333333,
+   "ci95": [
+    0.054166666666666675,
+    0.18750000000000003
+   ],
+   "se": 0.03311473784247178,
+   "n_resamples": 2000,
+   "seed": 20261111
+  }
+ },
+ "oracle": {
+  "r4": 0.9666666666666668,
+  "r20": 1.0
+ },
+ "failure": {
+  "miss_pairs": 33,
+  "pair_total": 119,
+  "miss_rate_pairs": 0.2773109243697479,
+  "categories": {
+   "1_unreachable": {
+    "label": "① 词面/语义都不重合、排名>20（无法召回）",
+    "count": 17,
+    "share": 0.5151515151515151,
+    "evidence_count": 0
+   },
+   "2_rank_5_20": {
+    "label": "② 召回了但排在 5–20（排序问题）",
+    "count": 16,
+    "share": 0.48484848484848486,
+    "evidence_count": 4
+   },
+   "3_displaced": {
+    "label": "③ 被其他记录挤掉（>20 但候选可达）",
+    "count": 0,
+    "share": 0.0,
+    "evidence_count": 0
+   }
+  },
+  "cross_tab": {
+   "evidence": {
+    "rank_5_20": 4,
+    "rank_gt_20": 0
+   },
+   "not_evidence": {
+    "rank_5_20": 12,
+    "rank_gt_20": 17
+   }
+  },
+  "gap_decomposition": {
+   "total": 0.11458333333333334,
+   "evidence": 0.03333333333333333,
+   "not_evidence": 0.08125,
+   "pairs_5_20": 16,
+   "pairs_gt_20": 17,
+   "note": "R@20−R@4 只由 5–20 名的漏项贡献；>20 的对两个指标都漏，只拉低两者"
+  },
+  "evidence_misses": [
+   {
+    "sid": 3,
+    "q": "我 2026 年一共换了几次工作?",
+    "doc": 5,
+    "rank": 6,
+    "sim": 0.460308,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": true,
+    "scenario": 3,
+    "raw_date": "2025",
+    "text": "入职了现在这家做 SaaS 的公司，做后端。",
+    "top4": [
+     {
+      "doc": 32,
+      "scenario": 11,
+      "sim": 0.544082,
+      "is_evidence": false,
+      "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。"
+     },
+     {
+      "doc": 33,
+      "scenario": 11,
+      "sim": 0.510107,
+      "is_evidence": false,
+      "text": "补记一下，去年在美团那两年其实挺累的，天天加班。"
+     },
+     {
+      "doc": 7,
+      "scenario": 3,
+      "sim": 0.507973,
+      "is_evidence": true,
+      "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。"
+     },
+     {
+      "doc": 6,
+      "scenario": 3,
+      "sim": 0.488353,
+      "is_evidence": true,
+      "text": "从这家 SaaS 公司离职，去了朋友介绍的创业团队。"
+     }
+    ]
+   },
+   {
+    "sid": 33,
+    "q": "我 2025 年体检查出了什么问题?",
+    "doc": 95,
+    "rank": 9,
+    "sim": 0.417428,
+    "lex_overlap": 3,
+    "bigram_rank": null,
+    "is_evidence": true,
+    "scenario": 33,
+    "raw_date": "2025",
+    "text": "体检查出血脂偏高，医生让我少吃油腻。",
+    "top4": [
+     {
+      "doc": 21,
+      "scenario": 7,
+      "sim": 0.487289,
+      "is_evidence": false,
+      "text": "报告出来了，医生让我少熬夜、少吃海鲜。"
+     },
+     {
+      "doc": 63,
+      "scenario": 21,
+      "sim": 0.472155,
+      "is_evidence": false,
+      "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。"
+     },
+     {
+      "doc": 20,
+      "scenario": 7,
+      "sim": 0.461766,
+      "is_evidence": false,
+      "text": "体检做完了，医生说血压 118/76，其他等报告。"
+     },
+     {
+      "doc": 19,
+      "scenario": 7,
+      "sim": 0.456938,
+      "is_evidence": false,
+      "text": "体检预约在 9 月 28 日上午，空腹去。"
+     }
+    ]
+   },
+   {
+    "sid": 33,
+    "q": "我 2025 年体检查出了什么问题?",
+    "doc": 96,
+    "rank": 6,
+    "sim": 0.445598,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": true,
+    "scenario": 33,
+    "raw_date": "2026-03-20",
+    "text": "复查了，血脂已经正常。",
+    "top4": [
+     {
+      "doc": 21,
+      "scenario": 7,
+      "sim": 0.487289,
+      "is_evidence": false,
+      "text": "报告出来了，医生让我少熬夜、少吃海鲜。"
+     },
+     {
+      "doc": 63,
+      "scenario": 21,
+      "sim": 0.472155,
+      "is_evidence": false,
+      "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。"
+     },
+     {
+      "doc": 20,
+      "scenario": 7,
+      "sim": 0.461766,
+      "is_evidence": false,
+      "text": "体检做完了，医生说血压 118/76，其他等报告。"
+     },
+     {
+      "doc": 19,
+      "scenario": 7,
+      "sim": 0.456938,
+      "is_evidence": false,
+      "text": "体检预约在 9 月 28 日上午，空腹去。"
+     }
+    ]
+   },
+   {
+    "sid": 33,
+    "q": "我 2025 年体检查出了什么问题?",
+    "doc": 97,
+    "rank": 5,
+    "sim": 0.447941,
+    "lex_overlap": 2,
+    "bigram_rank": null,
+    "is_evidence": true,
+    "scenario": 33,
+    "raw_date": "2026-11-05",
+    "text": "今年体检尿酸偏高，又开始忌口。",
+    "top4": [
+     {
+      "doc": 21,
+      "scenario": 7,
+      "sim": 0.487289,
+      "is_evidence": false,
+      "text": "报告出来了，医生让我少熬夜、少吃海鲜。"
+     },
+     {
+      "doc": 63,
+      "scenario": 21,
+      "sim": 0.472155,
+      "is_evidence": false,
+      "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。"
+     },
+     {
+      "doc": 20,
+      "scenario": 7,
+      "sim": 0.461766,
+      "is_evidence": false,
+      "text": "体检做完了，医生说血压 118/76，其他等报告。"
+     },
+     {
+      "doc": 19,
+      "scenario": 7,
+      "sim": 0.456938,
+      "is_evidence": false,
+      "text": "体检预约在 9 月 28 日上午，空腹去。"
+     }
+    ]
+   }
+  ],
+  "noise_misses": [
+   {
+    "sid": 2,
+    "q": "我客厅空调一般开多少度?",
+    "doc": 4,
+    "rank": 6,
+    "sim": 0.391179,
+    "lex_overlap": 1,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 2,
+    "raw_date": "2026-07-30",
+    "text": "空调滤网该洗了，出风有股味。",
+    "top4": [
+     {
+      "doc": 2,
+      "scenario": 2,
+      "sim": 0.852223,
+      "is_evidence": true,
+      "text": "客厅空调调到 26 度刚刚好，一整天都舒服。"
+     },
+     {
+      "doc": 3,
+      "scenario": 2,
+      "sim": 0.58264,
+      "is_evidence": true,
+      "text": "26 度还是有点冷，改成 28 度了，这样才不冻脚。"
+     },
+     {
+      "doc": 60,
+      "scenario": 20,
+      "sim": 0.478381,
+      "is_evidence": false,
+      "text": "我在成都住了好几年了，习惯了这边的气候。"
+     },
+     {
+      "doc": 104,
+      "scenario": 35,
+      "sim": 0.419963,
+      "is_evidence": false,
+      "text": "空调遥控器的电池该换了。"
+     }
+    ]
+   },
+   {
+    "sid": 5,
+    "q": "我家猫叫什么名字?",
+    "doc": 11,
+    "rank": 8,
+    "sim": 0.394034,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 5,
+    "raw_date": "2026-02-03",
+    "text": "周末把阳台的纱窗换成了金刚网，防猫抓。",
+    "top4": [
+     {
+      "doc": 98,
+      "scenario": 34,
+      "sim": 0.592765,
+      "is_evidence": false,
+      "text": "我家猫今年三岁，是只狸花。"
+     },
+     {
+      "doc": 10,
+      "scenario": 5,
+      "sim": 0.587237,
+      "is_evidence": true,
+      "text": "我家那只橘猫叫「布丁」，特别能吃。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.510414,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     },
+     {
+      "doc": 99,
+      "scenario": 34,
+      "sim": 0.487919,
+      "is_evidence": false,
+      "text": "我家猫已经五岁了，精力还是很旺。"
+     }
+    ]
+   },
+   {
+    "sid": 5,
+    "q": "我家猫叫什么名字?",
+    "doc": 12,
+    "rank": 5,
+    "sim": 0.470428,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 5,
+    "raw_date": "2026-09-20",
+    "text": "买了台扫地机器人，猫一开始怕得不行。",
+    "top4": [
+     {
+      "doc": 98,
+      "scenario": 34,
+      "sim": 0.592765,
+      "is_evidence": false,
+      "text": "我家猫今年三岁，是只狸花。"
+     },
+     {
+      "doc": 10,
+      "scenario": 5,
+      "sim": 0.587237,
+      "is_evidence": true,
+      "text": "我家那只橘猫叫「布丁」，特别能吃。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.510414,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     },
+     {
+      "doc": 99,
+      "scenario": 34,
+      "sim": 0.487919,
+      "is_evidence": false,
+      "text": "我家猫已经五岁了，精力还是很旺。"
+     }
+    ]
+   },
+   {
+    "sid": 7,
+    "q": "我上次体检的尿酸值是多少?",
+    "doc": 19,
+    "rank": 8,
+    "sim": 0.381572,
+    "lex_overlap": 1,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 7,
+    "raw_date": "2026-09-18",
+    "text": "体检预约在 9 月 28 日上午，空腹去。",
+    "top4": [
+     {
+      "doc": 97,
+      "scenario": 33,
+      "sim": 0.721842,
+      "is_evidence": false,
+      "text": "今年体检尿酸偏高，又开始忌口。"
+     },
+     {
+      "doc": 20,
+      "scenario": 7,
+      "sim": 0.468998,
+      "is_evidence": true,
+      "text": "体检做完了，医生说血压 118/76，其他等报告。"
+     },
+     {
+      "doc": 96,
+      "scenario": 33,
+      "sim": 0.462218,
+      "is_evidence": false,
+      "text": "复查了，血脂已经正常。"
+     },
+     {
+      "doc": 21,
+      "scenario": 7,
+      "sim": 0.420621,
+      "is_evidence": true,
+      "text": "报告出来了，医生让我少熬夜、少吃海鲜。"
+     }
+    ]
+   },
+   {
+    "sid": 7,
+    "q": "我上次体检的尿酸值是多少?",
+    "doc": 22,
+    "rank": 12,
+    "sim": 0.35234,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 7,
+    "raw_date": "2026-10-15",
+    "text": "开始每天走一万步，坚持了半个月。",
+    "top4": [
+     {
+      "doc": 97,
+      "scenario": 33,
+      "sim": 0.721842,
+      "is_evidence": false,
+      "text": "今年体检尿酸偏高，又开始忌口。"
+     },
+     {
+      "doc": 20,
+      "scenario": 7,
+      "sim": 0.468998,
+      "is_evidence": true,
+      "text": "体检做完了，医生说血压 118/76，其他等报告。"
+     },
+     {
+      "doc": 96,
+      "scenario": 33,
+      "sim": 0.462218,
+      "is_evidence": false,
+      "text": "复查了，血脂已经正常。"
+     },
+     {
+      "doc": 21,
+      "scenario": 7,
+      "sim": 0.420621,
+      "is_evidence": true,
+      "text": "报告出来了，医生让我少熬夜、少吃海鲜。"
+     }
+    ]
+   },
+   {
+    "sid": 10,
+    "q": "我现在用什么手机?",
+    "doc": 31,
+    "rank": 7,
+    "sim": 0.413568,
+    "lex_overlap": 1,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 10,
+    "raw_date": "日期不详",
+    "text": "手机壳买厚一点，我老摔手机。",
+    "top4": [
+     {
+      "doc": 29,
+      "scenario": 10,
+      "sim": 0.610235,
+      "is_evidence": true,
+      "text": "我一直用 iPhone，习惯了。"
+     },
+     {
+      "doc": 30,
+      "scenario": 10,
+      "sim": 0.536905,
+      "is_evidence": true,
+      "text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。"
+     },
+     {
+      "doc": 58,
+      "scenario": 19,
+      "sim": 0.44964,
+      "is_evidence": false,
+      "text": "我一般凌晨一点才睡，刷手机停不下来。"
+     },
+     {
+      "doc": 89,
+      "scenario": 30,
+      "sim": 0.420647,
+      "is_evidence": false,
+      "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+     }
+    ]
+   },
+   {
+    "sid": 11,
+    "q": "我现在在哪家公司上班?",
+    "doc": 33,
+    "rank": 6,
+    "sim": 0.489663,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 11,
+    "raw_date": "2026-11-08",
+    "text": "补记一下，去年在美团那两年其实挺累的，天天加班。",
+    "top4": [
+     {
+      "doc": 32,
+      "scenario": 11,
+      "sim": 0.610939,
+      "is_evidence": true,
+      "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。"
+     },
+     {
+      "doc": 5,
+      "scenario": 3,
+      "sim": 0.609562,
+      "is_evidence": false,
+      "text": "入职了现在这家做 SaaS 的公司，做后端。"
+     },
+     {
+      "doc": 61,
+      "scenario": 20,
+      "sim": 0.523803,
+      "is_evidence": false,
+      "text": "公司把我调去深圳，已经在深圳租好房子了。"
+     },
+     {
+      "doc": 7,
+      "scenario": 3,
+      "sim": 0.516374,
+      "is_evidence": false,
+      "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。"
+     }
+    ]
+   },
+   {
+    "sid": 16,
+    "q": "我以前一直以为自己对什么过敏?",
+    "doc": 50,
+    "rank": 14,
+    "sim": 0.382808,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 16,
+    "raw_date": "2026-08-03",
+    "text": "开始每周洗床单、用除螨仪。",
+    "top4": [
+     {
+      "doc": 48,
+      "scenario": 16,
+      "sim": 0.73005,
+      "is_evidence": true,
+      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+     },
+     {
+      "doc": 49,
+      "scenario": 16,
+      "sim": 0.634684,
+      "is_evidence": true,
+      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+     },
+     {
+      "doc": 42,
+      "scenario": 15,
+      "sim": 0.584714,
+      "is_evidence": false,
+      "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+     },
+     {
+      "doc": 23,
+      "scenario": 8,
+      "sim": 0.504432,
+      "is_evidence": false,
+      "text": "香菜我是真的受不了，闻到味道就难受。"
+     }
+    ]
+   },
+   {
+    "sid": 17,
+    "q": "我上次去日本住的那家酒店叫什么名字?",
+    "doc": 53,
+    "rank": 5,
+    "sim": 0.381585,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 17,
+    "raw_date": "2026-05-16",
+    "text": "在京都买了把厨刀，退税排了半小时队。",
+    "top4": [
+     {
+      "doc": 92,
+      "scenario": 31,
+      "sim": 0.44015,
+      "is_evidence": false,
+      "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。"
+     },
+     {
+      "doc": 51,
+      "scenario": 17,
+      "sim": 0.41593,
+      "is_evidence": true,
+      "text": "订了 5 月 12 号飞大阪的机票，往返。"
+     },
+     {
+      "doc": 52,
+      "scenario": 17,
+      "sim": 0.412581,
+      "is_evidence": true,
+      "text": "到大阪了，心斋桥人太多了。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.384075,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     }
+    ]
+   },
+   {
+    "sid": 23,
+    "q": "2026 年上半年我住在哪个城市?",
+    "doc": 69,
+    "rank": 10,
+    "sim": 0.400994,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 23,
+    "raw_date": "2026-10-05",
+    "text": "上海这边房租又涨了。",
+    "top4": [
+     {
+      "doc": 67,
+      "scenario": 23,
+      "sim": 0.47258,
+      "is_evidence": true,
+      "text": "搬到杭州了，租在西湖区。"
+     },
+     {
+      "doc": 68,
+      "scenario": 23,
+      "sim": 0.454351,
+      "is_evidence": true,
+      "text": "从杭州搬到上海，新公司在徐汇。"
+     },
+     {
+      "doc": 61,
+      "scenario": 20,
+      "sim": 0.443764,
+      "is_evidence": false,
+      "text": "公司把我调去深圳，已经在深圳租好房子了。"
+     },
+     {
+      "doc": 60,
+      "scenario": 20,
+      "sim": 0.43638,
+      "is_evidence": false,
+      "text": "我在成都住了好几年了，习惯了这边的气候。"
+     }
+    ]
+   },
+   {
+    "sid": 25,
+    "q": "我家路由器放在哪儿?",
+    "doc": 77,
+    "rank": 6,
+    "sim": 0.448896,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 25,
+    "raw_date": "2026-03-17",
+    "text": "把备用钥匙放到了门口的密码盒里。",
+    "top4": [
+     {
+      "doc": 72,
+      "scenario": 25,
+      "sim": 0.732684,
+      "is_evidence": true,
+      "text": "路由器挪到电视柜第二层了，信号比原来好。"
+     },
+     {
+      "doc": 16,
+      "scenario": 6,
+      "sim": 0.603817,
+      "is_evidence": false,
+      "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。"
+     },
+     {
+      "doc": 17,
+      "scenario": 6,
+      "sim": 0.525617,
+      "is_evidence": false,
+      "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。"
+     },
+     {
+      "doc": 18,
+      "scenario": 6,
+      "sim": 0.483153,
+      "is_evidence": false,
+      "text": "现在家里网络很稳，光猫换了之后没再出过问题。"
+     }
+    ]
+   },
+   {
+    "sid": 35,
+    "q": "我平时用哪个牌子的洗衣液?",
+    "doc": 103,
+    "rank": 17,
+    "sim": 0.323549,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 35,
+    "raw_date": "2025-12-30",
+    "text": "楼下快递柜换成刷脸的，方便不少。",
+    "top4": [
+     {
+      "doc": 100,
+      "scenario": 35,
+      "sim": 0.764456,
+      "is_evidence": true,
+      "text": "洗衣液一直买蓝月亮的，别的用不惯。"
+     },
+     {
+      "doc": 29,
+      "scenario": 10,
+      "sim": 0.409398,
+      "is_evidence": false,
+      "text": "我一直用 iPhone，习惯了。"
+     },
+     {
+      "doc": 113,
+      "scenario": 38,
+      "sim": 0.393563,
+      "is_evidence": false,
+      "text": "家里常备的茶就一种，绿茶。"
+     },
+     {
+      "doc": 89,
+      "scenario": 30,
+      "sim": 0.367279,
+      "is_evidence": false,
+      "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+     }
+    ]
+   },
+   {
+    "sid": 5,
+    "q": "我家猫叫什么名字?",
+    "doc": 13,
+    "rank": 54,
+    "sim": 0.226195,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 5,
+    "raw_date": "2025-12-08",
+    "text": "冰箱冷冻室结霜太厚，断电化了一下午。",
+    "top4": [
+     {
+      "doc": 98,
+      "scenario": 34,
+      "sim": 0.592765,
+      "is_evidence": false,
+      "text": "我家猫今年三岁，是只狸花。"
+     },
+     {
+      "doc": 10,
+      "scenario": 5,
+      "sim": 0.587237,
+      "is_evidence": true,
+      "text": "我家那只橘猫叫「布丁」，特别能吃。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.510414,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     },
+     {
+      "doc": 99,
+      "scenario": 34,
+      "sim": 0.487919,
+      "is_evidence": false,
+      "text": "我家猫已经五岁了，精力还是很旺。"
+     }
+    ]
+   },
+   {
+    "sid": 5,
+    "q": "我家猫叫什么名字?",
+    "doc": 14,
+    "rank": 30,
+    "sim": 0.252921,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 5,
+    "raw_date": "2026-05-15",
+    "text": "换了新的燃气灶，火明显比原来稳。",
+    "top4": [
+     {
+      "doc": 98,
+      "scenario": 34,
+      "sim": 0.592765,
+      "is_evidence": false,
+      "text": "我家猫今年三岁，是只狸花。"
+     },
+     {
+      "doc": 10,
+      "scenario": 5,
+      "sim": 0.587237,
+      "is_evidence": true,
+      "text": "我家那只橘猫叫「布丁」，特别能吃。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.510414,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     },
+     {
+      "doc": 99,
+      "scenario": 34,
+      "sim": 0.487919,
+      "is_evidence": false,
+      "text": "我家猫已经五岁了，精力还是很旺。"
+     }
+    ]
+   },
+   {
+    "sid": 5,
+    "q": "我家猫叫什么名字?",
+    "doc": 15,
+    "rank": 45,
+    "sim": 0.23371,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 5,
+    "raw_date": "2026-10-02",
+    "text": "楼下新开了家面馆，牛肉面还行。",
+    "top4": [
+     {
+      "doc": 98,
+      "scenario": 34,
+      "sim": 0.592765,
+      "is_evidence": false,
+      "text": "我家猫今年三岁，是只狸花。"
+     },
+     {
+      "doc": 10,
+      "scenario": 5,
+      "sim": 0.587237,
+      "is_evidence": true,
+      "text": "我家那只橘猫叫「布丁」，特别能吃。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.510414,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     },
+     {
+      "doc": 99,
+      "scenario": 34,
+      "sim": 0.487919,
+      "is_evidence": false,
+      "text": "我家猫已经五岁了，精力还是很旺。"
+     }
+    ]
+   },
+   {
+    "sid": 15,
+    "q": "我对什么食物过敏?",
+    "doc": 43,
+    "rank": 90,
+    "sim": 0.187457,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 15,
+    "raw_date": "2026-07-19",
+    "text": "新买的净水器滤芯三个月就得换一次。",
+    "top4": [
+     {
+      "doc": 42,
+      "scenario": 15,
+      "sim": 0.682494,
+      "is_evidence": true,
+      "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+     },
+     {
+      "doc": 48,
+      "scenario": 16,
+      "sim": 0.598822,
+      "is_evidence": false,
+      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+     },
+     {
+      "doc": 49,
+      "scenario": 16,
+      "sim": 0.58398,
+      "is_evidence": false,
+      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+     },
+     {
+      "doc": 23,
+      "scenario": 8,
+      "sim": 0.476376,
+      "is_evidence": false,
+      "text": "香菜我是真的受不了，闻到味道就难受。"
+     }
+    ]
+   },
+   {
+    "sid": 15,
+    "q": "我对什么食物过敏?",
+    "doc": 44,
+    "rank": 100,
+    "sim": 0.178444,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 15,
+    "raw_date": "2025-11-02",
+    "text": "公司楼下那家咖啡店的美式太淡了。",
+    "top4": [
+     {
+      "doc": 42,
+      "scenario": 15,
+      "sim": 0.682494,
+      "is_evidence": true,
+      "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+     },
+     {
+      "doc": 48,
+      "scenario": 16,
+      "sim": 0.598822,
+      "is_evidence": false,
+      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+     },
+     {
+      "doc": 49,
+      "scenario": 16,
+      "sim": 0.58398,
+      "is_evidence": false,
+      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+     },
+     {
+      "doc": 23,
+      "scenario": 8,
+      "sim": 0.476376,
+      "is_evidence": false,
+      "text": "香菜我是真的受不了，闻到味道就难受。"
+     }
+    ]
+   },
+   {
+    "sid": 15,
+    "q": "我对什么食物过敏?",
+    "doc": 45,
+    "rank": 26,
+    "sim": 0.285388,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 15,
+    "raw_date": "2026-01-30",
+    "text": "把卧室的窗帘换成了遮光的，睡眠好多了。",
+    "top4": [
+     {
+      "doc": 42,
+      "scenario": 15,
+      "sim": 0.682494,
+      "is_evidence": true,
+      "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+     },
+     {
+      "doc": 48,
+      "scenario": 16,
+      "sim": 0.598822,
+      "is_evidence": false,
+      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+     },
+     {
+      "doc": 49,
+      "scenario": 16,
+      "sim": 0.58398,
+      "is_evidence": false,
+      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+     },
+     {
+      "doc": 23,
+      "scenario": 8,
+      "sim": 0.476376,
+      "is_evidence": false,
+      "text": "香菜我是真的受不了，闻到味道就难受。"
+     }
+    ]
+   },
+   {
+    "sid": 15,
+    "q": "我对什么食物过敏?",
+    "doc": 46,
+    "rank": 119,
+    "sim": 0.083034,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 15,
+    "raw_date": "2026-09-05",
+    "text": "电动车电池冬天掉电太快。",
+    "top4": [
+     {
+      "doc": 42,
+      "scenario": 15,
+      "sim": 0.682494,
+      "is_evidence": true,
+      "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+     },
+     {
+      "doc": 48,
+      "scenario": 16,
+      "sim": 0.598822,
+      "is_evidence": false,
+      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+     },
+     {
+      "doc": 49,
+      "scenario": 16,
+      "sim": 0.58398,
+      "is_evidence": false,
+      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+     },
+     {
+      "doc": 23,
+      "scenario": 8,
+      "sim": 0.476376,
+      "is_evidence": false,
+      "text": "香菜我是真的受不了，闻到味道就难受。"
+     }
+    ]
+   },
+   {
+    "sid": 15,
+    "q": "我对什么食物过敏?",
+    "doc": 47,
+    "rank": 105,
+    "sim": 0.166035,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 15,
+    "raw_date": "2026-02-22",
+    "text": "周末把书架重新装了一遍，书终于有地方放了。",
+    "top4": [
+     {
+      "doc": 42,
+      "scenario": 15,
+      "sim": 0.682494,
+      "is_evidence": true,
+      "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+     },
+     {
+      "doc": 48,
+      "scenario": 16,
+      "sim": 0.598822,
+      "is_evidence": false,
+      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+     },
+     {
+      "doc": 49,
+      "scenario": 16,
+      "sim": 0.58398,
+      "is_evidence": false,
+      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+     },
+     {
+      "doc": 23,
+      "scenario": 8,
+      "sim": 0.476376,
+      "is_evidence": false,
+      "text": "香菜我是真的受不了，闻到味道就难受。"
+     }
+    ]
+   },
+   {
+    "sid": 17,
+    "q": "我上次去日本住的那家酒店叫什么名字?",
+    "doc": 54,
+    "rank": 63,
+    "sim": 0.226073,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 17,
+    "raw_date": "2026-05-20",
+    "text": "回国了，行李箱塞满了零食。",
+    "top4": [
+     {
+      "doc": 92,
+      "scenario": 31,
+      "sim": 0.44015,
+      "is_evidence": false,
+      "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。"
+     },
+     {
+      "doc": 51,
+      "scenario": 17,
+      "sim": 0.41593,
+      "is_evidence": true,
+      "text": "订了 5 月 12 号飞大阪的机票，往返。"
+     },
+     {
+      "doc": 52,
+      "scenario": 17,
+      "sim": 0.412581,
+      "is_evidence": true,
+      "text": "到大阪了，心斋桥人太多了。"
+     },
+     {
+      "doc": 91,
+      "scenario": 31,
+      "sim": 0.384075,
+      "is_evidence": false,
+      "text": "抱回来一只柯基，取名叫「豆豆」。"
+     }
+    ]
+   },
+   {
+    "sid": 25,
+    "q": "我家路由器放在哪儿?",
+    "doc": 73,
+    "rank": 101,
+    "sim": 0.215943,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 25,
+    "raw_date": "2026-04-22",
+    "text": "楼下超市的鸡蛋涨价了。",
+    "top4": [
+     {
+      "doc": 72,
+      "scenario": 25,
+      "sim": 0.732684,
+      "is_evidence": true,
+      "text": "路由器挪到电视柜第二层了，信号比原来好。"
+     },
+     {
+      "doc": 16,
+      "scenario": 6,
+      "sim": 0.603817,
+      "is_evidence": false,
+      "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。"
+     },
+     {
+      "doc": 17,
+      "scenario": 6,
+      "sim": 0.525617,
+      "is_evidence": false,
+      "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。"
+     },
+     {
+      "doc": 18,
+      "scenario": 6,
+      "sim": 0.483153,
+      "is_evidence": false,
+      "text": "现在家里网络很稳，光猫换了之后没再出过问题。"
+     }
+    ]
+   },
+   {
+    "sid": 25,
+    "q": "我家路由器放在哪儿?",
+    "doc": 74,
+    "rank": 64,
+    "sim": 0.260878,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 25,
+    "raw_date": "2026-08-14",
+    "text": "换了新的床垫，腰不疼了。",
+    "top4": [
+     {
+      "doc": 72,
+      "scenario": 25,
+      "sim": 0.732684,
+      "is_evidence": true,
+      "text": "路由器挪到电视柜第二层了，信号比原来好。"
+     },
+     {
+      "doc": 16,
+      "scenario": 6,
+      "sim": 0.603817,
+      "is_evidence": false,
+      "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。"
+     },
+     {
+      "doc": 17,
+      "scenario": 6,
+      "sim": 0.525617,
+      "is_evidence": false,
+      "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。"
+     },
+     {
+      "doc": 18,
+      "scenario": 6,
+      "sim": 0.483153,
+      "is_evidence": false,
+      "text": "现在家里网络很稳，光猫换了之后没再出过问题。"
+     }
+    ]
+   },
+   {
+    "sid": 25,
+    "q": "我家路由器放在哪儿?",
+    "doc": 75,
+    "rank": 73,
+    "sim": 0.250985,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 25,
+    "raw_date": "2025-10-09",
+    "text": "阳台的窗户漏风，找人来打了胶。",
+    "top4": [
+     {
+      "doc": 72,
+      "scenario": 25,
+      "sim": 0.732684,
+      "is_evidence": true,
+      "text": "路由器挪到电视柜第二层了，信号比原来好。"
+     },
+     {
+      "doc": 16,
+      "scenario": 6,
+      "sim": 0.603817,
+      "is_evidence": false,
+      "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。"
+     },
+     {
+      "doc": 17,
+      "scenario": 6,
+      "sim": 0.525617,
+      "is_evidence": false,
+      "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。"
+     },
+     {
+      "doc": 18,
+      "scenario": 6,
+      "sim": 0.483153,
+      "is_evidence": false,
+      "text": "现在家里网络很稳，光猫换了之后没再出过问题。"
+     }
+    ]
+   },
+   {
+    "sid": 25,
+    "q": "我家路由器放在哪儿?",
+    "doc": 76,
+    "rank": 95,
+    "sim": 0.222698,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 25,
+    "raw_date": "2026-06-30",
+    "text": "公司的团建定在下个月。",
+    "top4": [
+     {
+      "doc": 72,
+      "scenario": 25,
+      "sim": 0.732684,
+      "is_evidence": true,
+      "text": "路由器挪到电视柜第二层了，信号比原来好。"
+     },
+     {
+      "doc": 16,
+      "scenario": 6,
+      "sim": 0.603817,
+      "is_evidence": false,
+      "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。"
+     },
+     {
+      "doc": 17,
+      "scenario": 6,
+      "sim": 0.525617,
+      "is_evidence": false,
+      "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。"
+     },
+     {
+      "doc": 18,
+      "scenario": 6,
+      "sim": 0.483153,
+      "is_evidence": false,
+      "text": "现在家里网络很稳，光猫换了之后没再出过问题。"
+     }
+    ]
+   },
+   {
+    "sid": 35,
+    "q": "我平时用哪个牌子的洗衣液?",
+    "doc": 101,
+    "rank": 69,
+    "sim": 0.259532,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 35,
+    "raw_date": "2026-02-09",
+    "text": "新买的拖把杆有点短。",
+    "top4": [
+     {
+      "doc": 100,
+      "scenario": 35,
+      "sim": 0.764456,
+      "is_evidence": true,
+      "text": "洗衣液一直买蓝月亮的，别的用不惯。"
+     },
+     {
+      "doc": 29,
+      "scenario": 10,
+      "sim": 0.409398,
+      "is_evidence": false,
+      "text": "我一直用 iPhone，习惯了。"
+     },
+     {
+      "doc": 113,
+      "scenario": 38,
+      "sim": 0.393563,
+      "is_evidence": false,
+      "text": "家里常备的茶就一种，绿茶。"
+     },
+     {
+      "doc": 89,
+      "scenario": 30,
+      "sim": 0.367279,
+      "is_evidence": false,
+      "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+     }
+    ]
+   },
+   {
+    "sid": 35,
+    "q": "我平时用哪个牌子的洗衣液?",
+    "doc": 102,
+    "rank": 33,
+    "sim": 0.294576,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 35,
+    "raw_date": "2026-08-21",
+    "text": "冰箱里的酸奶过期了，扔了两盒。",
+    "top4": [
+     {
+      "doc": 100,
+      "scenario": 35,
+      "sim": 0.764456,
+      "is_evidence": true,
+      "text": "洗衣液一直买蓝月亮的，别的用不惯。"
+     },
+     {
+      "doc": 29,
+      "scenario": 10,
+      "sim": 0.409398,
+      "is_evidence": false,
+      "text": "我一直用 iPhone，习惯了。"
+     },
+     {
+      "doc": 113,
+      "scenario": 38,
+      "sim": 0.393563,
+      "is_evidence": false,
+      "text": "家里常备的茶就一种，绿茶。"
+     },
+     {
+      "doc": 89,
+      "scenario": 30,
+      "sim": 0.367279,
+      "is_evidence": false,
+      "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+     }
+    ]
+   },
+   {
+    "sid": 35,
+    "q": "我平时用哪个牌子的洗衣液?",
+    "doc": 104,
+    "rank": 77,
+    "sim": 0.252831,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 35,
+    "raw_date": "2026-07-04",
+    "text": "空调遥控器的电池该换了。",
+    "top4": [
+     {
+      "doc": 100,
+      "scenario": 35,
+      "sim": 0.764456,
+      "is_evidence": true,
+      "text": "洗衣液一直买蓝月亮的，别的用不惯。"
+     },
+     {
+      "doc": 29,
+      "scenario": 10,
+      "sim": 0.409398,
+      "is_evidence": false,
+      "text": "我一直用 iPhone，习惯了。"
+     },
+     {
+      "doc": 113,
+      "scenario": 38,
+      "sim": 0.393563,
+      "is_evidence": false,
+      "text": "家里常备的茶就一种，绿茶。"
+     },
+     {
+      "doc": 89,
+      "scenario": 30,
+      "sim": 0.367279,
+      "is_evidence": false,
+      "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+     }
+    ]
+   },
+   {
+    "sid": 35,
+    "q": "我平时用哪个牌子的洗衣液?",
+    "doc": 105,
+    "rank": 71,
+    "sim": 0.257488,
+    "lex_overlap": 0,
+    "bigram_rank": null,
+    "is_evidence": false,
+    "scenario": 35,
+    "raw_date": "2026-04-08",
+    "text": "小区的垃圾分类改到晚上七点以后了。",
+    "top4": [
+     {
+      "doc": 100,
+      "scenario": 35,
+      "sim": 0.764456,
+      "is_evidence": true,
+      "text": "洗衣液一直买蓝月亮的，别的用不惯。"
+     },
+     {
+      "doc": 29,
+      "scenario": 10,
+      "sim": 0.409398,
+      "is_evidence": false,
+      "text": "我一直用 iPhone，习惯了。"
+     },
+     {
+      "doc": 113,
+      "scenario": 38,
+      "sim": 0.393563,
+      "is_evidence": false,
+      "text": "家里常备的茶就一种，绿茶。"
+     },
+     {
+      "doc": 89,
+      "scenario": 30,
+      "sim": 0.367279,
+      "is_evidence": false,
+      "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+     }
+    ]
+   }
+  ],
+  "noise_evidence_pairs": 31,
+  "noise_slots_in_top4": 76
+ },
+ "evidence_metric": {
+  "pairs": 88,
+  "hits4": 84,
+  "hits20": 88,
+  "r4_pair": 0.9545454545454546,
+  "r20_pair": 1.0,
+  "r4_macro": 0.9666666666666666,
+  "note": "只把 EVIDENCE 标注的记录当 gold 的次要口径；不替代主口径"
+ },
+ "precision": {
+  "p4_evidence": 0.525,
+  "p4_ceiling": 0.55,
+  "p3_evidence": 0.65,
+  "evidence_slots": 84,
+  "slots": 160,
+  "evidence_per_query": 2.2,
+  "note": "FINAL_K=4 固定返回 4 条；每题平均只有 2.2 条证据记录，所以一半槽位天然是无关记录，提纯只能靠减 k / 弃权"
+ },
+ "rerank_headroom": {
+  "delta_r4_macro_if_all_evidence_misses_fixed": 0.03333333333333333,
+  "delta_r4_paired_ci95": [
+   0.0,
+   0.09166666666666667
+  ],
+  "delta_r4_paired_ci90": [
+   0.0,
+   0.08333333333333334
+  ],
+  "p_delta_gt_zero": 0.881,
+  "note": "只修 evidence 标注的漏召回（不含噪声对）能拿到的宏平均上界；CI 下界为 0 表示 n=40 无法把它与「没变」区分开"
+ },
+ "curation": {
+  "author": "本报告（逐题对照题库原文人工标注）",
+  "rule": "EVIDENCE[sid] = 回答该题所需/直接支撑的语料记录；不改 gold、不改主指标",
+  "query_defects": {
+   "7": "问「尿酸值是多少」，全语料只有 d=97（scenario 33）提到尿酸且没给数值；本题 gold（19/20/21/22）里没有任何一条含尿酸值 → 无解",
+   "17": "问「酒店叫什么名字」，全语料 0 条含“酒店”；gold（51–54）只有机票/行程/购物 → 无解",
+   "27": "问「车险哪天到期」，全语料 0 条含“到期/续保日期”；gold（80–82）只有续保、出险、推销电话 → 无解",
+   "37": "问「宠物医院叫什么名字」，全语料 0 条含“医院”；gold（108–110）只有疫苗与体重 → 无解"
+  }
+ },
+ "per_query": [
+  {
+   "sid": 1,
+   "q": "我现在开的是什么车?",
+   "gold": [
+    0,
+    1
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    3,
+    1
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 1,
+     "sim": 0.549686,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "is_evidence": true
+    },
+    {
+     "doc": 66,
+     "sim": 0.534632,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "车没卖，最后还是留着继续开，通勤没车太麻烦。",
+     "is_evidence": false
+    },
+    {
+     "doc": 0,
+     "sim": 0.533362,
+     "scenario": 1,
+     "raw_date": "2026-04-18",
+     "text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。",
+     "is_evidence": true
+    },
+    {
+     "doc": 65,
+     "sim": 0.5001,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "把车卖了，以后都坐地铁，省心。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 0,
+     "rank": 3,
+     "sim": 0.533362,
+     "scenario": 1,
+     "raw_date": "2026-04-18",
+     "text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 1,
+     "rank": 1,
+     "sim": 0.549686,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 2,
+   "q": "我客厅空调一般开多少度?",
+   "gold": [
+    2,
+    3,
+    4
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    6
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 0.6666666666666666,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 2,
+     "sim": 0.852223,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "客厅空调调到 26 度刚刚好，一整天都舒服。",
+     "is_evidence": true
+    },
+    {
+     "doc": 3,
+     "sim": 0.58264,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "26 度还是有点冷，改成 28 度了，这样才不冻脚。",
+     "is_evidence": true
+    },
+    {
+     "doc": 60,
+     "sim": 0.478381,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "is_evidence": false
+    },
+    {
+     "doc": 104,
+     "sim": 0.419963,
+     "scenario": 35,
+     "raw_date": "2026-07-04",
+     "text": "空调遥控器的电池该换了。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 2,
+     "rank": 1,
+     "sim": 0.852223,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "客厅空调调到 26 度刚刚好，一整天都舒服。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 3,
+     "rank": 2,
+     "sim": 0.58264,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "26 度还是有点冷，改成 28 度了，这样才不冻脚。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 4,
+     "rank": 6,
+     "sim": 0.391179,
+     "scenario": 2,
+     "raw_date": "2026-07-30",
+     "text": "空调滤网该洗了，出风有股味。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 3,
+   "q": "我 2026 年一共换了几次工作?",
+   "gold": [
+    5,
+    6,
+    7
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    6,
+    4,
+    3
+   ],
+   "r1": 0.0,
+   "r3": 0.3333333333333333,
+   "r4": 0.6666666666666666,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 0.3333333333333333,
+   "top4": [
+    {
+     "doc": 32,
+     "sim": 0.544082,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "is_evidence": false
+    },
+    {
+     "doc": 33,
+     "sim": 0.510107,
+     "scenario": 11,
+     "raw_date": "2026-11-08",
+     "text": "补记一下，去年在美团那两年其实挺累的，天天加班。",
+     "is_evidence": false
+    },
+    {
+     "doc": 7,
+     "sim": 0.507973,
+     "scenario": 3,
+     "raw_date": "2026-08-15",
+     "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。",
+     "is_evidence": true
+    },
+    {
+     "doc": 6,
+     "sim": 0.488353,
+     "scenario": 3,
+     "raw_date": "2026-03",
+     "text": "从这家 SaaS 公司离职，去了朋友介绍的创业团队。",
+     "is_evidence": true
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 5,
+     "rank": 6,
+     "sim": 0.460308,
+     "scenario": 3,
+     "raw_date": "2025",
+     "text": "入职了现在这家做 SaaS 的公司，做后端。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 6,
+     "rank": 4,
+     "sim": 0.488353,
+     "scenario": 3,
+     "raw_date": "2026-03",
+     "text": "从这家 SaaS 公司离职，去了朋友介绍的创业团队。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 7,
+     "rank": 3,
+     "sim": 0.507973,
+     "scenario": 3,
+     "raw_date": "2026-08-15",
+     "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 4,
+   "q": "我的车是什么颜色、什么型号?",
+   "gold": [
+    8,
+    9
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 8,
+     "sim": 0.61411,
+     "scenario": 4,
+     "raw_date": "2026-03-10",
+     "text": "我的车是白色的 Model 3，提车那天还下了小雨。",
+     "is_evidence": true
+    },
+    {
+     "doc": 9,
+     "sim": 0.590167,
+     "scenario": 4,
+     "raw_date": "2026-09-02",
+     "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
+     "is_evidence": true
+    },
+    {
+     "doc": 1,
+     "sim": 0.471202,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "is_evidence": false
+    },
+    {
+     "doc": 0,
+     "sim": 0.463111,
+     "scenario": 1,
+     "raw_date": "2026-04-18",
+     "text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 8,
+     "rank": 1,
+     "sim": 0.61411,
+     "scenario": 4,
+     "raw_date": "2026-03-10",
+     "text": "我的车是白色的 Model 3，提车那天还下了小雨。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 9,
+     "rank": 2,
+     "sim": 0.590167,
+     "scenario": 4,
+     "raw_date": "2026-09-02",
+     "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 5,
+   "q": "我家猫叫什么名字?",
+   "gold": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "gold_n": 6,
+   "gold_ranks": [
+    2,
+    8,
+    5,
+    54,
+    30,
+    45
+   ],
+   "r1": 0.0,
+   "r3": 0.16666666666666666,
+   "r4": 0.16666666666666666,
+   "r6": 0.3333333333333333,
+   "r20": 0.5,
+   "mrr": 0.5,
+   "top4": [
+    {
+     "doc": 98,
+     "sim": 0.592765,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "is_evidence": false
+    },
+    {
+     "doc": 10,
+     "sim": 0.587237,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "is_evidence": true
+    },
+    {
+     "doc": 91,
+     "sim": 0.510414,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "is_evidence": false
+    },
+    {
+     "doc": 99,
+     "sim": 0.487919,
+     "scenario": 34,
+     "raw_date": "2026-10-22",
+     "text": "我家猫已经五岁了，精力还是很旺。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 10,
+     "rank": 2,
+     "sim": 0.587237,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 11,
+     "rank": 8,
+     "sim": 0.394034,
+     "scenario": 5,
+     "raw_date": "2026-02-03",
+     "text": "周末把阳台的纱窗换成了金刚网，防猫抓。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 12,
+     "rank": 5,
+     "sim": 0.470428,
+     "scenario": 5,
+     "raw_date": "2026-09-20",
+     "text": "买了台扫地机器人，猫一开始怕得不行。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 13,
+     "rank": 54,
+     "sim": 0.226195,
+     "scenario": 5,
+     "raw_date": "2025-12-08",
+     "text": "冰箱冷冻室结霜太厚，断电化了一下午。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 14,
+     "rank": 30,
+     "sim": 0.252921,
+     "scenario": 5,
+     "raw_date": "2026-05-15",
+     "text": "换了新的燃气灶，火明显比原来稳。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 15,
+     "rank": 45,
+     "sim": 0.23371,
+     "scenario": 5,
+     "raw_date": "2026-10-02",
+     "text": "楼下新开了家面馆，牛肉面还行。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 6,
+   "q": "五月那次家里断网,当时我以为是什么原因?",
+   "gold": [
+    16,
+    17,
+    18
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    2,
+    1,
+    3
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 17,
+     "sim": 0.6626,
+     "scenario": 6,
+     "raw_date": "2026-05-12",
+     "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。",
+     "is_evidence": true
+    },
+    {
+     "doc": 16,
+     "sim": 0.65687,
+     "scenario": 6,
+     "raw_date": "2026-05-09",
+     "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
+     "is_evidence": true
+    },
+    {
+     "doc": 18,
+     "sim": 0.616563,
+     "scenario": 6,
+     "raw_date": "2026-11-02",
+     "text": "现在家里网络很稳，光猫换了之后没再出过问题。",
+     "is_evidence": true
+    },
+    {
+     "doc": 72,
+     "sim": 0.450256,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 16,
+     "rank": 2,
+     "sim": 0.65687,
+     "scenario": 6,
+     "raw_date": "2026-05-09",
+     "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 17,
+     "rank": 1,
+     "sim": 0.6626,
+     "scenario": 6,
+     "raw_date": "2026-05-12",
+     "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 18,
+     "rank": 3,
+     "sim": 0.616563,
+     "scenario": 6,
+     "raw_date": "2026-11-02",
+     "text": "现在家里网络很稳，光猫换了之后没再出过问题。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 7,
+   "q": "我上次体检的尿酸值是多少?",
+   "gold": [
+    19,
+    20,
+    21,
+    22
+   ],
+   "gold_n": 4,
+   "gold_ranks": [
+    8,
+    2,
+    4,
+    12
+   ],
+   "r1": 0.0,
+   "r3": 0.25,
+   "r4": 0.5,
+   "r6": 0.5,
+   "r20": 1.0,
+   "mrr": 0.5,
+   "top4": [
+    {
+     "doc": 97,
+     "sim": 0.721842,
+     "scenario": 33,
+     "raw_date": "2026-11-05",
+     "text": "今年体检尿酸偏高，又开始忌口。",
+     "is_evidence": false
+    },
+    {
+     "doc": 20,
+     "sim": 0.468998,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "is_evidence": true
+    },
+    {
+     "doc": 96,
+     "sim": 0.462218,
+     "scenario": 33,
+     "raw_date": "2026-03-20",
+     "text": "复查了，血脂已经正常。",
+     "is_evidence": false
+    },
+    {
+     "doc": 21,
+     "sim": 0.420621,
+     "scenario": 7,
+     "raw_date": "2026-10-09",
+     "text": "报告出来了，医生让我少熬夜、少吃海鲜。",
+     "is_evidence": true
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 19,
+     "rank": 8,
+     "sim": 0.381572,
+     "scenario": 7,
+     "raw_date": "2026-09-18",
+     "text": "体检预约在 9 月 28 日上午，空腹去。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 20,
+     "rank": 2,
+     "sim": 0.468998,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 21,
+     "rank": 4,
+     "sim": 0.420621,
+     "scenario": 7,
+     "raw_date": "2026-10-09",
+     "text": "报告出来了，医生让我少熬夜、少吃海鲜。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 22,
+     "rank": 12,
+     "sim": 0.35234,
+     "scenario": 7,
+     "raw_date": "2026-10-15",
+     "text": "开始每天走一万步，坚持了半个月。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": "问「尿酸值是多少」，全语料只有 d=97（scenario 33）提到尿酸且没给数值；本题 gold（19/20/21/22）里没有任何一条含尿酸值 → 无解"
+  },
+  {
+   "sid": 8,
+   "q": "我吃香菜吗?",
+   "gold": [
+    23,
+    24,
+    25,
+    26
+   ],
+   "gold_n": 4,
+   "gold_ranks": [
+    1,
+    3,
+    2,
+    4
+   ],
+   "r1": 0.25,
+   "r3": 0.75,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 23,
+     "sim": 0.826485,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "is_evidence": true
+    },
+    {
+     "doc": 25,
+     "sim": 0.795135,
+     "scenario": 8,
+     "raw_date": "2026-09-27",
+     "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
+     "is_evidence": true
+    },
+    {
+     "doc": 24,
+     "sim": 0.722816,
+     "scenario": 8,
+     "raw_date": "2026-06-03",
+     "text": "点外卖永远备注「不要香菜」，这习惯改不了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 26,
+     "sim": 0.677865,
+     "scenario": 8,
+     "raw_date": "2025",
+     "text": "火锅蘸料我从来不放香菜。",
+     "is_evidence": true
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 23,
+     "rank": 1,
+     "sim": 0.826485,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 24,
+     "rank": 3,
+     "sim": 0.722816,
+     "scenario": 8,
+     "raw_date": "2026-06-03",
+     "text": "点外卖永远备注「不要香菜」，这习惯改不了。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 25,
+     "rank": 2,
+     "sim": 0.795135,
+     "scenario": 8,
+     "raw_date": "2026-09-27",
+     "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 26,
+     "rank": 4,
+     "sim": 0.677865,
+     "scenario": 8,
+     "raw_date": "2025",
+     "text": "火锅蘸料我从来不放香菜。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 9,
+   "q": "我现在公司车位在哪儿?",
+   "gold": [
+    27,
+    28
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 27,
+     "sim": 0.733981,
+     "scenario": 9,
+     "raw_date": "2026-03-02",
+     "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
+     "is_evidence": true
+    },
+    {
+     "doc": 28,
+     "sim": 0.676056,
+     "scenario": 9,
+     "raw_date": "2026-08-14",
+     "text": "物业重新分配车位，我的月租车位换到 B1 区 A17 了，离电梯近多了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 9,
+     "sim": 0.585623,
+     "scenario": 4,
+     "raw_date": "2026-09-02",
+     "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
+     "is_evidence": false
+    },
+    {
+     "doc": 61,
+     "sim": 0.506236,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 27,
+     "rank": 1,
+     "sim": 0.733981,
+     "scenario": 9,
+     "raw_date": "2026-03-02",
+     "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 28,
+     "rank": 2,
+     "sim": 0.676056,
+     "scenario": 9,
+     "raw_date": "2026-08-14",
+     "text": "物业重新分配车位，我的月租车位换到 B1 区 A17 了，离电梯近多了。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 10,
+   "q": "我现在用什么手机?",
+   "gold": [
+    29,
+    30,
+    31
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    7
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 0.6666666666666666,
+   "r6": 0.6666666666666666,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 29,
+     "sim": 0.610235,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "我一直用 iPhone，习惯了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 30,
+     "sim": 0.536905,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。",
+     "is_evidence": true
+    },
+    {
+     "doc": 58,
+     "sim": 0.44964,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "is_evidence": false
+    },
+    {
+     "doc": 89,
+     "sim": 0.420647,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 29,
+     "rank": 1,
+     "sim": 0.610235,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "我一直用 iPhone，习惯了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 30,
+     "rank": 2,
+     "sim": 0.536905,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 31,
+     "rank": 7,
+     "sim": 0.413568,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "手机壳买厚一点，我老摔手机。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 11,
+   "q": "我现在在哪家公司上班?",
+   "gold": [
+    32,
+    33
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    6
+   ],
+   "r1": 0.5,
+   "r3": 0.5,
+   "r4": 0.5,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 32,
+     "sim": 0.610939,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "is_evidence": true
+    },
+    {
+     "doc": 5,
+     "sim": 0.609562,
+     "scenario": 3,
+     "raw_date": "2025",
+     "text": "入职了现在这家做 SaaS 的公司，做后端。",
+     "is_evidence": false
+    },
+    {
+     "doc": 61,
+     "sim": 0.523803,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "is_evidence": false
+    },
+    {
+     "doc": 7,
+     "sim": 0.516374,
+     "scenario": 3,
+     "raw_date": "2026-08-15",
+     "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 32,
+     "rank": 1,
+     "sim": 0.610939,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 33,
+     "rank": 6,
+     "sim": 0.489663,
+     "scenario": 11,
+     "raw_date": "2026-11-08",
+     "text": "补记一下，去年在美团那两年其实挺累的，天天加班。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 12,
+   "q": "我家阳台那盆绿萝现在放在哪边?",
+   "gold": [
+    34,
+    35,
+    36
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    3
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 34,
+     "sim": 0.873876,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "今天把阳台的绿萝搬到南边了，那边光照好。",
+     "is_evidence": true
+    },
+    {
+     "doc": 35,
+     "sim": 0.788779,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "南边晒得太狠，绿萝叶子都蔫了，又搬回北阳台。",
+     "is_evidence": true
+    },
+    {
+     "doc": 36,
+     "sim": 0.700102,
+     "scenario": 12,
+     "raw_date": "2026-09-11",
+     "text": "给绿萝换了盆，根都长满了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 72,
+     "sim": 0.468859,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 34,
+     "rank": 1,
+     "sim": 0.873876,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "今天把阳台的绿萝搬到南边了，那边光照好。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 35,
+     "rank": 2,
+     "sim": 0.788779,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "南边晒得太狠，绿萝叶子都蔫了，又搬回北阳台。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 36,
+     "rank": 3,
+     "sim": 0.700102,
+     "scenario": 12,
+     "raw_date": "2026-09-11",
+     "text": "给绿萝换了盆，根都长满了。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 13,
+   "q": "我 2026 年买的那台相机是什么型号?",
+   "gold": [
+    37,
+    38,
+    39
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    3,
+    2,
+    1
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 39,
+     "sim": 0.651142,
+     "scenario": 13,
+     "raw_date": "2026-10-08",
+     "text": "又添了一颗 56mm 镜头，拍人像用。",
+     "is_evidence": false
+    },
+    {
+     "doc": 38,
+     "sim": 0.554397,
+     "scenario": 13,
+     "raw_date": "2026",
+     "text": "今年入手了富士 X-T5，主要是喜欢它的直出色彩。",
+     "is_evidence": true
+    },
+    {
+     "doc": 37,
+     "sim": 0.539681,
+     "scenario": 13,
+     "raw_date": "2025-12-20",
+     "text": "买了台索尼 A7C，配了个 35mm 定焦。",
+     "is_evidence": true
+    },
+    {
+     "doc": 1,
+     "sim": 0.458234,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 37,
+     "rank": 3,
+     "sim": 0.539681,
+     "scenario": 13,
+     "raw_date": "2025-12-20",
+     "text": "买了台索尼 A7C，配了个 35mm 定焦。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 38,
+     "rank": 2,
+     "sim": 0.554397,
+     "scenario": 13,
+     "raw_date": "2026",
+     "text": "今年入手了富士 X-T5，主要是喜欢它的直出色彩。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 39,
+     "rank": 1,
+     "sim": 0.651142,
+     "scenario": 13,
+     "raw_date": "2026-10-08",
+     "text": "又添了一颗 56mm 镜头，拍人像用。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 14,
+   "q": "我是什么血型?",
+   "gold": [
+    40,
+    41
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 40,
+     "sim": 0.780638,
+     "scenario": 14,
+     "raw_date": "2026-01-20",
+     "text": "体检报告上写我是 O 型血。",
+     "is_evidence": true
+    },
+    {
+     "doc": 41,
+     "sim": 0.699181,
+     "scenario": 14,
+     "raw_date": "2026-08",
+     "text": "我是 A 型血，献血的时候护士说的。",
+     "is_evidence": true
+    },
+    {
+     "doc": 20,
+     "sim": 0.39397,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "is_evidence": false
+    },
+    {
+     "doc": 25,
+     "sim": 0.386463,
+     "scenario": 8,
+     "raw_date": "2026-09-27",
+     "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 40,
+     "rank": 1,
+     "sim": 0.780638,
+     "scenario": 14,
+     "raw_date": "2026-01-20",
+     "text": "体检报告上写我是 O 型血。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 41,
+     "rank": 2,
+     "sim": 0.699181,
+     "scenario": 14,
+     "raw_date": "2026-08",
+     "text": "我是 A 型血，献血的时候护士说的。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 15,
+   "q": "我对什么食物过敏?",
+   "gold": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47
+   ],
+   "gold_n": 6,
+   "gold_ranks": [
+    1,
+    90,
+    100,
+    26,
+    119,
+    105
+   ],
+   "r1": 0.16666666666666666,
+   "r3": 0.16666666666666666,
+   "r4": 0.16666666666666666,
+   "r6": 0.16666666666666666,
+   "r20": 0.16666666666666666,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 42,
+     "sim": 0.682494,
+     "scenario": 15,
+     "raw_date": "2026-03-08",
+     "text": "我对虾过敏，吃了会起疹子，挺严重的。",
+     "is_evidence": true
+    },
+    {
+     "doc": 48,
+     "sim": 0.598822,
+     "scenario": 16,
+     "raw_date": "2026-03-15",
+     "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
+     "is_evidence": false
+    },
+    {
+     "doc": 49,
+     "sim": 0.58398,
+     "scenario": 16,
+     "raw_date": "2026-07-21",
+     "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
+     "is_evidence": false
+    },
+    {
+     "doc": 23,
+     "sim": 0.476376,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 42,
+     "rank": 1,
+     "sim": 0.682494,
+     "scenario": 15,
+     "raw_date": "2026-03-08",
+     "text": "我对虾过敏，吃了会起疹子，挺严重的。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 43,
+     "rank": 90,
+     "sim": 0.187457,
+     "scenario": 15,
+     "raw_date": "2026-07-19",
+     "text": "新买的净水器滤芯三个月就得换一次。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 44,
+     "rank": 100,
+     "sim": 0.178444,
+     "scenario": 15,
+     "raw_date": "2025-11-02",
+     "text": "公司楼下那家咖啡店的美式太淡了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 45,
+     "rank": 26,
+     "sim": 0.285388,
+     "scenario": 15,
+     "raw_date": "2026-01-30",
+     "text": "把卧室的窗帘换成了遮光的，睡眠好多了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 46,
+     "rank": 119,
+     "sim": 0.083034,
+     "scenario": 15,
+     "raw_date": "2026-09-05",
+     "text": "电动车电池冬天掉电太快。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 47,
+     "rank": 105,
+     "sim": 0.166035,
+     "scenario": 15,
+     "raw_date": "2026-02-22",
+     "text": "周末把书架重新装了一遍，书终于有地方放了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 16,
+   "q": "我以前一直以为自己对什么过敏?",
+   "gold": [
+    48,
+    49,
+    50
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    14
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 0.6666666666666666,
+   "r6": 0.6666666666666666,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 48,
+     "sim": 0.73005,
+     "scenario": 16,
+     "raw_date": "2026-03-15",
+     "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
+     "is_evidence": true
+    },
+    {
+     "doc": 49,
+     "sim": 0.634684,
+     "scenario": 16,
+     "raw_date": "2026-07-21",
+     "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
+     "is_evidence": true
+    },
+    {
+     "doc": 42,
+     "sim": 0.584714,
+     "scenario": 15,
+     "raw_date": "2026-03-08",
+     "text": "我对虾过敏，吃了会起疹子，挺严重的。",
+     "is_evidence": false
+    },
+    {
+     "doc": 23,
+     "sim": 0.504432,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 48,
+     "rank": 1,
+     "sim": 0.73005,
+     "scenario": 16,
+     "raw_date": "2026-03-15",
+     "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
+     "lex_overlap": 6,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 49,
+     "rank": 2,
+     "sim": 0.634684,
+     "scenario": 16,
+     "raw_date": "2026-07-21",
+     "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 50,
+     "rank": 14,
+     "sim": 0.382808,
+     "scenario": 16,
+     "raw_date": "2026-08-03",
+     "text": "开始每周洗床单、用除螨仪。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 17,
+   "q": "我上次去日本住的那家酒店叫什么名字?",
+   "gold": [
+    51,
+    52,
+    53,
+    54
+   ],
+   "gold_n": 4,
+   "gold_ranks": [
+    2,
+    3,
+    5,
+    63
+   ],
+   "r1": 0.0,
+   "r3": 0.5,
+   "r4": 0.5,
+   "r6": 0.75,
+   "r20": 0.75,
+   "mrr": 0.5,
+   "top4": [
+    {
+     "doc": 92,
+     "sim": 0.44015,
+     "scenario": 31,
+     "raw_date": "2026-11-01",
+     "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
+     "is_evidence": false
+    },
+    {
+     "doc": 51,
+     "sim": 0.41593,
+     "scenario": 17,
+     "raw_date": "2026-04-02",
+     "text": "订了 5 月 12 号飞大阪的机票，往返。",
+     "is_evidence": true
+    },
+    {
+     "doc": 52,
+     "sim": 0.412581,
+     "scenario": 17,
+     "raw_date": "2026-05-12",
+     "text": "到大阪了，心斋桥人太多了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 91,
+     "sim": 0.384075,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 51,
+     "rank": 2,
+     "sim": 0.41593,
+     "scenario": 17,
+     "raw_date": "2026-04-02",
+     "text": "订了 5 月 12 号飞大阪的机票，往返。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 52,
+     "rank": 3,
+     "sim": 0.412581,
+     "scenario": 17,
+     "raw_date": "2026-05-12",
+     "text": "到大阪了，心斋桥人太多了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 53,
+     "rank": 5,
+     "sim": 0.381585,
+     "scenario": 17,
+     "raw_date": "2026-05-16",
+     "text": "在京都买了把厨刀，退税排了半小时队。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 54,
+     "rank": 63,
+     "sim": 0.226073,
+     "scenario": 17,
+     "raw_date": "2026-05-20",
+     "text": "回国了，行李箱塞满了零食。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    }
+   ],
+   "query_defect": "问「酒店叫什么名字」，全语料 0 条含“酒店”；gold（51–54）只有机票/行程/购物 → 无解"
+  },
+  {
+   "sid": 18,
+   "q": "我早上一般几点起?",
+   "gold": [
+    55,
+    56,
+    57
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    2,
+    1,
+    3
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 56,
+     "sim": 0.724939,
+     "scenario": 18,
+     "raw_date": "2026-05-04",
+     "text": "六点半起床已经成习惯了，不用闹钟也能醒。",
+     "is_evidence": true
+    },
+    {
+     "doc": 55,
+     "sim": 0.67224,
+     "scenario": 18,
+     "raw_date": "2026-02-11",
+     "text": "闹钟定在 6:30，起来先喝一杯水。",
+     "is_evidence": true
+    },
+    {
+     "doc": 57,
+     "sim": 0.666449,
+     "scenario": 18,
+     "raw_date": "2026-08-19",
+     "text": "早上六点半起，出门前还能看二十分钟书。",
+     "is_evidence": true
+    },
+    {
+     "doc": 58,
+     "sim": 0.569778,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 55,
+     "rank": 2,
+     "sim": 0.67224,
+     "scenario": 18,
+     "raw_date": "2026-02-11",
+     "text": "闹钟定在 6:30，起来先喝一杯水。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 56,
+     "rank": 1,
+     "sim": 0.724939,
+     "scenario": 18,
+     "raw_date": "2026-05-04",
+     "text": "六点半起床已经成习惯了，不用闹钟也能醒。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 57,
+     "rank": 3,
+     "sim": 0.666449,
+     "scenario": 18,
+     "raw_date": "2026-08-19",
+     "text": "早上六点半起，出门前还能看二十分钟书。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 19,
+   "q": "我现在一般几点睡?",
+   "gold": [
+    58,
+    59
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 58,
+     "sim": 0.694892,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "is_evidence": true
+    },
+    {
+     "doc": 59,
+     "sim": 0.579588,
+     "scenario": 19,
+     "raw_date": "2026-10-02",
+     "text": "调整作息了，现在 23 点前必须上床，手机放客厅。",
+     "is_evidence": true
+    },
+    {
+     "doc": 56,
+     "sim": 0.518865,
+     "scenario": 18,
+     "raw_date": "2026-05-04",
+     "text": "六点半起床已经成习惯了，不用闹钟也能醒。",
+     "is_evidence": false
+    },
+    {
+     "doc": 105,
+     "sim": 0.465485,
+     "scenario": 35,
+     "raw_date": "2026-04-08",
+     "text": "小区的垃圾分类改到晚上七点以后了。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 58,
+     "rank": 1,
+     "sim": 0.694892,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 59,
+     "rank": 2,
+     "sim": 0.579588,
+     "scenario": 19,
+     "raw_date": "2026-10-02",
+     "text": "调整作息了，现在 23 点前必须上床，手机放客厅。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 20,
+   "q": "我现在住在哪个城市?",
+   "gold": [
+    60,
+    61,
+    62
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    4
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 60,
+     "sim": 0.518824,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "is_evidence": true
+    },
+    {
+     "doc": 61,
+     "sim": 0.473507,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 67,
+     "sim": 0.471846,
+     "scenario": 23,
+     "raw_date": "2025-11",
+     "text": "搬到杭州了，租在西湖区。",
+     "is_evidence": false
+    },
+    {
+     "doc": 62,
+     "sim": 0.466268,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "成都的房子还留着，没退租。",
+     "is_evidence": true
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 60,
+     "rank": 1,
+     "sim": 0.518824,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 61,
+     "rank": 2,
+     "sim": 0.473507,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 62,
+     "rank": 4,
+     "sim": 0.466268,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "成都的房子还留着，没退租。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 21,
+   "q": "我现在还喝酒吗?",
+   "gold": [
+    63,
+    64
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    2,
+    1
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 64,
+     "sim": 0.712986,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 63,
+     "sim": 0.698244,
+     "scenario": 21,
+     "raw_date": "2026-06",
+     "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。",
+     "is_evidence": true
+    },
+    {
+     "doc": 94,
+     "sim": 0.574345,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "is_evidence": false
+    },
+    {
+     "doc": 115,
+     "sim": 0.547279,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 63,
+     "rank": 2,
+     "sim": 0.698244,
+     "scenario": 21,
+     "raw_date": "2026-06",
+     "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 64,
+     "rank": 1,
+     "sim": 0.712986,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 22,
+   "q": "我现在还开车上班吗?",
+   "gold": [
+    65,
+    66
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    4,
+    1
+   ],
+   "r1": 0.5,
+   "r3": 0.5,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 66,
+     "sim": 0.647182,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "车没卖，最后还是留着继续开，通勤没车太麻烦。",
+     "is_evidence": true
+    },
+    {
+     "doc": 118,
+     "sim": 0.617365,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "地铁早高峰太挤，有时候还是开车。",
+     "is_evidence": false
+    },
+    {
+     "doc": 116,
+     "sim": 0.610202,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "我开车上班，走滨江路，四十分钟。",
+     "is_evidence": false
+    },
+    {
+     "doc": 65,
+     "sim": 0.560572,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "把车卖了，以后都坐地铁，省心。",
+     "is_evidence": true
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 65,
+     "rank": 4,
+     "sim": 0.560572,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "把车卖了，以后都坐地铁，省心。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 66,
+     "rank": 1,
+     "sim": 0.647182,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "车没卖，最后还是留着继续开，通勤没车太麻烦。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 23,
+   "q": "2026 年上半年我住在哪个城市?",
+   "gold": [
+    67,
+    68,
+    69
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    10
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 0.6666666666666666,
+   "r6": 0.6666666666666666,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 67,
+     "sim": 0.47258,
+     "scenario": 23,
+     "raw_date": "2025-11",
+     "text": "搬到杭州了，租在西湖区。",
+     "is_evidence": true
+    },
+    {
+     "doc": 68,
+     "sim": 0.454351,
+     "scenario": 23,
+     "raw_date": "2026-06-20",
+     "text": "从杭州搬到上海，新公司在徐汇。",
+     "is_evidence": true
+    },
+    {
+     "doc": 61,
+     "sim": 0.443764,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "is_evidence": false
+    },
+    {
+     "doc": 60,
+     "sim": 0.43638,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 67,
+     "rank": 1,
+     "sim": 0.47258,
+     "scenario": 23,
+     "raw_date": "2025-11",
+     "text": "搬到杭州了，租在西湖区。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 68,
+     "rank": 2,
+     "sim": 0.454351,
+     "scenario": 23,
+     "raw_date": "2026-06-20",
+     "text": "从杭州搬到上海，新公司在徐汇。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 69,
+     "rank": 10,
+     "sim": 0.400994,
+     "scenario": 23,
+     "raw_date": "2026-10-05",
+     "text": "上海这边房租又涨了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 24,
+   "q": "我现在每天吃多少降压药?",
+   "gold": [
+    70,
+    71
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 70,
+     "sim": 0.819447,
+     "scenario": 24,
+     "raw_date": "2026-04-02",
+     "text": "医生给我开了降压药，每天 5mg，早上吃。",
+     "is_evidence": true
+    },
+    {
+     "doc": 71,
+     "sim": 0.807976,
+     "scenario": 24,
+     "raw_date": "2026-10-19",
+     "text": "降压药是 10mg 的，每天早上吃一片。",
+     "is_evidence": true
+    },
+    {
+     "doc": 114,
+     "sim": 0.536863,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "is_evidence": false
+    },
+    {
+     "doc": 115,
+     "sim": 0.521123,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 70,
+     "rank": 1,
+     "sim": 0.819447,
+     "scenario": 24,
+     "raw_date": "2026-04-02",
+     "text": "医生给我开了降压药，每天 5mg，早上吃。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 71,
+     "rank": 2,
+     "sim": 0.807976,
+     "scenario": 24,
+     "raw_date": "2026-10-19",
+     "text": "降压药是 10mg 的，每天早上吃一片。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 25,
+   "q": "我家路由器放在哪儿?",
+   "gold": [
+    72,
+    73,
+    74,
+    75,
+    76,
+    77
+   ],
+   "gold_n": 6,
+   "gold_ranks": [
+    1,
+    101,
+    64,
+    73,
+    95,
+    6
+   ],
+   "r1": 0.16666666666666666,
+   "r3": 0.16666666666666666,
+   "r4": 0.16666666666666666,
+   "r6": 0.3333333333333333,
+   "r20": 0.3333333333333333,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 72,
+     "sim": 0.732684,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "is_evidence": true
+    },
+    {
+     "doc": 16,
+     "sim": 0.603817,
+     "scenario": 6,
+     "raw_date": "2026-05-09",
+     "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
+     "is_evidence": false
+    },
+    {
+     "doc": 17,
+     "sim": 0.525617,
+     "scenario": 6,
+     "raw_date": "2026-05-12",
+     "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。",
+     "is_evidence": false
+    },
+    {
+     "doc": 18,
+     "sim": 0.483153,
+     "scenario": 6,
+     "raw_date": "2026-11-02",
+     "text": "现在家里网络很稳，光猫换了之后没再出过问题。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 72,
+     "rank": 1,
+     "sim": 0.732684,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 73,
+     "rank": 101,
+     "sim": 0.215943,
+     "scenario": 25,
+     "raw_date": "2026-04-22",
+     "text": "楼下超市的鸡蛋涨价了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 74,
+     "rank": 64,
+     "sim": 0.260878,
+     "scenario": 25,
+     "raw_date": "2026-08-14",
+     "text": "换了新的床垫，腰不疼了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 75,
+     "rank": 73,
+     "sim": 0.250985,
+     "scenario": 25,
+     "raw_date": "2025-10-09",
+     "text": "阳台的窗户漏风，找人来打了胶。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 76,
+     "rank": 95,
+     "sim": 0.222698,
+     "scenario": 25,
+     "raw_date": "2026-06-30",
+     "text": "公司的团建定在下个月。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 77,
+     "rank": 6,
+     "sim": 0.448896,
+     "scenario": 25,
+     "raw_date": "2026-03-17",
+     "text": "把备用钥匙放到了门口的密码盒里。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 26,
+   "q": "年初的时候我以为季度奖能发多少?",
+   "gold": [
+    78,
+    79
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 78,
+     "sim": 0.826463,
+     "scenario": 26,
+     "raw_date": "2026-01-15",
+     "text": "我一直以为季度奖是三个月工资，还跟老婆算了半天怎么花。",
+     "is_evidence": true
+    },
+    {
+     "doc": 79,
+     "sim": 0.55464,
+     "scenario": 26,
+     "raw_date": "2026-04-10",
+     "text": "结果只发了 1.5 个月，差得有点远。",
+     "is_evidence": true
+    },
+    {
+     "doc": 32,
+     "sim": 0.463073,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "is_evidence": false
+    },
+    {
+     "doc": 5,
+     "sim": 0.449664,
+     "scenario": 3,
+     "raw_date": "2025",
+     "text": "入职了现在这家做 SaaS 的公司，做后端。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 78,
+     "rank": 1,
+     "sim": 0.826463,
+     "scenario": 26,
+     "raw_date": "2026-01-15",
+     "text": "我一直以为季度奖是三个月工资，还跟老婆算了半天怎么花。",
+     "lex_overlap": 4,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 79,
+     "rank": 2,
+     "sim": 0.55464,
+     "scenario": 26,
+     "raw_date": "2026-04-10",
+     "text": "结果只发了 1.5 个月，差得有点远。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 27,
+   "q": "我的车险哪天到期?",
+   "gold": [
+    80,
+    81,
+    82
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    3,
+    2
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 80,
+     "sim": 0.501328,
+     "scenario": 27,
+     "raw_date": "2026-02-18",
+     "text": "续了车险，还是原来那家公司，三者险买到 300 万。",
+     "is_evidence": true
+    },
+    {
+     "doc": 82,
+     "sim": 0.485733,
+     "scenario": 27,
+     "raw_date": "2026-09-12",
+     "text": "保险公司打电话来推销驾乘险，没要。",
+     "is_evidence": true
+    },
+    {
+     "doc": 81,
+     "sim": 0.452455,
+     "scenario": 27,
+     "raw_date": "2026-03-05",
+     "text": "去年出过一次小险，今年保费涨了几百。",
+     "is_evidence": true
+    },
+    {
+     "doc": 8,
+     "sim": 0.418082,
+     "scenario": 4,
+     "raw_date": "2026-03-10",
+     "text": "我的车是白色的 Model 3，提车那天还下了小雨。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 80,
+     "rank": 1,
+     "sim": 0.501328,
+     "scenario": 27,
+     "raw_date": "2026-02-18",
+     "text": "续了车险，还是原来那家公司，三者险买到 300 万。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 81,
+     "rank": 3,
+     "sim": 0.452455,
+     "scenario": 27,
+     "raw_date": "2026-03-05",
+     "text": "去年出过一次小险，今年保费涨了几百。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 82,
+     "rank": 2,
+     "sim": 0.485733,
+     "scenario": 27,
+     "raw_date": "2026-09-12",
+     "text": "保险公司打电话来推销驾乘险，没要。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": "问「车险哪天到期」，全语料 0 条含“到期/续保日期”；gold（80–82）只有续保、出险、推销电话 → 无解"
+  },
+  {
+   "sid": 28,
+   "q": "我一周去几次健身房?",
+   "gold": [
+    83,
+    84,
+    85
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    3,
+    2
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 83,
+     "sim": 0.847741,
+     "scenario": 28,
+     "raw_date": "2026-03-02",
+     "text": "现在每周去三次健身房，周一、三、五。",
+     "is_evidence": true
+    },
+    {
+     "doc": 85,
+     "sim": 0.703883,
+     "scenario": 28,
+     "raw_date": "2026-09",
+     "text": "最近还是保持每周去三次，练完拉伸十分钟。",
+     "is_evidence": true
+    },
+    {
+     "doc": 84,
+     "sim": 0.694904,
+     "scenario": 28,
+     "raw_date": "2026-06-18",
+     "text": "一周三练已经固定下来了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 114,
+     "sim": 0.428988,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 83,
+     "rank": 1,
+     "sim": 0.847741,
+     "scenario": 28,
+     "raw_date": "2026-03-02",
+     "text": "现在每周去三次健身房，周一、三、五。",
+     "lex_overlap": 4,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 84,
+     "rank": 3,
+     "sim": 0.694904,
+     "scenario": 28,
+     "raw_date": "2026-06-18",
+     "text": "一周三练已经固定下来了。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 85,
+     "rank": 2,
+     "sim": 0.703883,
+     "scenario": 28,
+     "raw_date": "2026-09",
+     "text": "最近还是保持每周去三次，练完拉伸十分钟。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 29,
+   "q": "我现在键盘用什么轴?",
+   "gold": [
+    86,
+    87
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 86,
+     "sim": 0.808208,
+     "scenario": 29,
+     "raw_date": "2026-02-07",
+     "text": "我一直用红轴，打字轻快。",
+     "is_evidence": true
+    },
+    {
+     "doc": 87,
+     "sim": 0.668876,
+     "scenario": 29,
+     "raw_date": "2026-09-19",
+     "text": "红轴太吵了，办公室同事有意见，换成了静音茶轴。",
+     "is_evidence": true
+    },
+    {
+     "doc": 37,
+     "sim": 0.440329,
+     "scenario": 13,
+     "raw_date": "2025-12-20",
+     "text": "买了台索尼 A7C，配了个 35mm 定焦。",
+     "is_evidence": false
+    },
+    {
+     "doc": 89,
+     "sim": 0.412639,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 86,
+     "rank": 1,
+     "sim": 0.808208,
+     "scenario": 29,
+     "raw_date": "2026-02-07",
+     "text": "我一直用红轴，打字轻快。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 87,
+     "rank": 2,
+     "sim": 0.668876,
+     "scenario": 29,
+     "raw_date": "2026-09-19",
+     "text": "红轴太吵了，办公室同事有意见，换成了静音茶轴。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 30,
+   "q": "我现在用的是什么笔记本电脑?",
+   "gold": [
+    88,
+    89,
+    90
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    2,
+    1,
+    3
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 89,
+     "sim": 0.631837,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "is_evidence": true
+    },
+    {
+     "doc": 88,
+     "sim": 0.564994,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "我一直用 MacBook Air，轻便。",
+     "is_evidence": true
+    },
+    {
+     "doc": 90,
+     "sim": 0.496997,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "家里那台 MacBook 电池不太行了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 86,
+     "sim": 0.393912,
+     "scenario": 29,
+     "raw_date": "2026-02-07",
+     "text": "我一直用红轴，打字轻快。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 88,
+     "rank": 2,
+     "sim": 0.564994,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "我一直用 MacBook Air，轻便。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 89,
+     "rank": 1,
+     "sim": 0.631837,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 90,
+     "rank": 3,
+     "sim": 0.496997,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "家里那台 MacBook 电池不太行了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 31,
+   "q": "我现在养的狗叫什么?",
+   "gold": [
+    91,
+    92
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 91,
+     "sim": 0.649775,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "is_evidence": true
+    },
+    {
+     "doc": 92,
+     "sim": 0.592201,
+     "scenario": 31,
+     "raw_date": "2026-11-01",
+     "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
+     "is_evidence": true
+    },
+    {
+     "doc": 10,
+     "sim": 0.451227,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "is_evidence": false
+    },
+    {
+     "doc": 98,
+     "sim": 0.374514,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 91,
+     "rank": 1,
+     "sim": 0.649775,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 92,
+     "rank": 2,
+     "sim": 0.592201,
+     "scenario": 31,
+     "raw_date": "2026-11-01",
+     "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 32,
+   "q": "我现在还喝咖啡吗?",
+   "gold": [
+    93,
+    94
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    2,
+    1
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 94,
+     "sim": 0.714998,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "is_evidence": true
+    },
+    {
+     "doc": 93,
+     "sim": 0.651841,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "今天开始戒咖啡，改喝白开水，心跳快得受不了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 115,
+     "sim": 0.649663,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "is_evidence": false
+    },
+    {
+     "doc": 64,
+     "sim": 0.635752,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 93,
+     "rank": 2,
+     "sim": 0.651841,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "今天开始戒咖啡，改喝白开水，心跳快得受不了。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 94,
+     "rank": 1,
+     "sim": 0.714998,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 33,
+   "q": "我 2025 年体检查出了什么问题?",
+   "gold": [
+    95,
+    96,
+    97
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    9,
+    6,
+    5
+   ],
+   "r1": 0.0,
+   "r3": 0.0,
+   "r4": 0.0,
+   "r6": 0.6666666666666666,
+   "r20": 1.0,
+   "mrr": 0.2,
+   "top4": [
+    {
+     "doc": 21,
+     "sim": 0.487289,
+     "scenario": 7,
+     "raw_date": "2026-10-09",
+     "text": "报告出来了，医生让我少熬夜、少吃海鲜。",
+     "is_evidence": false
+    },
+    {
+     "doc": 63,
+     "sim": 0.472155,
+     "scenario": 21,
+     "raw_date": "2026-06",
+     "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。",
+     "is_evidence": false
+    },
+    {
+     "doc": 20,
+     "sim": 0.461766,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "is_evidence": false
+    },
+    {
+     "doc": 19,
+     "sim": 0.456938,
+     "scenario": 7,
+     "raw_date": "2026-09-18",
+     "text": "体检预约在 9 月 28 日上午，空腹去。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 95,
+     "rank": 9,
+     "sim": 0.417428,
+     "scenario": 33,
+     "raw_date": "2025",
+     "text": "体检查出血脂偏高，医生让我少吃油腻。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 96,
+     "rank": 6,
+     "sim": 0.445598,
+     "scenario": 33,
+     "raw_date": "2026-03-20",
+     "text": "复查了，血脂已经正常。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 97,
+     "rank": 5,
+     "sim": 0.447941,
+     "scenario": 33,
+     "raw_date": "2026-11-05",
+     "text": "今年体检尿酸偏高，又开始忌口。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "2_rank_5_20"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 34,
+   "q": "我家猫几岁了?",
+   "gold": [
+    98,
+    99
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 98,
+     "sim": 0.716507,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "is_evidence": true
+    },
+    {
+     "doc": 99,
+     "sim": 0.709287,
+     "scenario": 34,
+     "raw_date": "2026-10-22",
+     "text": "我家猫已经五岁了，精力还是很旺。",
+     "is_evidence": true
+    },
+    {
+     "doc": 110,
+     "sim": 0.505695,
+     "scenario": 37,
+     "raw_date": "2026-05-30",
+     "text": "猫体重 4.2 公斤，医生说保持得不错。",
+     "is_evidence": false
+    },
+    {
+     "doc": 10,
+     "sim": 0.468321,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 98,
+     "rank": 1,
+     "sim": 0.716507,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 99,
+     "rank": 2,
+     "sim": 0.709287,
+     "scenario": 34,
+     "raw_date": "2026-10-22",
+     "text": "我家猫已经五岁了，精力还是很旺。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 35,
+   "q": "我平时用哪个牌子的洗衣液?",
+   "gold": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105
+   ],
+   "gold_n": 6,
+   "gold_ranks": [
+    1,
+    69,
+    33,
+    17,
+    77,
+    71
+   ],
+   "r1": 0.16666666666666666,
+   "r3": 0.16666666666666666,
+   "r4": 0.16666666666666666,
+   "r6": 0.16666666666666666,
+   "r20": 0.3333333333333333,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 100,
+     "sim": 0.764456,
+     "scenario": 35,
+     "raw_date": "2026-05-17",
+     "text": "洗衣液一直买蓝月亮的，别的用不惯。",
+     "is_evidence": true
+    },
+    {
+     "doc": 29,
+     "sim": 0.409398,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "我一直用 iPhone，习惯了。",
+     "is_evidence": false
+    },
+    {
+     "doc": 113,
+     "sim": 0.393563,
+     "scenario": 38,
+     "raw_date": "2026-10-11",
+     "text": "家里常备的茶就一种，绿茶。",
+     "is_evidence": false
+    },
+    {
+     "doc": 89,
+     "sim": 0.367279,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 100,
+     "rank": 1,
+     "sim": 0.764456,
+     "scenario": 35,
+     "raw_date": "2026-05-17",
+     "text": "洗衣液一直买蓝月亮的，别的用不惯。",
+     "lex_overlap": 2,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 101,
+     "rank": 69,
+     "sim": 0.259532,
+     "scenario": 35,
+     "raw_date": "2026-02-09",
+     "text": "新买的拖把杆有点短。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 102,
+     "rank": 33,
+     "sim": 0.294576,
+     "scenario": 35,
+     "raw_date": "2026-08-21",
+     "text": "冰箱里的酸奶过期了，扔了两盒。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 103,
+     "rank": 17,
+     "sim": 0.323549,
+     "scenario": 35,
+     "raw_date": "2025-12-30",
+     "text": "楼下快递柜换成刷脸的，方便不少。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "2_rank_5_20"
+    },
+    {
+     "doc": 104,
+     "rank": 77,
+     "sim": 0.252831,
+     "scenario": 35,
+     "raw_date": "2026-07-04",
+     "text": "空调遥控器的电池该换了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    },
+    {
+     "doc": 105,
+     "rank": 71,
+     "sim": 0.257488,
+     "scenario": 35,
+     "raw_date": "2026-04-08",
+     "text": "小区的垃圾分类改到晚上七点以后了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "1_unreachable"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 36,
+   "q": "猫软便那阵子,我当时怀疑是什么原因?",
+   "gold": [
+    106,
+    107
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 106,
+     "sim": 0.786755,
+     "scenario": 36,
+     "raw_date": "2026-06-08",
+     "text": "猫一直软便，我怀疑是猫粮的问题，换了两三种粮。",
+     "is_evidence": true
+    },
+    {
+     "doc": 107,
+     "sim": 0.546492,
+     "scenario": 36,
+     "raw_date": "2026-06-25",
+     "text": "换粮没用，最后发现是猫砂粉尘太大，换了猫砂就好了。",
+     "is_evidence": true
+    },
+    {
+     "doc": 10,
+     "sim": 0.477843,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "is_evidence": false
+    },
+    {
+     "doc": 98,
+     "sim": 0.4684,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 106,
+     "rank": 1,
+     "sim": 0.786755,
+     "scenario": 36,
+     "raw_date": "2026-06-08",
+     "text": "猫一直软便，我怀疑是猫粮的问题，换了两三种粮。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 107,
+     "rank": 2,
+     "sim": 0.546492,
+     "scenario": 36,
+     "raw_date": "2026-06-25",
+     "text": "换粮没用，最后发现是猫砂粉尘太大，换了猫砂就好了。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 37,
+   "q": "我给猫打疫苗的那家宠物医院叫什么名字?",
+   "gold": [
+    108,
+    109,
+    110
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    2,
+    1,
+    4
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 109,
+     "sim": 0.684132,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "疫苗一共花了 380，猫在诊室里一直叫。",
+     "is_evidence": true
+    },
+    {
+     "doc": 108,
+     "sim": 0.630845,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "带猫去打了疫苗，是三联，加一针狂犬。",
+     "is_evidence": true
+    },
+    {
+     "doc": 98,
+     "sim": 0.468075,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "is_evidence": false
+    },
+    {
+     "doc": 110,
+     "sim": 0.427797,
+     "scenario": 37,
+     "raw_date": "2026-05-30",
+     "text": "猫体重 4.2 公斤，医生说保持得不错。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 108,
+     "rank": 2,
+     "sim": 0.630845,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "带猫去打了疫苗，是三联，加一针狂犬。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 109,
+     "rank": 1,
+     "sim": 0.684132,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "疫苗一共花了 380，猫在诊室里一直叫。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 110,
+     "rank": 4,
+     "sim": 0.427797,
+     "scenario": 37,
+     "raw_date": "2026-05-30",
+     "text": "猫体重 4.2 公斤，医生说保持得不错。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": false,
+     "category": "hit"
+    }
+   ],
+   "query_defect": "问「宠物医院叫什么名字」，全语料 0 条含“医院”；gold（108–110）只有疫苗与体重 → 无解"
+  },
+  {
+   "sid": 38,
+   "q": "我平时喝什么茶?",
+   "gold": [
+    111,
+    112,
+    113
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    3,
+    2,
+    1
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 113,
+     "sim": 0.729257,
+     "scenario": 38,
+     "raw_date": "2026-10-11",
+     "text": "家里常备的茶就一种，绿茶。",
+     "is_evidence": true
+    },
+    {
+     "doc": 112,
+     "sim": 0.692683,
+     "scenario": 38,
+     "raw_date": "2026-05-23",
+     "text": "别给我泡红茶，我喝不惯，绿茶就行。",
+     "is_evidence": true
+    },
+    {
+     "doc": 111,
+     "sim": 0.670142,
+     "scenario": 38,
+     "raw_date": "2026-01-09",
+     "text": "我只喝绿茶，红茶喝着太涩。",
+     "is_evidence": true
+    },
+    {
+     "doc": 115,
+     "sim": 0.532914,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 111,
+     "rank": 3,
+     "sim": 0.670142,
+     "scenario": 38,
+     "raw_date": "2026-01-09",
+     "text": "我只喝绿茶，红茶喝着太涩。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 112,
+     "rank": 2,
+     "sim": 0.692683,
+     "scenario": 38,
+     "raw_date": "2026-05-23",
+     "text": "别给我泡红茶，我喝不惯，绿茶就行。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 113,
+     "rank": 1,
+     "sim": 0.729257,
+     "scenario": 38,
+     "raw_date": "2026-10-11",
+     "text": "家里常备的茶就一种，绿茶。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 39,
+   "q": "我现在每天喝几杯咖啡?",
+   "gold": [
+    114,
+    115
+   ],
+   "gold_n": 2,
+   "gold_ranks": [
+    1,
+    2
+   ],
+   "r1": 0.5,
+   "r3": 1.0,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 114,
+     "sim": 0.800576,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "is_evidence": true
+    },
+    {
+     "doc": 115,
+     "sim": 0.697127,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "is_evidence": true
+    },
+    {
+     "doc": 94,
+     "sim": 0.615137,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "is_evidence": false
+    },
+    {
+     "doc": 64,
+     "sim": 0.586966,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "is_evidence": false
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 114,
+     "rank": 1,
+     "sim": 0.800576,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 115,
+     "rank": 2,
+     "sim": 0.697127,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "lex_overlap": 3,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  },
+  {
+   "sid": 40,
+   "q": "我现在上班怎么去?",
+   "gold": [
+    116,
+    117,
+    118
+   ],
+   "gold_n": 3,
+   "gold_ranks": [
+    1,
+    2,
+    4
+   ],
+   "r1": 0.3333333333333333,
+   "r3": 0.6666666666666666,
+   "r4": 1.0,
+   "r6": 1.0,
+   "r20": 1.0,
+   "mrr": 1.0,
+   "top4": [
+    {
+     "doc": 116,
+     "sim": 0.603374,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "我开车上班，走滨江路，四十分钟。",
+     "is_evidence": true
+    },
+    {
+     "doc": 117,
+     "sim": 0.554144,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "改成坐地铁了，路上还能看会儿书。",
+     "is_evidence": true
+    },
+    {
+     "doc": 27,
+     "sim": 0.544005,
+     "scenario": 9,
+     "raw_date": "2026-03-02",
+     "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
+     "is_evidence": false
+    },
+    {
+     "doc": 118,
+     "sim": 0.530017,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "地铁早高峰太挤，有时候还是开车。",
+     "is_evidence": true
+    }
+   ],
+   "gold_detail": [
+    {
+     "doc": 116,
+     "rank": 1,
+     "sim": 0.603374,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "我开车上班，走滨江路，四十分钟。",
+     "lex_overlap": 1,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 117,
+     "rank": 2,
+     "sim": 0.554144,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "改成坐地铁了，路上还能看会儿书。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    },
+    {
+     "doc": 118,
+     "rank": 4,
+     "sim": 0.530017,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "地铁早高峰太挤，有时候还是开车。",
+     "lex_overlap": 0,
+     "bigram_rank": null,
+     "is_evidence": true,
+     "category": "hit"
+    }
+   ],
+   "query_defect": null
+  }
+ ]
+}
