@@ -55,3 +55,10 @@ research/recall/.llm_cache_*.tmp
 *.swp
 .DS_Store
 Thumbs.db
+
+# LongMemEval 大文件（>50MB 不入库；仓库留 manifest / SHA256SUMS / 样本）
+research/bench/raw/longmemeval/longmemeval_s_cleaned.json
+research/bench/raw/longmemeval/longmemeval_m_cleaned.json
+research/bench/raw/longmemeval/*.part
+research/bench/converted/local/
+research/bench/.llm_cache_*.json

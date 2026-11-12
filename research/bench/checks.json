@@ -1,0 +1,2185 @@
+{
+ "generated_by": "research/bench/check_bank.py",
+ "model": "deepseek-flash",
+ "seed": 20261112,
+ "converted_file": "research/bench/converted/longmemeval.jsonl",
+ "converted_sha256": "b27714dd959803753b3b3b7ade4ae8e29dd62dc94f669afaa244a532e7516bd6",
+ "coverage": {
+  "split": "oracle",
+  "converted": 500,
+  "source_total": 500,
+  "kept": 500,
+  "discarded": 0,
+  "discard_reasons": {},
+  "kept_by_category": {
+   "abstention": 30,
+   "assistant": 56,
+   "knowledge-update": 72,
+   "multi-session": 121,
+   "other": 64,
+   "preference": 30,
+   "temporal": 127
+  },
+  "evidence_source_counts": {
+   "session_fallback": 21,
+   "turn:has_answer": 479
+  },
+  "sum_facts": 10960,
+  "sum_gold": 1364,
+  "sum_distractor": 9596,
+  "duplicate_ids": 0,
+  "structural_problems": [],
+  "structural_ok": true
+ },
+ "timestamps": {
+  "n_questions": 500,
+  "n_session_timestamps": 948,
+  "timestamp_format": "YYYY/MM/DD (Ddd) HH:MM（全部带时分）",
+  "sessions_with_nonzero_minute": 934,
+  "weekday_matches_calendar": "948/948",
+  "sessions_after_question_date": 0,
+  "question_date_vs_last_session": {
+   "before_last_session": 376,
+   "after_last_session": 0,
+   "same_day": 124
+  },
+  "turns_with_relative_time_phrase": 904,
+  "turns_with_explicit_calendar_date": 387,
+  "explicit_date_same_as_session_date": 1,
+  "explicit_date_differs_from_session_date": 386,
+  "semantics": "session_time",
+  "conclusion": "haystack_dates 是**会话发生时间**（精确到时分、星期与日历一致、全部不晚于 question_date），不是文本里提到的**事件时间**：文本用 yesterday / last week / March 15th 这类相对或显式日期指事件，说明事实层把 date 当 event_time 代理时会有 0–N 天偏移；本转换保留 date_kind=session_time 不做推断。"
+ },
+ "answer_leak": {
+  "sample_size": 30,
+  "sampled_by_category": {
+   "assistant": 5,
+   "knowledge-update": 5,
+   "multi-session": 5,
+   "other": 5,
+   "preference": 5,
+   "temporal": 5
+  },
+  "leak_flagged": [
+   "lme-oracle-e493bb7c",
+   "lme-oracle-1a1907b4",
+   "lme-oracle-6b168ec8",
+   "lme-oracle-gpt4_85da3956",
+   "lme-oracle-3ba21379",
+   "lme-oracle-b6025781",
+   "lme-oracle-e3fc4d6e",
+   "lme-oracle-gpt4_1d4ab0c9",
+   "lme-oracle-5c40ec5b",
+   "lme-oracle-gpt4_68e94288",
+   "lme-oracle-59524333",
+   "lme-oracle-c8c3f81d"
+  ],
+  "suspected_leak_rate": 0.4,
+  "suspected_leak_rate_ci95": [
+   0.2459,
+   0.5768
+  ],
+  "leak_carrier_roles": {
+   "user": 24,
+   "assistant": 44
+  },
+  "rows": [
+   {
+    "id": "lme-oracle-gpt4_2c50253f",
+    "category": "temporal",
+    "n_records_shown": 22,
+    "answer": "The records do not specify a wake-up time for Tuesdays and Thursdays. They only mention a general “new 7:00 AM wake-up time,” but not that it applies specifically to Tuesdays and Thursdays.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the wake-up time is not specified, rather than giving the gold answer of 6:45 AM."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-21d02d0d",
+    "category": "multi-session",
+    "n_records_shown": 20,
+    "answer": "The records do not contain that information. They only mention missing the 5K fun run on March 26th, without stating that it was due to work commitments or giving a total count for March.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the information is unavailable instead of providing the gold count of 2."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-e493bb7c",
+    "category": "knowledge-update",
+    "n_records_shown": 22,
+    "answer": "The records indicate that the user moved “Ethereal Dreams” by Emma Taylor to their bedroom, where it is currently hanging.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states the painting is currently hanging in the user's bedroom, matching the gold answer."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_1a374afa_2#t0",
+       "role": "user",
+       "tokens": [
+        "bedroom"
+       ]
+      },
+      {
+       "fact_id": "answer_1a374afa_2#t7",
+       "role": "assistant",
+       "tokens": [
+        "bedroom"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 1,
+      "assistant": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-1a1907b4",
+    "category": "preference",
+    "n_records_shown": 15,
+    "answer": "From the records, a good suggestion is the **Pimm’s Cup with a Twist** made with Hendrick’s gin. The records describe it as: 1 1/2 oz Hendrick’s gin, 1/2 oz lemon juice, 1/2 oz simple syrup, 1/2 oz Pimm’s No. 1, and a splash of ginger beer, garnished with cucumber, mint, and fruit. The records also note you discussed muddling cucumber slices, using Ruby Red Grapefruit simple syrup, serving it in a Collins glass, and garnishing with cucumber, grapefruit, mint, edible flowers, or fresh fruit.\n\nOther cocktail suggestions in the records are: **Cucumber Gimlet, Rose Petal Spritz, Gin-Gin Mule, Summer Solstice, and Hendrick’s High Tea**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate suggests a creative Pimm’s Cup variation and other cocktails, matching the gold answer’s preference for skill-building, non-basic drink recommendations."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_719502eb#t0",
+       "role": "user",
+       "tokens": [
+        "cocktails",
+        "drinks",
+        "incorporate",
+        "recommendations",
+        "summer"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t1",
+       "role": "assistant",
+       "tokens": [
+        "classic",
+        "cocktail",
+        "cocktails",
+        "like",
+        "pimm's",
+        "recipes"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t3",
+       "role": "assistant",
+       "tokens": [
+        "cocktails",
+        "drinks",
+        "incorporate",
+        "pimm's",
+        "prefer",
+        "refreshing"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t4",
+       "role": "user",
+       "tokens": [
+        "pimm's",
+        "recommendations"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t5",
+       "role": "assistant",
+       "tokens": [
+        "basic",
+        "classic",
+        "cocktails",
+        "like",
+        "pimm's",
+        "prefer"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t6",
+       "role": "user",
+       "tokens": [
+        "pimm's",
+        "recommendations"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t7",
+       "role": "assistant",
+       "tokens": [
+        "basic",
+        "classic",
+        "cup.",
+        "don't",
+        "like",
+        "pimm's"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t8",
+       "role": "user",
+       "tokens": [
+        "like",
+        "recommendations"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t9",
+       "role": "assistant",
+       "tokens": [
+        "basic",
+        "pimm's",
+        "prefer"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t10",
+       "role": "user",
+       "tokens": [
+        "like",
+        "pimm's",
+        "recommendations"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t11",
+       "role": "assistant",
+       "tokens": [
+        "classic",
+        "creative",
+        "cup.",
+        "don't",
+        "flavors.",
+        "like"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t12",
+       "role": "user",
+       "tokens": [
+        "pimm's",
+        "recommendations"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t13",
+       "role": "assistant",
+       "tokens": [
+        "creative",
+        "cup.",
+        "don't",
+        "like",
+        "pimm's"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t14",
+       "role": "user",
+       "tokens": [
+        "classic",
+        "pimm's",
+        "refreshing",
+        "summer"
+       ]
+      },
+      {
+       "fact_id": "answer_719502eb#t15",
+       "role": "assistant",
+       "tokens": [
+        "appreciate",
+        "classic",
+        "cocktail",
+        "cocktails",
+        "cup.",
+        "like"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 7,
+      "assistant": 8
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-41275add",
+    "category": "assistant",
+    "n_records_shown": 1,
+    "answer": "The records do not contain the Mayo Clinic video recommendation—or any YouTube video title/link. The only record is a user question asking for a YouTube video to share.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate states the information is unavailable instead of providing the gold video title and link."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_sharegpt_81riySf_0#t0",
+       "role": "user",
+       "tokens": [
+        "video"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-6b168ec8",
+    "category": "other",
+    "n_records_shown": 11,
+    "answer": "You own **three bikes**: a road bike, a mountain bike, and a commuter bike.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states that the user owns three bikes, matching the gold answer."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_e623ae87#t5",
+       "role": "assistant",
+       "tokens": [
+        "three"
+       ]
+      },
+      {
+       "fact_id": "answer_e623ae87#t8",
+       "role": "user",
+       "tokens": [
+        "three"
+       ]
+      },
+      {
+       "fact_id": "answer_e623ae87#t9",
+       "role": "assistant",
+       "tokens": [
+        "three"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 2,
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-gpt4_85da3956",
+    "category": "temporal",
+    "n_records_shown": 11,
+    "answer": "Three weeks ago.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states three weeks ago, matching the gold answer."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_581ab834_1#t1",
+       "role": "assistant",
+       "tokens": [
+        "weeks"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-2318644b",
+    "category": "multi-session",
+    "n_records_shown": 22,
+    "answer": "The records do not contain your actual per-night accommodation cost in Tokyo, so I can’t calculate how much more you spent in Hawaii. They only mention that your Maui resort cost **over $300 per night**, while Tokyo hostels generally ranged from about **$18–$45 per night**—but that is not stated as your actual spend.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the information is unavailable instead of providing the gold answer of $270."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-3ba21379",
+    "category": "knowledge-update",
+    "n_records_shown": 22,
+    "answer": "A Ford F-150 pickup truck model.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate answer matches the gold answer's key fact."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_cd345582_1#t1",
+       "role": "assistant",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t4",
+       "role": "user",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t5",
+       "role": "assistant",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t6",
+       "role": "user",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t7",
+       "role": "assistant",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t9",
+       "role": "assistant",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t10",
+       "role": "user",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_1#t11",
+       "role": "assistant",
+       "tokens": [
+        "ford"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t1",
+       "role": "assistant",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t3",
+       "role": "assistant",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t4",
+       "role": "user",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t5",
+       "role": "assistant",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t6",
+       "role": "user",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t7",
+       "role": "assistant",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t8",
+       "role": "user",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t9",
+       "role": "assistant",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      },
+      {
+       "fact_id": "answer_cd345582_2#t11",
+       "role": "assistant",
+       "tokens": [
+        "f-150",
+        "ford",
+        "pickup",
+        "truck"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 11,
+      "user": 6
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-b6025781",
+    "category": "preference",
+    "n_records_shown": 11,
+    "answer": "The records contain these meal-prep recipe ideas:\n\n1. **Lentil Bolognese** — Use 1 cup dried green or brown lentils, onion, garlic, 2 cups mixed mushrooms, carrot, celery, 1 can (28 oz) crushed tomatoes, basil, oregano, salt/pepper, and optional red wine. Sauté the aromatics, add mushrooms, then lentils/spices, then tomatoes/wine; simmer covered 20–25 minutes until lentils are tender. Serve over quinoa, with roasted vegetables, or as a sauce for pasta or veggies. It can be made in a double batch and frozen for up to 3 months.\n\n2. **Roasted Sweet Potatoes with Fresh Rosemary** — Cube 2–3 large sweet potatoes and toss with 2 tbsp olive oil, about 2 tbsp chopped fresh rosemary, salt, and pepper. Spread on a baking sheet and roast at 425°F for 20–25 minutes, flipping halfway, until tender and caramelized.\n\n3. **Meal-prep pairings** — Quinoa and roasted veggies pair well with proteins such as grilled chicken, pan-seared salmon, tofu, chickpeas, shrimp, tempeh, lentils/mushroom bolognese, and others listed in the records. Suggested sides/add-ins include roasted broccoli, Brussels sprouts, sweet potato wedges, carrots, asparagus, sautéed greens, toasted pumpkin seeds, fresh herbs, nuts, Parmesan/feta, and avocado. The records also suggest prepping roasted vegetables ahead for up to 5 days and cooking a large batch of quinoa.\n\nThe records also include customization ideas for homemade granola, but not a full granola recipe.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate suggests healthy meal-prep recipes with quinoa, roasted vegetables, and varied protein options, matching the gold preferences."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_8414cc57#t1",
+       "role": "assistant",
+       "tokens": [
+        "chicken",
+        "healthy",
+        "meal",
+        "offer",
+        "prep",
+        "protein"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t2",
+       "role": "user",
+       "tokens": [
+        "chicken",
+        "turkey"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t3",
+       "role": "assistant",
+       "tokens": [
+        "meal",
+        "protein",
+        "quinoa",
+        "roasted",
+        "such",
+        "vegetables"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t4",
+       "role": "user",
+       "tokens": [
+        "suggestions"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t5",
+       "role": "assistant",
+       "tokens": [
+        "avocado",
+        "healthy",
+        "meal",
+        "prep",
+        "quinoa",
+        "roasted"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t6",
+       "role": "user",
+       "tokens": [
+        "meal",
+        "prep",
+        "roasted",
+        "suggestions"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t7",
+       "role": "assistant",
+       "tokens": [
+        "meal",
+        "prep",
+        "roasted",
+        "suggestions"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t9",
+       "role": "assistant",
+       "tokens": [
+        "roasted"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t10",
+       "role": "user",
+       "tokens": [
+        "preferences",
+        "suggestions"
+       ]
+      },
+      {
+       "fact_id": "answer_8414cc57#t11",
+       "role": "assistant",
+       "tokens": [
+        "prefer",
+        "preferences",
+        "quinoa",
+        "suggestions"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 6,
+      "user": 4
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-e3fc4d6e",
+    "category": "assistant",
+    "n_records_shown": 1,
+    "answer": "Dr. Arati Prabhakar",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate answer exactly matches the gold answer."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_sharegpt_5m7gg5F_0#t0",
+       "role": "user",
+       "tokens": [
+        "arati",
+        "prabhakar"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-c14c00dd",
+    "category": "other",
+    "n_records_shown": 11,
+    "answer": "The records do not explicitly state the brand of shampoo you currently use. They only mention “Lavender shampoo” and “Trader Joe’s,” but no definite shampoo brand is given.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the brand is not definitively given instead of answering Trader Joe's."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_304511ce#t5",
+       "role": "assistant",
+       "tokens": [
+        "joe's",
+        "trader"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-gpt4_1d4ab0c9",
+    "category": "temporal",
+    "n_records_shown": 22,
+    "answer": "24 days passed between starting to water your herb garden (2023-03-22) and harvesting your first batch of fresh herbs (2023-04-15).",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states 24 days, which matches an acceptable gold answer."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_febde667_1#t1",
+       "role": "assistant",
+       "tokens": [
+        "also",
+        "last"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_1#t3",
+       "role": "assistant",
+       "tokens": [
+        "also"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_1#t7",
+       "role": "assistant",
+       "tokens": [
+        "also"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_1#t8",
+       "role": "user",
+       "tokens": [
+        "also"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_1#t9",
+       "role": "assistant",
+       "tokens": [
+        "also"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_2#t3",
+       "role": "assistant",
+       "tokens": [
+        "also"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_2#t5",
+       "role": "assistant",
+       "tokens": [
+        "including"
+       ]
+      },
+      {
+       "fact_id": "answer_febde667_2#t7",
+       "role": "assistant",
+       "tokens": [
+        "days"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 7,
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-87f22b4a",
+    "category": "multi-session",
+    "n_records_shown": 22,
+    "answer": "The records do not contain the actual amount you made from selling eggs this month. They mention that you sold 40 dozen eggs and that **$3 per dozen is a reasonable price**, but they do not confirm that you sold them at that price or state your total egg sales income.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the amount is unavailable instead of providing the gold answer of $120."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-5c40ec5b",
+    "category": "knowledge-update",
+    "n_records_shown": 18,
+    "answer": "You’ve met up with Alex from Germany **twice before**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states they have met up twice, matching the gold answer's key fact."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_1cb52d0a_2#t8",
+       "role": "user",
+       "tokens": [
+        "we've"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-54026fce",
+    "category": "preference",
+    "n_records_shown": 11,
+    "answer": "Yes. The records suggest these ways to stay connected with colleagues:\n\n- **Virtual coffee breaks**: regular informal video calls for casual chats.\n- **Online team activities**: virtual games or team-building exercises, such as trivia or online escape rooms.\n- **Collaborative projects**: cross-departmental projects or working groups.\n- **Social channels**: informal chat groups on platforms like Slack or Microsoft Teams for non-work conversations.\n- **Recognition and celebrations**: virtual parties or shout-outs for milestones, birthdays, and work anniversaries.\n- **Interest-based groups**: groups based on shared interests, such as book clubs or fitness challenges.\n- **A dedicated virtual space**: a shared virtual room or social platform for informal team socializing.\n\nFor virtual coffee breaks specifically, the records recommend discussing and agreeing with the team first, setting clear expectations, choosing a convenient time, using an easy and accessible platform, keeping participation optional, starting small, encouraging participation, being flexible, leading by example, and evaluating/adjusting based on feedback. Suggested ground rules include no work talk, keeping it light and casual, respecting everyone’s time, being present and engaged, using video, rotating conversation starters, and encouraging active listening.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate gives a generic list of suggestions but does not acknowledge the user's desire for social interaction or incorporate their previous experiences with company initiatives and team collaborations."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_f7b22c66#t1",
+       "role": "assistant",
+       "tokens": [
+        "activities",
+        "groups",
+        "interest-based",
+        "regular",
+        "social",
+        "suggestions"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t2",
+       "role": "user",
+       "tokens": [
+        "team",
+        "virtual"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t3",
+       "role": "assistant",
+       "tokens": [
+        "connected",
+        "experiences",
+        "suggestions",
+        "team",
+        "virtual",
+        "work"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t4",
+       "role": "user",
+       "tokens": [
+        "team"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t5",
+       "role": "assistant",
+       "tokens": [
+        "collaboration",
+        "connected",
+        "social",
+        "suggestions",
+        "team",
+        "virtual"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t7",
+       "role": "assistant",
+       "tokens": [
+        "take",
+        "team",
+        "within",
+        "work"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t8",
+       "role": "user",
+       "tokens": [
+        "virtual"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t9",
+       "role": "assistant",
+       "tokens": [
+        "collaboration",
+        "regular",
+        "team",
+        "virtual",
+        "work"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t10",
+       "role": "user",
+       "tokens": [
+        "acknowledge",
+        "regular",
+        "virtual",
+        "work"
+       ]
+      },
+      {
+       "fact_id": "answer_f7b22c66#t11",
+       "role": "assistant",
+       "tokens": [
+        "interaction",
+        "social",
+        "specific",
+        "team",
+        "virtual",
+        "while"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 6,
+      "user": 4
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-1903aded",
+    "category": "assistant",
+    "n_records_shown": 1,
+    "answer": "The records do not contain the list or the 7th work-from-home job for seniors, so I can’t remind you of it.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the information is unavailable instead of providing the gold answer, Transcriptionist."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-577d4d32",
+    "category": "other",
+    "n_records_shown": 9,
+    "answer": "The records do not contain the answer. They discuss book recommendations, evening relaxation activities, meditation, and guitar practice, but they do not state what time you stop checking work emails and messages.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the information is unavailable rather than providing the gold answer of 7 pm."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-gpt4_68e94288",
+    "category": "temporal",
+    "n_records_shown": 21,
+    "answer": "You participated in the social media challenge **#PlankChallenge**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate conveys the same key fact: participation in the #PlankChallenge social media challenge."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_9793daa4_2#t3",
+       "role": "assistant",
+       "tokens": [
+        "called"
+       ]
+      },
+      {
+       "fact_id": "answer_9793daa4_1#t0",
+       "role": "user",
+       "tokens": [
+        "called",
+        "challenge",
+        "media",
+        "participated",
+        "social"
+       ]
+      },
+      {
+       "fact_id": "answer_9793daa4_1#t5",
+       "role": "assistant",
+       "tokens": [
+        "challenge"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 2,
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-eeda8a6d",
+    "category": "multi-session",
+    "n_records_shown": 22,
+    "answer": "The records do not contain a total fish count for either aquarium. They mention fish such as neon tetras, Golden Honey Gouramis, a Pleco catfish in the 20-gallon tank, and Bubbles the betta in the 10-gallon tank, but they do not specify exact numbers for the aquariums.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate states the total fish count is unavailable instead of providing 17."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-59524333",
+    "category": "knowledge-update",
+    "n_records_shown": 20,
+    "answer": "You usually go to the gym at **6:00 pm** (on Mondays, Wednesdays, and Fridays).",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate provides the gold answer 6:00 pm with additional acceptable detail."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_b28f2c7a_1#t5",
+       "role": "assistant",
+       "tokens": [
+        "6:00"
+       ]
+      },
+      {
+       "fact_id": "answer_b28f2c7a_2#t5",
+       "role": "assistant",
+       "tokens": [
+        "6:00"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 2
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-a89d7624",
+    "category": "preference",
+    "n_records_shown": 12,
+    "answer": "The records mostly contain music- and Red Rocks-related suggestions for Denver:\n\n- **Music venues:** Red Rocks Park and Amphitheatre, The Ogden Theatre, The Bluebird Theater, The Fillmore Auditorium, Larimer Lounge, The hi-dive, and The Marquis Theater.\n- **Music festivals/events:** Grandoozy, Denver Folk Festival, Denver Jazz Festival, Westword Music Showcase, and Riot Fest Denver.\n- **Music-related spot:** Twist & Shout Records.\n- **BBQ near Red Rocks:** GQue BBQ, Dinosaur Bar-B-Que, Moe’s Original BBQ, Big B’s Delicious BBQ, and Wayne’s Smoke Shack.\n- **Dinner near Red Rocks:** The Ship Rock Grille, The Village Tavern, Morrison Inn, food trucks/concession stands during concert season, plus The Fort and Bear Creek Tavern by short drive/Uber.\n- **The Ship Rock Grille** has outdoor patio seating with views of the red rock formations; it is not directly adjacent to the stage, but you can ask about a table with a stage view.\n\nThe records do not include general Denver tourist attractions beyond music venues, festivals, record stores, and food options near Red Rocks.",
+    "judge": {
+     "verdict": "UNCLEAR",
+     "reason": "judge output unparsable"
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_8f15ac24#t0",
+       "role": "user",
+       "tokens": [
+        "music"
+       ]
+      },
+      {
+       "fact_id": "answer_8f15ac24#t1",
+       "role": "assistant",
+       "tokens": [
+        "experience",
+        "exploring",
+        "live",
+        "music",
+        "recommendations",
+        "similar"
+       ]
+      },
+      {
+       "fact_id": "answer_8f15ac24#t2",
+       "role": "user",
+       "tokens": [
+        "brandon",
+        "music"
+       ]
+      },
+      {
+       "fact_id": "answer_8f15ac24#t3",
+       "role": "assistant",
+       "tokens": [
+        "area.",
+        "brandon",
+        "experience",
+        "live",
+        "music",
+        "recommendations"
+       ]
+      },
+      {
+       "fact_id": "answer_8f15ac24#t5",
+       "role": "assistant",
+       "tokens": [
+        "denver",
+        "exploring",
+        "live",
+        "music",
+        "music.",
+        "upon"
+       ]
+      },
+      {
+       "fact_id": "answer_8f15ac24#t7",
+       "role": "assistant",
+       "tokens": [
+        "denver"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 2,
+      "assistant": 4
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-0e5e2d1a",
+    "category": "assistant",
+    "n_records_shown": 5,
+    "answer": "The records do not contain the number of subjects in that study.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate states the information is unavailable instead of providing the gold answer of 38 subjects."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-a82c026e",
+    "category": "other",
+    "n_records_shown": 11,
+    "answer": "Dark Souls 3.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate omits the key detail that it was the Dark Souls 3 DLC, not just the base game."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_787e6a6d#t3",
+       "role": "assistant",
+       "tokens": [
+        "dark",
+        "souls"
+       ]
+      },
+      {
+       "fact_id": "answer_787e6a6d#t4",
+       "role": "user",
+       "tokens": [
+        "dark",
+        "souls"
+       ]
+      },
+      {
+       "fact_id": "answer_787e6a6d#t5",
+       "role": "assistant",
+       "tokens": [
+        "dark",
+        "souls"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 2,
+      "user": 1
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-gpt4_2f584639",
+    "category": "temporal",
+    "n_records_shown": 22,
+    "answer": "The records do not explicitly state which gift you bought first. The necklace for your sister is mentioned earlier in the conversation, and the photo album for your mom is mentioned later, but there is no purchase date or clear statement confirming the actual order of purchase.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says the order is not explicitly stated instead of answering that the photo album was bought first."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_11a8f823_2#t4",
+       "role": "user",
+       "tokens": [
+        "album",
+        "photo"
+       ]
+      },
+      {
+       "fact_id": "answer_11a8f823_2#t5",
+       "role": "assistant",
+       "tokens": [
+        "album",
+        "photo"
+       ]
+      },
+      {
+       "fact_id": "answer_11a8f823_2#t6",
+       "role": "user",
+       "tokens": [
+        "photo"
+       ]
+      },
+      {
+       "fact_id": "answer_11a8f823_2#t7",
+       "role": "assistant",
+       "tokens": [
+        "album",
+        "photo"
+       ]
+      },
+      {
+       "fact_id": "answer_11a8f823_2#t8",
+       "role": "user",
+       "tokens": [
+        "album"
+       ]
+      },
+      {
+       "fact_id": "answer_11a8f823_2#t9",
+       "role": "assistant",
+       "tokens": [
+        "album",
+        "photo"
+       ]
+      },
+      {
+       "fact_id": "answer_11a8f823_1#t11",
+       "role": "assistant",
+       "tokens": [
+        "photo"
+       ]
+      }
+     ],
+     "roles": {
+      "user": 3,
+      "assistant": 4
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-1f2b8d4f",
+    "category": "multi-session",
+    "n_records_shown": 22,
+    "answer": "The records do not contain a confirmed price for a similar pair actually found at a budget store. They state the luxury boots cost **$800** and suggest budget alternatives in the **$50–$100** range. Based only on that range, the difference would be **$700–$750**, but the exact difference cannot be determined.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate does not state the gold answer of $750 and instead says the exact difference cannot be determined."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-7401057b",
+    "category": "knowledge-update",
+    "n_records_shown": 22,
+    "answer": "Based on the records, you have enough points for **one free night’s stay at any Hilton property**. A later record also says you have enough for **two free nights at the Hilton Paris Eiffel Tower** specifically.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says only one free night at any Hilton property, while the gold answer is two."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-0a34ad58",
+    "category": "preference",
+    "n_records_shown": 18,
+    "answer": "Here are helpful getting-around tips from the records:\n\n- **Get a Suica or Pasmo card**: It makes traveling around Tokyo more convenient and cost-effective. Touch it on the reader when entering and exiting stations. You can also use it for most public transportation in Tokyo and surrounding areas.\n- **Ask for help if unsure**: Don’t hesitate to ask station staff or a local for help with fares, routes, or assistance.\n- **Plan your route**: Use a transit app or Google Maps, check schedules, and account for transfers.\n- **From Narita Airport to Shinjuku Station**:\n  - JR Narita Express: about 60–70 minutes, around ¥3,200–3,500.\n  - Keisei Skyliner + JR Yamanote Line: about 50–60 minutes, around ¥2,500–3,000.\n  - Keisei Limited Express + JR Yamanote Line: about 70–80 minutes, around ¥2,000–2,500.\n- **To Tsukiji Fish Market from Shinjuku**: Take the JR Yamanote Line to Shimbashi, transfer to the Tokyo Metro Ginza Line to Tsukijishijo. It takes about 30–40 minutes and costs about ¥420–450. A taxi takes about 20–30 minutes and costs about ¥4,000–5,000.\n- **For Nikko**: From Tokyo, take the JR Tohoku Shinkansen to Utsunomiya, then transfer to the JR Nikko Line. Your Suica card should work for those segments, and you can use it for local buses or taxis if needed.\n- **Use your hotel**: The Park Hyatt Tokyo’s concierge and tour/activity desk can help with sightseeing arrangements, restaurant reservations, and activities. The hotel also offers an airport shuttle to/from Narita and Haneda for a fee.\n- **Be mindful in crowded places**: Keep an eye on your belongings and your Suica card, especially in crowded areas like markets.\n- **Carry some cash**: While Suica covers most transportation, a small amount of cash can be useful. Credit and debit cards are widely accepted, and 7-Eleven ATMs and ATMs inside Shinjuku Station are options.",
+    "judge": {
+     "verdict": "UNCLEAR",
+     "reason": "judge output unparsable"
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_cebb7159#t1",
+       "role": "assistant",
+       "tokens": [
+        "card",
+        "navigating",
+        "recommendations",
+        "tokyo's"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t3",
+       "role": "assistant",
+       "tokens": [
+        "card",
+        "prefer",
+        "suica",
+        "take"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t5",
+       "role": "assistant",
+       "tokens": [
+        "card"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t7",
+       "role": "assistant",
+       "tokens": [
+        "account",
+        "card",
+        "provide",
+        "public",
+        "suica",
+        "take"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t8",
+       "role": "user",
+       "tokens": [
+        "take"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t9",
+       "role": "assistant",
+       "tokens": [
+        "card",
+        "suica",
+        "take"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t10",
+       "role": "user",
+       "tokens": [
+        "take"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t11",
+       "role": "assistant",
+       "tokens": [
+        "card",
+        "suica",
+        "take"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t15",
+       "role": "assistant",
+       "tokens": [
+        "tokyo's"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t17",
+       "role": "assistant",
+       "tokens": [
+        "general",
+        "public",
+        "tips"
+       ]
+      },
+      {
+       "fact_id": "answer_cebb7159#t19",
+       "role": "assistant",
+       "tokens": [
+        "take",
+        "tokyo's"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 9,
+      "user": 2
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-c7cf7dfd",
+    "category": "assistant",
+    "n_records_shown": 13,
+    "answer": "The provided records do not contain the name of an online store based in India that sells traditional Indian fabrics, threads, and embellishments.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate states the information is unavailable instead of providing the store name Nostalgia."
+    },
+    "answerable_without_gold": false,
+    "carriers": {
+     "visible_matches": [],
+     "roles": {}
+    }
+   },
+   {
+    "id": "lme-oracle-c8c3f81d",
+    "category": "other",
+    "n_records_shown": 9,
+    "answer": "Nike — based on the records, you’ve been using Nike running shoes for your daily 5K runs.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate identifies Nike, which matches the gold answer."
+    },
+    "answerable_without_gold": true,
+    "carriers": {
+     "visible_matches": [
+      {
+       "fact_id": "answer_761acef8#t3",
+       "role": "assistant",
+       "tokens": [
+        "nike"
+       ]
+      },
+      {
+       "fact_id": "answer_761acef8#t4",
+       "role": "user",
+       "tokens": [
+        "nike"
+       ]
+      },
+      {
+       "fact_id": "answer_761acef8#t5",
+       "role": "assistant",
+       "tokens": [
+        "nike"
+       ]
+      },
+      {
+       "fact_id": "answer_761acef8#t7",
+       "role": "assistant",
+       "tokens": [
+        "nike"
+       ]
+      },
+      {
+       "fact_id": "answer_761acef8#t9",
+       "role": "assistant",
+       "tokens": [
+        "nike"
+       ]
+      }
+     ],
+     "roles": {
+      "assistant": 4,
+      "user": 1
+     }
+    }
+   }
+  ]
+ },
+ "reconstruction": {
+  "sample_size": 30,
+  "sampled_by_category": {
+   "assistant": 5,
+   "knowledge-update": 5,
+   "multi-session": 5,
+   "other": 5,
+   "preference": 5,
+   "temporal": 5
+  },
+  "reconstruction_failed": [
+   "lme-oracle-46a3abf7",
+   "lme-oracle-afdc33df",
+   "lme-oracle-06f04340",
+   "lme-oracle-fca70973",
+   "lme-oracle-37f165cf",
+   "lme-oracle-1c0ddc50"
+  ],
+  "reconstruction_failure_rate": 0.2,
+  "reconstruction_failure_rate_ci95": [
+   0.095,
+   0.3731
+  ],
+  "failed_by_category": {
+   "multi-session": 2,
+   "preference": 4
+  },
+  "rows": [
+   {
+    "id": "lme-oracle-c8090214",
+    "category": "temporal",
+    "n_gold_records": 2,
+    "answer": "7 days before.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate matches the acceptable answer of 7 days before."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-46a3abf7",
+    "category": "multi-session",
+    "n_gold_records": 3,
+    "answer": "The records mention two tanks: a 20-gallon community tank named “Amazonia” and a 5-gallon betta tank with Finley. However, there is no record of a tank set up for your friend’s kid, so I can’t determine the total including that tank.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate does not provide the gold count of 3 and says the total cannot be determined."
+    },
+    "reconstructed": false
+   },
+   {
+    "id": "lme-oracle-1cea1afa",
+    "category": "knowledge-update",
+    "n_gold_records": 2,
+    "answer": "Based on the latest record (2023-05-25), you had **600 Instagram followers**. The records do not provide a more current count.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states 600 Instagram followers, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-afdc33df",
+    "category": "preference",
+    "n_gold_records": 3,
+    "answer": "The records do not contain tips for keeping your kitchen clean. They only show prior questions about organizing utensils, repairing granite countertop scratches, and fixing a leaking faucet, but no actual cleaning advice.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate states the information is missing instead of conveying the gold answer's response preferences and actionable kitchen-cleaning guidance."
+    },
+    "reconstructed": false
+   },
+   {
+    "id": "lme-oracle-4388e9dd",
+    "category": "assistant",
+    "n_gold_records": 1,
+    "answer": "Andy was wearing an untidy, stained white shirt.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate answer matches the gold answer exactly."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-faba32e5",
+    "category": "other",
+    "n_gold_records": 1,
+    "answer": "24 hours.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate answer matches the gold answer exactly."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-gpt4_76048e76",
+    "category": "temporal",
+    "n_gold_records": 2,
+    "answer": "The bike — you took it in for repairs in mid-February, while you washed the car on February 27th.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate clearly answers that the bike was taken care of first."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-81507db6",
+    "category": "multi-session",
+    "n_gold_records": 3,
+    "answer": "You have attended **3 graduation ceremonies** in the past three months, based on the records: your cousin Emma’s preschool graduation, your friend Rachel’s master’s degree graduation, and your colleague Alex’s leadership development program graduation.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states 3 graduation ceremonies, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-45dc21b6",
+    "category": "knowledge-update",
+    "n_gold_records": 2,
+    "answer": "You’ve tried **3** of Emma’s recipes so far.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states that 3 of Emma's recipes have been tried, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-0edc2aef",
+    "category": "preference",
+    "n_gold_records": 1,
+    "answer": "The records do not contain any specific hotel suggestions for Miami. They only note that you like great views and unique features such as a rooftop pool or a hot tub on the balcony.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate conveys the key preference for Miami hotels with great views and unique features like a rooftop pool or balcony hot tub."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-51b23612",
+    "category": "assistant",
+    "n_gold_records": 1,
+    "answer": "You mentioned the Soviet cartoon **“Nu, pogodi!”**, which the record says mocked Western culture and portrayed the Soviet Union as superior.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate identifies the Soviet cartoon as \"Nu, pogodi!\", matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-15745da0",
+    "category": "other",
+    "n_gold_records": 1,
+    "answer": "You’ve been collecting vintage cameras for three months, as of 2023-05-23.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states three months, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-b46e15ee",
+    "category": "temporal",
+    "n_gold_records": 1,
+    "answer": "You participated in the **“Walk for Hunger”** charity event.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate identifies the 'Walk for Hunger' charity event, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-00ca467f",
+    "category": "multi-session",
+    "n_gold_records": 2,
+    "answer": "You went to 2 doctor’s appointments in March: March 3 with Dr. Smith and March 20 with Dr. Thompson.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states the correct number, 2 doctor's appointments in March."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-6a1eabeb",
+    "category": "knowledge-update",
+    "n_gold_records": 2,
+    "answer": "Your personal best time in the charity 5K was **25:50** according to the later record. An earlier record had mentioned **27:12**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states the personal best time as 25:50, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-06f04340",
+    "category": "preference",
+    "n_gold_records": 1,
+    "answer": "The records do not contain a dinner recommendation. They only mention that you have been using basil and mint and have harvested cherry tomatoes from your garden.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate says no dinner recommendation is available, whereas the gold answer states the user prefers suggestions using their homegrown cherry tomatoes, basil, and mint."
+    },
+    "reconstructed": false
+   },
+   {
+    "id": "lme-oracle-6ae235be",
+    "category": "assistant",
+    "n_gold_records": 1,
+    "answer": "At the Lake Charles Refinery, the processes mentioned are:\n\n- Atmospheric distillation\n- Fluid catalytic cracking (FCC)\n- Alkylation\n- Hydrotreating\n\nThe records note that these are some of the main processes and that others may also exist.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate lists all four key processes: atmospheric distillation, FCC, alkylation, and hydrotreating."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-d52b4f67",
+    "category": "other",
+    "n_gold_records": 1,
+    "answer": "You attended your cousin’s wedding at the **Grand Ballroom**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate identifies the wedding venue as the Grand Ballroom, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-gpt4_93159ced",
+    "category": "temporal",
+    "n_gold_records": 3,
+    "answer": "About 4 years and 9 months.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate matches the gold answer of 4 years and 9 months, with 'about' as an acceptable approximation."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-bc149d6b",
+    "category": "multi-session",
+    "n_gold_records": 2,
+    "answer": "70 pounds total (50 pounds of layer feed + 20 pounds of organic scratch grains).",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states 70 pounds total, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-031748ae",
+    "category": "knowledge-update",
+    "n_gold_records": 2,
+    "answer": "When you just started your new role, you led **4 engineers**. Now, you lead **5 engineers**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate correctly states that you led 4 engineers at the start and now lead 5 engineers."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-fca70973",
+    "category": "preference",
+    "n_gold_records": 1,
+    "answer": "The records do not contain any theme park weekend suggestions or recommendations—only a prior request for theme park event recommendations.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate states the information is missing rather than conveying the user's theme park preferences and recommendation criteria in the gold answer."
+    },
+    "reconstructed": false
+   },
+   {
+    "id": "lme-oracle-58470ed2",
+    "category": "assistant",
+    "n_gold_records": 1,
+    "answer": "Borges said: “The Library is a sphere whose exact center is any one of its hexagons and whose circumference is inaccessible.”",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate accurately quotes Borges's statement about the Library's center and circumference."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-ccb36322",
+    "category": "other",
+    "n_gold_records": 1,
+    "answer": "Spotify",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate answer exactly matches the gold answer, Spotify."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-gpt4_1a1dc16d",
+    "category": "temporal",
+    "n_gold_records": 2,
+    "answer": "The meeting with Rachel happened first, on April 10th; the pride parade was on May 1st.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states the meeting with Rachel happened first, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-37f165cf",
+    "category": "multi-session",
+    "n_gold_records": 2,
+    "answer": "The records do not contain information about novels finished in January and March, so their page counts cannot be determined.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "The candidate claims the page count cannot be determined, rather than providing the gold value 856."
+    },
+    "reconstructed": false
+   },
+   {
+    "id": "lme-oracle-0e4e4c46",
+    "category": "knowledge-update",
+    "n_gold_records": 2,
+    "answer": "Your current highest score in Ticket to Ride is **132 points**.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states the highest score is 132 points, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-1c0ddc50",
+    "category": "preference",
+    "n_gold_records": 2,
+    "answer": "Based on the records, you can listen to podcasts during your commute—specifically true crime, self-improvement, or branch out into history podcasts. Since your commute is about 40 minutes each way, you could organize your listening schedule around that. The records do not contain other commute activity suggestions.",
+    "judge": {
+     "verdict": "INCORRECT",
+     "reason": "It suggests true crime and self-improvement podcasts, which the gold answer says the user would not prefer."
+    },
+    "reconstructed": false
+   },
+   {
+    "id": "lme-oracle-89527b6b",
+    "category": "assistant",
+    "n_gold_records": 1,
+    "answer": "The Plesiosaur’s scaly body was blue.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate states that the Plesiosaur’s scaly body was blue, matching the gold answer."
+    },
+    "reconstructed": true
+   },
+   {
+    "id": "lme-oracle-60d45044",
+    "category": "other",
+    "n_gold_records": 1,
+    "answer": "Japanese short-grain rice.",
+    "judge": {
+     "verdict": "CORRECT",
+     "reason": "The candidate exactly matches the gold answer."
+    },
+    "reconstructed": true
+   }
+  ]
+ },
+ "language": {
+  "sample_size": 10,
+  "sampled_by_category": {
+   "assistant": 1,
+   "knowledge-update": 2,
+   "multi-session": 2,
+   "other": 1,
+   "preference": 2,
+   "temporal": 2
+  },
+  "contract_zh_file": "plugin/contracts/reader-contract-v4.zh.txt",
+  "contract_en_file": "research/bench/contracts/reader-contract-v4.en.txt",
+  "correct": {
+   "zh_contract": 7,
+   "en_contract": 6
+  },
+  "agreement": {
+   "both_correct": 6,
+   "both_wrong": 3,
+   "zh_only_correct": 1,
+   "en_only_correct": 0
+  },
+  "rows": [
+   {
+    "id": "lme-oracle-bbf86515",
+    "category": "temporal",
+    "groups": {
+     "zh": {
+      "answer": "你是在 **4 天前**参加的 “Turbocharged Tuesdays” 活动：该活动在 **6 月 14 日**，“Rack Fest” 在 **6 月 18 日**。依据是 **2023 年 6 月 28 日**的记录。",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states a 4-day difference and gives dates June 14 and June 18, matching the gold answer."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "According to the record of 2023-06-28, you participated in “Turbocharged Tuesdays” on June 14th, which was **4 days before** “Rack Fest” on June 18th.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate explicitly states it was 4 days before Rack Fest, matching the gold answer."
+      },
+      "correct": true
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-e25c3b8d",
+    "category": "multi-session",
+    "groups": {
+     "zh": {
+      "answer": "You saved **$300** — the bag was originally **$500** (recorded **2023-05-27**) and you paid **$200** at TK Maxx (recorded **2023-05-25**).",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states the saved amount is $300, matching the gold answer."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "Based on the 2023-05-25 record (you got the designer handbag at TK Maxx for $200) and the 2023-05-27 record (it was originally $500), you saved **$300**.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states the savings were $300, matching the gold answer."
+      },
+      "correct": true
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-c6853660",
+    "category": "knowledge-update",
+    "groups": {
+     "zh": {
+      "answer": "You most recently **increased** it: according to the **2023-05-29** record, you said you had increased your morning coffee limit to **two cups**. The earlier **2023-05-28** record said you had cut back to one cup.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate correctly states that the morning coffee limit was increased to two cups from one."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "According to the record of 2023-05-29, you increased your morning coffee limit to two cups. The 2023-05-28 record had said you had cut back to one cup.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states the limit increased to two cups from one cup, matching the gold answer."
+      },
+      "correct": true
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-b0479f84",
+    "category": "preference",
+    "groups": {
+     "zh": {
+      "answer": "Based on the **2023-05-21** records, you were into nature and wildlife documentaries, so I’d recommend **“Dynasties”** and **“Chasing Coral.”** That same day’s record also lists **“Planet Earth,” “Blue Planet,” “March of the Penguins,”** and **“The Last Lions”** as options.",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "The candidate narrows the recommendation to nature/wildlife and omits the key preference for titles similar to 'Our Planet,' 'Free Solo,' and 'Tiger King.'"
+      },
+      "correct": false
+     },
+     "en": {
+      "answer": "Based on the record from **2023-05-21**, since you were interested in nature and wildlife documentaries, I’d recommend:\n\n- **Planet Earth**\n- **Blue Planet**\n- **March of the Penguins**\n- **Dynasties** — especially good for intimate, character-driven animal family stories\n- **Chasing Coral** — a more urgent, personal documentary about coral-reef decline\n- **The Last Lions**\n\nIf you want something closer to **Our Planet** and **Planet Earth**, start with **Planet Earth**, **Blue Planet**, or **Dynasties**.",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "The candidate only tailors recommendations to nature/wildlife and 'Our Planet,' omitting the gold's key requirement to match the user's broader taste across 'Our Planet,' 'Free Solo,' and 'Tiger King.'"
+      },
+      "correct": false
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-3249768e",
+    "category": "assistant",
+    "groups": {
+     "zh": {
+      "answer": "第五瓶是 **Absinthe（苦艾酒）**。依据的是 **2023-05-24** 那条关于“widest variety of gin-based cocktails”的记录。",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate identifies the fifth bottle as Absinthe, matching the gold answer."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "According to the record of 2023-05-24, the fifth bottle was **Absinthe**.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate correctly identifies the fifth bottle as Absinthe."
+      },
+      "correct": true
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-af8d2e46",
+    "category": "other",
+    "groups": {
+     "zh": {
+      "answer": "According to the 2023-05-27 record, you brought **7 shirts** on your last Costa Rica trip. The record does not explicitly say that trip was 5 days.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states that 7 shirts were packed, which matches the gold answer."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "The records do not contain the number of shirts you packed for a 5-day trip to Costa Rica. The only Costa Rica packing detail—from the 2023-05-27 record—says you brought **7 shirts** on your **last trip**, but it does not specify that trip was 5 days.",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "The candidate says the information is unavailable for the 5-day trip rather than giving 7 as the answer."
+      },
+      "correct": false
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-d01c6aa8",
+    "category": "temporal",
+    "groups": {
+     "zh": {
+      "answer": "大约 27 岁：依据 2023-05-29 的记录，你当时 32 岁，并说已经在美国生活了五年（32 − 5 ≈ 27）。",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states approximately 27 years old, matching the gold answer 27."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "The records do not explicitly state your age when you moved. Based on the 2023-05-29 records, you were 32 and had been living in the U.S. for the past five years, so you were approximately **27 years old** when you moved.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states you were approximately 27 years old when you moved, matching the gold answer."
+      },
+      "correct": true
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-f0e564bc",
+    "category": "multi-session",
+    "groups": {
+     "zh": {
+      "answer": "总额是 **$1,300**。\n\n依据：**2023-05-26** 的记录中你说在 Nordstrom 周年庆为高端护肤品投入了 **$500**；**2023-05-27** 的记录中你说买了 Coach 手袋，花费 **$800**。合计 **$500 + $800 = $1,300**。",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states the total amount is $1,300, matching the gold answer."
+      },
+      "correct": true
+     },
+     "en": {
+      "answer": "The total is **$1,300**: **$500** for high-end skincare products on **2023-05-26**, plus **$800** for the Coach handbag on **2023-05-27**.",
+      "judge": {
+       "verdict": "CORRECT",
+       "reason": "The candidate states the total is $1,300, matching the gold answer."
+      },
+      "correct": true
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-7a87bd0c",
+    "category": "knowledge-update",
+    "groups": {
+     "zh": {
+      "answer": "I can’t determine a single answer from the records. On **2023-06-11** you said you’d been sticking to your daily tidying routine for **3 weeks**. On **2023-09-30** you said you’d been sticking to it for **4 weeks now**. The later record does not explicitly say the routine length changed, so I shouldn’t choose one. Which one is correct?",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "The candidate does not provide the gold answer of 4 weeks and instead says it cannot determine a single answer."
+      },
+      "correct": false
+     },
+     "en": {
+      "answer": "The records conflict: the 2023-06-11 record says you had been sticking to your daily tidying routine for **3 weeks**, while the 2023-09-30 record says **4 weeks now**. The later record does not explicitly state that a change happened, so this is undetermined. Which record should I use?",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "The candidate does not clearly answer 4 weeks and concludes the information is undetermined."
+      },
+      "correct": false
+     }
+    }
+   },
+   {
+    "id": "lme-oracle-75f70248",
+    "category": "preference",
+    "groups": {
+     "zh": {
+      "answer": "不能确定是不是客厅。记录里没有你打喷嚏或客厅导致打喷嚏的直接条目；依据 **2023-05-27** 关于“living room dust-free，尤其猫掉毛很多”的记录，只提到客厅灰尘、猫毛/皮屑、过敏症状和空气过滤器等，因此客厅灰尘或猫毛**可能相关**，但不能据此确认。",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "It fails to mention the recent deep clean of the living room and instead treats the information as unavailable/uncertain."
+      },
+      "correct": false
+     },
+     "en": {
+      "answer": "The records do not contain any answer about your sneezing or whether it is caused by your living room. The only relevant record—from 2023-05-27—mentions living-room dust, cat shedding, and reducing allergens, but it does not address sneezing or identify a cause.",
+      "judge": {
+       "verdict": "INCORRECT",
+       "reason": "The candidate states the information is unavailable instead of considering Luna's shedding and the living room deep clean as the gold answer requires."
+      },
+      "correct": false
+     }
+    }
+   }
+  ]
+ },
+ "usage": {
+  "this_run": {
+   "new_calls": 0,
+   "cache_hits": 160,
+   "prompt_tokens": 0,
+   "completion_tokens": 0,
+   "total_tokens": 0
+  },
+  "cumulative": {
+   "calls": 160,
+   "prompt_tokens": 271535,
+   "completion_tokens": 42595,
+   "total_tokens": 314130
+  },
+  "cache_file": "research/bench/.llm_cache_checks.json",
+  "note": "cumulative 是缓存文件累计的实际调用量；this_run 为 0 表示全部命中缓存。"
+ },
+ "eval_exclusions": {
+  "ids": [
+   "lme-oracle-06f04340",
+   "lme-oracle-1a1907b4",
+   "lme-oracle-1c0ddc50",
+   "lme-oracle-37f165cf",
+   "lme-oracle-3ba21379",
+   "lme-oracle-46a3abf7",
+   "lme-oracle-59524333",
+   "lme-oracle-5c40ec5b",
+   "lme-oracle-6b168ec8",
+   "lme-oracle-afdc33df",
+   "lme-oracle-b6025781",
+   "lme-oracle-c8c3f81d",
+   "lme-oracle-e3fc4d6e",
+   "lme-oracle-e493bb7c",
+   "lme-oracle-fca70973",
+   "lme-oracle-gpt4_1d4ab0c9",
+   "lme-oracle-gpt4_68e94288",
+   "lme-oracle-gpt4_85da3956"
+  ],
+  "note": "只排除抽样里实测命中的题（suspected_leak / reconstruction_failed），不外推到未抽样的题；转换产物仍保留全部 500 题供原版对照。",
+  "eval_ready_reader_level": 482
+ }
+}
