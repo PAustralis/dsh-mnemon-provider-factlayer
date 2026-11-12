@@ -157,3 +157,29 @@ multi-session 35/121（28.9%）、assistant 16/56（28.6%）、temporal 28/127�
 （另有 90 次抽样口径调试调用）。账户余额实测 26.20 → 21.93 CNY（−4.27；21:24 后本地账本记录的其它
 DSH 模型调用约 0.32 CNY，故本脚本约 3.9 CNY）。逐题明细见 [`checks.json`](checks.json)，
 分析见 `docs/14` §10。
+
+## 7. 契约外部效度实验（337 题 × 3 组 × 2 角色，2026-11-12）
+
+用干净集验证 `plugin/contracts/reader-contract-v4.zh.txt` 在**外部题库**上是否成立。
+三组同题、只差 reader prompt：**A** 不给契约、**E** 中文契约 v4、**F** 英文契约 v4。
+
+| 文件 | 说明 | 入库 |
+|---|---|---|
+| [`contract_ext_eval.py`](contract_ext_eval.py) | 实验脚本（reader + judge + 配对统计 + `--markdown` 出表） | ✅ |
+| [`contract_ext_eval.json`](contract_ext_eval.json) | 机读结果：设计、自检、逐题回答/判分/用量、统计、成本 | ✅ |
+| [`contract_v4_en.txt`](contract_v4_en.txt) | F 组用的 v4 忠实英文翻译（与中文契约规则 1–6 / 2a–2c / 例外逐条平行） | ✅ |
+| `.llm_cache_ext.json` | 调用缓存，键 `group|qid|role`，2022 条，复跑 0 调用 | ❌ gitignore |
+
+```powershell
+python research/bench/contract_ext_eval.py --smoke                      # 5 题冒烟（30 次调用）
+python research/bench/contract_ext_eval.py --workers 12                 # 全量（2022 次调用，约 10 分钟）
+python research/bench/contract_ext_eval.py --analyze-only               # 0 调用，只看落盘结果
+python research/bench/contract_ext_eval.py --markdown                   # 0 调用，出报告用 markdown 表
+```
+
+结果摘要（正确率 = ✅/337）：**A 74.8% / E 71.2% / F 68.5%**；A→E Δ=−3.6pp（McNemar p=0.081），
+A→F Δ=−6.2pp（p=0.0015）；❌ A 38 → E 36（p=0.85）→ F 46；合格率 A=E=88.4%。
+**knowledge-update 显著变差**（69.7%→39.4%，p=0.0063，BH p=0.019），multi-session 略好（+3.5pp，不显著）。
+成本 2022 次调用 / 7,797,321 tokens / $1.487（off-peak）。详见
+[`docs/16-契约外部效度.md`](../../docs/16-契约外部效度.md)。
+

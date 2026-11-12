@@ -1,0 +1,1811 @@
+{
+ "generated_at": "2026-11-12T21:53:36+08:00",
+ "experiment": "契约 v4 外部效度（LongMemEval 干净集 337 题 × 3 组 × 2 角色）",
+ "design": {
+  "groups": {
+   "A": {
+    "label": "基线（不给契约）",
+    "contract": null
+   },
+   "E": {
+    "label": "中文契约 v4",
+    "contract": "zh"
+   },
+   "F": {
+    "label": "英文契约 v4",
+    "contract": "en"
+   }
+  },
+  "scaffold_version": "lme-ext-scaffold-v3",
+  "preamble_en": "You are an assistant. Below is the user's question, followed by several records retrieved from a memory store. The bracket before each record shows when it was recorded. Answer the user's question using only these records. Give the answer directly and do not call any tools. If the records do not contain the answer, say so explicitly.",
+  "reader": {
+   "model": "deepseek-flash",
+   "temperature": 0,
+   "max_tokens": 4096,
+   "thinking": "default（任务书 1024 实测会被 thinking 吃成空回答，见 §1.3）",
+   "records": "该题全部 facts，按 (date, session_id, turn) 排序，逐条带 [date] (role)"
+  },
+  "judge": {
+   "model": "deepseek-flash",
+   "temperature": 0,
+   "max_tokens": 2048,
+   "thinking": "default",
+   "prompt_same_across_groups": true,
+   "prompt": "You grade one answer to a memory question against a gold answer.\n\nQuestion: {question}\nGold answer: {gold}\nAlso acceptable: {acceptable}\n\nCandidate answer:\n{answer}\n\nUse exactly three levels:\n\n✅ CORRECT — conveys the key fact(s) of the gold answer. Paraphrase and extra detail are\nfine; for a numeric answer a different unit with the same value counts; for a counting\nquestion the number must match. Special case: if the gold answer says the information is\nnot enough / the question cannot be answered from the records, then ✅ means the candidate\nclearly says the information is missing or cannot be determined, without inventing an\nanswer.\n\n⚠️ PARTIAL — partially right, or materially hedged: gives only part of the gold answer, or\noffers the gold answer alongside a conflicting alternative, or flags that the records\nconflict / are insufficient while still not reaching the gold answer, or is too vague to\ntell what it concludes. If the candidate recommends a wrong answer but explicitly says the\nrecords conflict or are uncertain, use ⚠️ rather than ❌.\n\n❌ INCORRECT — answers with a wrong value, name, date or number, or contradicts the gold\nanswer, or (when the gold answer says the information is not enough) confidently invents\nan answer or asserts a fact the records do not support.\n\nReply with JSON only:\n{{\"verdict\": \"✅\" or \"⚠️\" or \"❌\",\n \"answer_state\": \"answered\" or \"abstained\" or \"conflict_flagged\",\n \"reason\": \"one short sentence\"}}"
+  },
+  "cache": {
+   "path": "research/bench/.llm_cache_ext.json",
+   "key_schema": "group|qid|role",
+   "note": "键含 group|qid|role；值里另存 prompt sha256，prompt 变了按 miss 处理"
+  }
+ },
+ "self_check": {
+  "checks": {
+   "A_has_no_contract": true,
+   "E_has_zh_verbatim": true,
+   "F_has_en_verbatim": true,
+   "A_excludes_en_contract": true,
+   "question_block_identical_across_groups": true,
+   "A_is_E_minus_contract": true,
+   "A_is_F_minus_contract": true,
+   "verified_questions": 337,
+   "sample_verified": 5
+  },
+  "parity": {
+   "zh": {
+    "rules": 6,
+    "sub_rules_2a_2b_2c": 3,
+    "has_exception": true,
+    "non_empty_lines": 17
+   },
+   "en": {
+    "rules": 6,
+    "sub_rules_2a_2b_2c": 3,
+    "has_exception": true,
+    "non_empty_lines": 17
+   },
+   "rules_parallel": true,
+   "sub_rules_parallel": true,
+   "exception_both": true
+  },
+  "ok": true,
+  "contracts": {
+   "zh": {
+    "path": "plugin/contracts/reader-contract-v4.zh.txt",
+    "sha256": "a8f09c803b161ab9543c35308b84c692f7e07b5327947273b9b0ba53dd111766",
+    "chars": 585,
+    "lines": 17
+   },
+   "en": {
+    "path": "research/bench/contract_v4_en.txt",
+    "sha256": "5ccc1943e80ba7016e186e58bdc18469228a8eed463cd343f51d406105950805",
+    "chars": 1612,
+    "lines": 17,
+    "provenance": "v4 的忠实英文翻译；规则 1-6 / 2a-2c / 例外逐条对应（见 parity）"
+   }
+  }
+ },
+ "data": {
+  "path": "research/bench/converted/longmemeval_clean.jsonl",
+  "sha256": "54c80a06dc460ce411d010fc54fdbab0a2af2931b7c3d97621ab6bf45db3b25f",
+  "n_questions": 337,
+  "n_questions_run": 5,
+  "by_category": {
+   "abstention": 30,
+   "assistant": 40,
+   "knowledge-update": 33,
+   "multi-session": 86,
+   "other": 32,
+   "preference": 17,
+   "temporal": 99
+  },
+  "n_abstention": 30,
+  "n_facts_total": 7419
+ },
+ "run": {
+  "wall_clock_s": 36.5,
+  "new_calls": 30,
+  "cache_hits": 0,
+  "prompt_mismatch": 30,
+  "retries": 0,
+  "groups": [
+   "A",
+   "E",
+   "F"
+  ],
+  "workers": 8,
+  "smoke": true,
+  "limit": 0,
+  "failures": {
+   "A": {
+    "n": 5,
+    "call_failures": 0,
+    "call_failure_rate": 0.0,
+    "invalid_judge": 0,
+    "invalid_judge_rate": 0.0,
+    "empty_answers": 0,
+    "empty_answer_rate": 0.0
+   },
+   "E": {
+    "n": 5,
+    "call_failures": 0,
+    "call_failure_rate": 0.0,
+    "invalid_judge": 0,
+    "invalid_judge_rate": 0.0,
+    "empty_answers": 0,
+    "empty_answer_rate": 0.0
+   },
+   "F": {
+    "n": 5,
+    "call_failures": 0,
+    "call_failure_rate": 0.0,
+    "invalid_judge": 0,
+    "invalid_judge_rate": 0.0,
+    "empty_answers": 0,
+    "empty_answer_rate": 0.0
+   }
+  },
+  "call_failure_total": 0,
+  "failure_detail": []
+ },
+ "analysis": {
+  "n_questions": 5,
+  "verdict_counts": {
+   "A": {
+    "✅": 4,
+    "⚠️": 0,
+    "❌": 1
+   },
+   "E": {
+    "✅": 3,
+    "⚠️": 2,
+    "❌": 0
+   },
+   "F": {
+    "✅": 2,
+    "⚠️": 2,
+    "❌": 1
+   }
+  },
+  "overall": {
+   "A": {
+    "✅": 4,
+    "⚠️": 0,
+    "❌": 1,
+    "invalid": 0,
+    "n": 5,
+    "accuracy": 0.8,
+    "qualified": 0.8
+   },
+   "E": {
+    "✅": 3,
+    "⚠️": 2,
+    "❌": 0,
+    "invalid": 0,
+    "n": 5,
+    "accuracy": 0.6,
+    "qualified": 1.0
+   },
+   "F": {
+    "✅": 2,
+    "⚠️": 2,
+    "❌": 1,
+    "invalid": 0,
+    "n": 5,
+    "accuracy": 0.4,
+    "qualified": 0.8
+   }
+  },
+  "by_category": {
+   "temporal": {
+    "A": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "E": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "F": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    }
+   },
+   "multi-session": {
+    "A": {
+     "✅": 0,
+     "⚠️": 0,
+     "❌": 1,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 0.0,
+     "qualified": 0.0
+    },
+    "E": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "F": {
+     "✅": 0,
+     "⚠️": 0,
+     "❌": 1,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 0.0,
+     "qualified": 0.0
+    }
+   },
+   "knowledge-update": {
+    "A": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "E": {
+     "✅": 0,
+     "⚠️": 1,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 0.0,
+     "qualified": 1.0
+    },
+    "F": {
+     "✅": 0,
+     "⚠️": 1,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 0.0,
+     "qualified": 1.0
+    }
+   },
+   "preference": {
+    "A": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "E": {
+     "✅": 0,
+     "⚠️": 1,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 0.0,
+     "qualified": 1.0
+    },
+    "F": {
+     "✅": 0,
+     "⚠️": 1,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 0.0,
+     "qualified": 1.0
+    }
+   },
+   "abstention": {
+    "A": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "E": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    },
+    "F": {
+     "✅": 1,
+     "⚠️": 0,
+     "❌": 0,
+     "invalid": 0,
+     "n": 1,
+     "accuracy": 1.0,
+     "qualified": 1.0
+    }
+   }
+  },
+  "by_category_tests": {},
+  "focus_categories": {
+   "knowledge-update": {
+    "n": 1,
+    "summary": {
+     "A": {
+      "✅": 1,
+      "⚠️": 0,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 1.0,
+      "qualified": 1.0
+     },
+     "E": {
+      "✅": 0,
+      "⚠️": 1,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 0.0,
+      "qualified": 1.0
+     },
+     "F": {
+      "✅": 0,
+      "⚠️": 1,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 0.0,
+      "qualified": 1.0
+     }
+    },
+    "A_vs_E": {
+     "comparison": "A -> E",
+     "label": "A vs E（knowledge-update）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 1,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": 0.0,
+     "net_improve": -1,
+     "diff_rate": -1.0,
+     "diff_rate_ci95": [
+      -1.0,
+      -1.0
+     ],
+     "p_bootstrap": 0.0,
+     "accuracy_a": 1.0,
+     "accuracy_b": 0.0
+    },
+    "A_vs_F": {
+     "comparison": "A -> F",
+     "label": "A vs F（knowledge-update）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 1,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": 0.0,
+     "net_improve": -1,
+     "diff_rate": -1.0,
+     "diff_rate_ci95": [
+      -1.0,
+      -1.0
+     ],
+     "p_bootstrap": 0.0,
+     "accuracy_a": 1.0,
+     "accuracy_b": 0.0
+    },
+    "E_vs_F": {
+     "comparison": "E -> F",
+     "label": "E vs F（knowledge-update）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 0,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": null,
+     "net_improve": 0,
+     "diff_rate": 0.0,
+     "diff_rate_ci95": [
+      0.0,
+      0.0
+     ],
+     "p_bootstrap": 1.0,
+     "accuracy_a": 0.0,
+     "accuracy_b": 0.0
+    },
+    "A_vs_E_errors": {
+     "comparison": "A -> E",
+     "label": "A vs E ❌（knowledge-update）",
+     "metric": "❌ vs not-❌ (b = A fine / B wrong, c = A wrong / B fine)",
+     "n": 1,
+     "errors_a": 0,
+     "errors_b": 0,
+     "errors_a_rate": 0.0,
+     "errors_b_rate": 0.0,
+     "b_new_errors": 0,
+     "c_fixed_errors": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "net_fixed": 0
+    },
+    "transitions_A_E": {
+     "counts": {
+      "✅->⚠️": 1
+     },
+     "n_changed": 1,
+     "n_improved": 0,
+     "n_worsened": 1,
+     "improved": [],
+     "worsened": [
+      {
+       "qid": "lme-oracle-6aeb4375",
+       "category": "knowledge-update",
+       "is_abstention": false,
+       "from": "✅",
+       "to": "⚠️",
+       "improved": false,
+       "worsened": true,
+       "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+       "reason_b": "The candidate flags conflicting records and abstains instead of providing the gold count of four."
+      }
+     ],
+     "changed": [
+      {
+       "qid": "lme-oracle-6aeb4375",
+       "category": "knowledge-update",
+       "is_abstention": false,
+       "from": "✅",
+       "to": "⚠️",
+       "improved": false,
+       "worsened": true,
+       "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+       "reason_b": "The candidate flags conflicting records and abstains instead of providing the gold count of four."
+      }
+     ]
+    },
+    "transitions_A_F": {
+     "counts": {
+      "✅->⚠️": 1
+     },
+     "n_changed": 1,
+     "n_improved": 0,
+     "n_worsened": 1,
+     "improved": [],
+     "worsened": [
+      {
+       "qid": "lme-oracle-6aeb4375",
+       "category": "knowledge-update",
+       "is_abstention": false,
+       "from": "✅",
+       "to": "⚠️",
+       "improved": false,
+       "worsened": true,
+       "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+       "reason_b": "The candidate mentions four but hedges with a conflicting prior count of three and does not conclude that four is the answer."
+      }
+     ],
+     "changed": [
+      {
+       "qid": "lme-oracle-6aeb4375",
+       "category": "knowledge-update",
+       "is_abstention": false,
+       "from": "✅",
+       "to": "⚠️",
+       "improved": false,
+       "worsened": true,
+       "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+       "reason_b": "The candidate mentions four but hedges with a conflicting prior count of three and does not conclude that four is the answer."
+      }
+     ]
+    }
+   },
+   "temporal": {
+    "n": 1,
+    "summary": {
+     "A": {
+      "✅": 1,
+      "⚠️": 0,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 1.0,
+      "qualified": 1.0
+     },
+     "E": {
+      "✅": 1,
+      "⚠️": 0,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 1.0,
+      "qualified": 1.0
+     },
+     "F": {
+      "✅": 1,
+      "⚠️": 0,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 1.0,
+      "qualified": 1.0
+     }
+    },
+    "A_vs_E": {
+     "comparison": "A -> E",
+     "label": "A vs E（temporal）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 0,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": null,
+     "net_improve": 0,
+     "diff_rate": 0.0,
+     "diff_rate_ci95": [
+      0.0,
+      0.0
+     ],
+     "p_bootstrap": 1.0,
+     "accuracy_a": 1.0,
+     "accuracy_b": 1.0
+    },
+    "A_vs_F": {
+     "comparison": "A -> F",
+     "label": "A vs F（temporal）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 0,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": null,
+     "net_improve": 0,
+     "diff_rate": 0.0,
+     "diff_rate_ci95": [
+      0.0,
+      0.0
+     ],
+     "p_bootstrap": 1.0,
+     "accuracy_a": 1.0,
+     "accuracy_b": 1.0
+    },
+    "E_vs_F": {
+     "comparison": "E -> F",
+     "label": "E vs F（temporal）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 0,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": null,
+     "net_improve": 0,
+     "diff_rate": 0.0,
+     "diff_rate_ci95": [
+      0.0,
+      0.0
+     ],
+     "p_bootstrap": 1.0,
+     "accuracy_a": 1.0,
+     "accuracy_b": 1.0
+    },
+    "A_vs_E_errors": {
+     "comparison": "A -> E",
+     "label": "A vs E ❌（temporal）",
+     "metric": "❌ vs not-❌ (b = A fine / B wrong, c = A wrong / B fine)",
+     "n": 1,
+     "errors_a": 0,
+     "errors_b": 0,
+     "errors_a_rate": 0.0,
+     "errors_b_rate": 0.0,
+     "b_new_errors": 0,
+     "c_fixed_errors": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "net_fixed": 0
+    },
+    "transitions_A_E": {
+     "counts": {
+      "✅->✅": 1
+     },
+     "n_changed": 0,
+     "n_improved": 0,
+     "n_worsened": 0,
+     "improved": [],
+     "worsened": [],
+     "changed": []
+    },
+    "transitions_A_F": {
+     "counts": {
+      "✅->✅": 1
+     },
+     "n_changed": 0,
+     "n_improved": 0,
+     "n_worsened": 0,
+     "improved": [],
+     "worsened": [],
+     "changed": []
+    }
+   },
+   "multi-session": {
+    "n": 1,
+    "summary": {
+     "A": {
+      "✅": 0,
+      "⚠️": 0,
+      "❌": 1,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 0.0,
+      "qualified": 0.0
+     },
+     "E": {
+      "✅": 1,
+      "⚠️": 0,
+      "❌": 0,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 1.0,
+      "qualified": 1.0
+     },
+     "F": {
+      "✅": 0,
+      "⚠️": 0,
+      "❌": 1,
+      "invalid": 0,
+      "n": 1,
+      "accuracy": 0.0,
+      "qualified": 0.0
+     }
+    },
+    "A_vs_E": {
+     "comparison": "A -> E",
+     "label": "A vs E（multi-session）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 0,
+     "c_only_b_correct": 1,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": null,
+     "net_improve": 1,
+     "diff_rate": 1.0,
+     "diff_rate_ci95": [
+      1.0,
+      1.0
+     ],
+     "p_bootstrap": 0.0,
+     "accuracy_a": 0.0,
+     "accuracy_b": 1.0
+    },
+    "A_vs_F": {
+     "comparison": "A -> F",
+     "label": "A vs F（multi-session）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 0,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": null,
+     "net_improve": 0,
+     "diff_rate": 0.0,
+     "diff_rate_ci95": [
+      0.0,
+      0.0
+     ],
+     "p_bootstrap": 1.0,
+     "accuracy_a": 0.0,
+     "accuracy_b": 0.0
+    },
+    "E_vs_F": {
+     "comparison": "E -> F",
+     "label": "E vs F（multi-session）",
+     "metric": "accuracy",
+     "n": 1,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 1,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": 0.0,
+     "net_improve": -1,
+     "diff_rate": -1.0,
+     "diff_rate_ci95": [
+      -1.0,
+      -1.0
+     ],
+     "p_bootstrap": 0.0,
+     "accuracy_a": 1.0,
+     "accuracy_b": 0.0
+    },
+    "A_vs_E_errors": {
+     "comparison": "A -> E",
+     "label": "A vs E ❌（multi-session）",
+     "metric": "❌ vs not-❌ (b = A fine / B wrong, c = A wrong / B fine)",
+     "n": 1,
+     "errors_a": 1,
+     "errors_b": 0,
+     "errors_a_rate": 1.0,
+     "errors_b_rate": 0.0,
+     "b_new_errors": 0,
+     "c_fixed_errors": 1,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "net_fixed": 1
+    },
+    "transitions_A_E": {
+     "counts": {
+      "❌->✅": 1
+     },
+     "n_changed": 1,
+     "n_improved": 1,
+     "n_worsened": 0,
+     "improved": [
+      {
+       "qid": "lme-oracle-6d550036",
+       "category": "multi-session",
+       "is_abstention": false,
+       "from": "❌",
+       "to": "✅",
+       "improved": true,
+       "worsened": false,
+       "reason_a": "The candidate concludes only 1 project, which contradicts the gold answer of 2.",
+       "reason_b": "The candidate clearly states two projects, matching the gold answer of 2."
+      }
+     ],
+     "worsened": [],
+     "changed": [
+      {
+       "qid": "lme-oracle-6d550036",
+       "category": "multi-session",
+       "is_abstention": false,
+       "from": "❌",
+       "to": "✅",
+       "improved": true,
+       "worsened": false,
+       "reason_a": "The candidate concludes only 1 project, which contradicts the gold answer of 2.",
+       "reason_b": "The candidate clearly states two projects, matching the gold answer of 2."
+      }
+     ]
+    },
+    "transitions_A_F": {
+     "counts": {
+      "❌->❌": 1
+     },
+     "n_changed": 0,
+     "n_improved": 0,
+     "n_worsened": 0,
+     "improved": [],
+     "worsened": [],
+     "changed": []
+    }
+   }
+  },
+  "tests": {
+   "overall": [
+    {
+     "comparison": "A -> E",
+     "label": "A vs E（全量 5 题）",
+     "metric": "accuracy",
+     "n": 5,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 2,
+     "c_only_b_correct": 1,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": 0.5,
+     "net_improve": -1,
+     "diff_rate": -0.20000000000000007,
+     "diff_rate_ci95": [
+      -0.8,
+      0.4
+     ],
+     "p_bootstrap": 0.7552,
+     "accuracy_a": 0.8,
+     "accuracy_b": 0.6
+    },
+    {
+     "comparison": "A -> F",
+     "label": "A vs F（全量 5 题）",
+     "metric": "accuracy",
+     "n": 5,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 2,
+     "c_only_b_correct": 0,
+     "p_exact": 0.5,
+     "p_chi2_cc": 0.4795001221869534,
+     "odds_ratio_improve": 0.0,
+     "net_improve": -2,
+     "diff_rate": -0.4,
+     "diff_rate_ci95": [
+      -0.8,
+      0.0
+     ],
+     "p_bootstrap": 0.1594,
+     "accuracy_a": 0.8,
+     "accuracy_b": 0.4
+    },
+    {
+     "comparison": "E -> F",
+     "label": "E vs F（语言对照，全量 5 题）",
+     "metric": "accuracy",
+     "n": 5,
+     "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+     "b_only_a_correct": 1,
+     "c_only_b_correct": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "odds_ratio_improve": 0.0,
+     "net_improve": -1,
+     "diff_rate": -0.19999999999999996,
+     "diff_rate_ci95": [
+      -0.6,
+      0.0
+     ],
+     "p_bootstrap": 0.6592,
+     "accuracy_a": 0.6,
+     "accuracy_b": 0.4
+    }
+   ],
+   "errors": [
+    {
+     "comparison": "A -> E",
+     "label": "A vs E（全量 5 题）",
+     "metric": "❌ vs not-❌ (b = A fine / B wrong, c = A wrong / B fine)",
+     "n": 5,
+     "errors_a": 1,
+     "errors_b": 0,
+     "errors_a_rate": 0.2,
+     "errors_b_rate": 0.0,
+     "b_new_errors": 0,
+     "c_fixed_errors": 1,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "net_fixed": 1
+    },
+    {
+     "comparison": "A -> F",
+     "label": "A vs F（全量 5 题）",
+     "metric": "❌ vs not-❌ (b = A fine / B wrong, c = A wrong / B fine)",
+     "n": 5,
+     "errors_a": 1,
+     "errors_b": 1,
+     "errors_a_rate": 0.2,
+     "errors_b_rate": 0.2,
+     "b_new_errors": 0,
+     "c_fixed_errors": 0,
+     "p_exact": 1.0,
+     "p_chi2_cc": 1.0,
+     "net_fixed": 0
+    }
+   ]
+  },
+  "multiplicity_bh": {
+   "overall:A -> E": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "overall:A -> F": {
+    "p_raw": 0.5,
+    "p_bh": 1.0
+   },
+   "overall:E -> F": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "knowledge-update:A_vs_E": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "knowledge-update:A_vs_F": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "temporal:A_vs_E": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "temporal:A_vs_F": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "multi-session:A_vs_E": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   },
+   "multi-session:A_vs_F": {
+    "p_raw": 1.0,
+    "p_bh": 1.0
+   }
+  },
+  "language": {
+   "E_vs_F": {
+    "comparison": "E -> F",
+    "label": "E vs F（语言对照，全量 5 题）",
+    "metric": "accuracy",
+    "n": 5,
+    "test": "McNemar exact (binomial) on ✅ vs not-✅; paired bootstrap for the difference",
+    "b_only_a_correct": 1,
+    "c_only_b_correct": 0,
+    "p_exact": 1.0,
+    "p_chi2_cc": 1.0,
+    "odds_ratio_improve": 0.0,
+    "net_improve": -1,
+    "diff_rate": -0.19999999999999996,
+    "diff_rate_ci95": [
+     -0.6,
+     0.0
+    ],
+    "p_bootstrap": 0.6592,
+    "accuracy_a": 0.6,
+    "accuracy_b": 0.4
+   },
+   "E_vs_F_errors": {
+    "comparison": "E -> F",
+    "label": "E vs F（❌ 对照）",
+    "metric": "❌ vs not-❌ (b = A fine / B wrong, c = A wrong / B fine)",
+    "n": 5,
+    "errors_a": 0,
+    "errors_b": 1,
+    "errors_a_rate": 0.0,
+    "errors_b_rate": 0.2,
+    "b_new_errors": 1,
+    "c_fixed_errors": 0,
+    "p_exact": 1.0,
+    "p_chi2_cc": 1.0,
+    "net_fixed": -1
+   },
+   "E_only_correct": 1,
+   "F_only_correct": 0,
+   "both_correct": 2,
+   "neither_correct": 2,
+   "same_verdict": 4
+  },
+  "transitions": {
+   "A->E": {
+    "counts": {
+     "✅->⚠️": 2,
+     "✅->✅": 2,
+     "❌->✅": 1
+    },
+    "n_changed": 3,
+    "n_improved": 1,
+    "n_worsened": 2,
+    "improved": [
+     {
+      "qid": "lme-oracle-6d550036",
+      "category": "multi-session",
+      "is_abstention": false,
+      "from": "❌",
+      "to": "✅",
+      "improved": true,
+      "worsened": false,
+      "reason_a": "The candidate concludes only 1 project, which contradicts the gold answer of 2.",
+      "reason_b": "The candidate clearly states two projects, matching the gold answer of 2."
+     }
+    ],
+    "worsened": [
+     {
+      "qid": "lme-oracle-6aeb4375",
+      "category": "knowledge-update",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+      "reason_b": "The candidate flags conflicting records and abstains instead of providing the gold count of four."
+     },
+     {
+      "qid": "lme-oracle-8a2466db",
+      "category": "preference",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate recommends Adobe Premiere Pro-specific resources, matching the gold preference for tailored Premiere Pro material.",
+      "reason_b": "It includes Adobe Premiere Pro-specific resources but also general course platforms and omits the emphasis on advanced settings."
+     }
+    ],
+    "changed": [
+     {
+      "qid": "lme-oracle-6aeb4375",
+      "category": "knowledge-update",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+      "reason_b": "The candidate flags conflicting records and abstains instead of providing the gold count of four."
+     },
+     {
+      "qid": "lme-oracle-6d550036",
+      "category": "multi-session",
+      "is_abstention": false,
+      "from": "❌",
+      "to": "✅",
+      "improved": true,
+      "worsened": false,
+      "reason_a": "The candidate concludes only 1 project, which contradicts the gold answer of 2.",
+      "reason_b": "The candidate clearly states two projects, matching the gold answer of 2."
+     },
+     {
+      "qid": "lme-oracle-8a2466db",
+      "category": "preference",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate recommends Adobe Premiere Pro-specific resources, matching the gold preference for tailored Premiere Pro material.",
+      "reason_b": "It includes Adobe Premiere Pro-specific resources but also general course platforms and omits the emphasis on advanced settings."
+     }
+    ]
+   },
+   "A->F": {
+    "counts": {
+     "✅->⚠️": 2,
+     "✅->✅": 2,
+     "❌->❌": 1
+    },
+    "n_changed": 2,
+    "n_improved": 0,
+    "n_worsened": 2,
+    "improved": [],
+    "worsened": [
+     {
+      "qid": "lme-oracle-6aeb4375",
+      "category": "knowledge-update",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+      "reason_b": "The candidate mentions four but hedges with a conflicting prior count of three and does not conclude that four is the answer."
+     },
+     {
+      "qid": "lme-oracle-8a2466db",
+      "category": "preference",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate recommends Adobe Premiere Pro-specific resources, matching the gold preference for tailored Premiere Pro material.",
+      "reason_b": "It partially aligns by listing Premiere Pro resources but omits the advanced-settings focus and includes general/other-software options."
+     }
+    ],
+    "changed": [
+     {
+      "qid": "lme-oracle-6aeb4375",
+      "category": "knowledge-update",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate correctly states that four Korean restaurants were tried.",
+      "reason_b": "The candidate mentions four but hedges with a conflicting prior count of three and does not conclude that four is the answer."
+     },
+     {
+      "qid": "lme-oracle-8a2466db",
+      "category": "preference",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "⚠️",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate recommends Adobe Premiere Pro-specific resources, matching the gold preference for tailored Premiere Pro material.",
+      "reason_b": "It partially aligns by listing Premiere Pro resources but omits the advanced-settings focus and includes general/other-software options."
+     }
+    ]
+   },
+   "E->F": {
+    "counts": {
+     "⚠️->⚠️": 2,
+     "✅->✅": 2,
+     "✅->❌": 1
+    },
+    "n_changed": 1,
+    "n_improved": 0,
+    "n_worsened": 1,
+    "improved": [],
+    "worsened": [
+     {
+      "qid": "lme-oracle-6d550036",
+      "category": "multi-session",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "❌",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate clearly states two projects, matching the gold answer of 2.",
+      "reason_b": "The candidate states one project, but the gold answer is 2."
+     }
+    ],
+    "changed": [
+     {
+      "qid": "lme-oracle-6d550036",
+      "category": "multi-session",
+      "is_abstention": false,
+      "from": "✅",
+      "to": "❌",
+      "improved": false,
+      "worsened": true,
+      "reason_a": "The candidate clearly states two projects, matching the gold answer of 2.",
+      "reason_b": "The candidate states one project, but the gold answer is 2."
+     }
+    ]
+   }
+  },
+  "answer_states": {
+   "A": {
+    "answered": 4,
+    "abstained": 1,
+    "conflict_flagged": 0,
+    "null": 0
+   },
+   "E": {
+    "answered": 3,
+    "abstained": 1,
+    "conflict_flagged": 1,
+    "null": 0
+   },
+   "F": {
+    "answered": 3,
+    "abstained": 1,
+    "conflict_flagged": 1,
+    "null": 0
+   }
+  },
+  "truncated_answers": {
+   "A": 0,
+   "E": 0,
+   "F": 0
+  },
+  "empty_answers": {
+   "A": 0,
+   "E": 0,
+   "F": 0
+  },
+  "mean_answer_chars": {
+   "A": 208.8,
+   "E": 293.6,
+   "F": 263.8
+  },
+  "answer_language": {
+   "A": {
+    "mostly_chinese": 0,
+    "english_only": 5,
+    "mixed": 0,
+    "mostly_chinese_rate": 0.0
+   },
+   "E": {
+    "mostly_chinese": 1,
+    "english_only": 3,
+    "mixed": 1,
+    "mostly_chinese_rate": 0.2
+   },
+   "F": {
+    "mostly_chinese": 0,
+    "english_only": 5,
+    "mixed": 0,
+    "mostly_chinese_rate": 0.0
+   }
+  }
+ },
+ "cost": {
+  "model": "deepseek-flash",
+  "endpoint": "https://api.deepseek.com/chat/completions",
+  "rates_usd_per_1m_tokens": {
+   "off_peak": {
+    "input_hit": 0.003,
+    "input_miss": 0.15,
+    "output": 0.6
+   },
+   "peak": {
+    "input_hit": 0.006,
+    "input_miss": 0.3,
+    "output": 1.2
+   }
+  },
+  "rates_source": "https://api-docs.deepseek.com/quick_start/pricing（2026-11-12 取；off-peak = peak 的一半）",
+  "totals": {
+   "calls": 30,
+   "prompt_tokens": 136745,
+   "completion_tokens": 16688,
+   "reasoning_tokens": 15133,
+   "prompt_cache_hit_tokens": 126717,
+   "prompt_cache_miss_tokens": 10028,
+   "total_tokens": 153433
+  },
+  "cost_usd": {
+   "off_peak": 0.0119,
+   "peak_upper_bound": 0.0238
+  },
+  "by_group": {
+   "A": {
+    "calls": 10,
+    "prompt_tokens": 44289,
+    "completion_tokens": 3795,
+    "reasoning_tokens": 3361,
+    "prompt_cache_hit_tokens": 41085,
+    "prompt_cache_miss_tokens": 3204,
+    "cost_usd": {
+     "off_peak": 0.002880855,
+     "peak": 0.00576171
+    },
+    "total_tokens": 48084
+   },
+   "E": {
+    "calls": 10,
+    "prompt_tokens": 46191,
+    "completion_tokens": 6420,
+    "reasoning_tokens": 5820,
+    "prompt_cache_hit_tokens": 42752,
+    "prompt_cache_miss_tokens": 3439,
+    "cost_usd": {
+     "off_peak": 0.004496105999999999,
+     "peak": 0.008992211999999998
+    },
+    "total_tokens": 52611
+   },
+   "F": {
+    "calls": 10,
+    "prompt_tokens": 46265,
+    "completion_tokens": 6473,
+    "reasoning_tokens": 5952,
+    "prompt_cache_hit_tokens": 42880,
+    "prompt_cache_miss_tokens": 3385,
+    "cost_usd": {
+     "off_peak": 0.00452019,
+     "peak": 0.00904038
+    },
+    "total_tokens": 52738
+   }
+  },
+  "by_role": {
+   "reader": {
+    "calls": 15,
+    "prompt_tokens": 129680,
+    "completion_tokens": 13364,
+    "reasoning_tokens": 12406,
+    "prompt_cache_hit_tokens": 126717,
+    "prompt_cache_miss_tokens": 2963,
+    "cost_usd": {
+     "off_peak": 0.008843001000000001,
+     "peak": 0.017686002000000003
+    },
+    "total_tokens": 143044
+   },
+   "judge": {
+    "calls": 15,
+    "prompt_tokens": 7065,
+    "completion_tokens": 3324,
+    "reasoning_tokens": 2727,
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 7065,
+    "cost_usd": {
+     "off_peak": 0.0030541499999999994,
+     "peak": 0.006108299999999999
+    },
+    "total_tokens": 10389
+   }
+  },
+  "cache_ledger": {
+   "calls": 96,
+   "prompt_tokens": 433406,
+   "completion_tokens": 35747,
+   "note": "缓存文件里的累计账本（只在新调用时累加，命中不加）"
+  },
+  "note": "cost = cache-hit 输入 × hit 单价 + cache-miss 输入 × miss 单价 + completion × 输出单价；thinking 的 reasoning_tokens 计入 completion。peak 为上界（同一批 token 按 peak 单价）。"
+ },
+ "rows": [
+  {
+   "qid": "lme-oracle-6aeb4375",
+   "source_item_id": "6aeb4375",
+   "category": "knowledge-update",
+   "is_abstention": false,
+   "n_facts": 24,
+   "question": "How many Korean restaurants have I tried in my city?",
+   "gold_answer": "four",
+   "groups": {
+    "A": {
+     "answer": "You’ve tried **four** Korean restaurants in your city so far, based on your 2023-09-30 statement.",
+     "answer_chars": 97,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 5353,
+      "completion_tokens": 160,
+      "prompt_cache_hit_tokens": 5120,
+      "prompt_cache_miss_tokens": 233,
+      "reasoning_tokens": 132
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "answered",
+     "judge_reason": "The candidate correctly states that four Korean restaurants were tried.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 394,
+      "completion_tokens": 70,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 394,
+      "reasoning_tokens": 39
+     },
+     "judge_cached": false
+    },
+    "E": {
+     "answer": "The records conflict: on **2023-08-11** you said you’d tried **three** different Korean restaurants recently, but on **2023-09-30** you said you’d tried **four** different ones so far. Since the later record doesn’t explicitly say a change occurred (e.g., that you tried one more), I can’t determine the count from memory. Which is correct: **3 or 4**?",
+     "answer_chars": 352,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 5702,
+      "completion_tokens": 2023,
+      "prompt_cache_hit_tokens": 5504,
+      "prompt_cache_miss_tokens": 198,
+      "reasoning_tokens": 1928
+     },
+     "reader_cached": false,
+     "verdict": "⚠️",
+     "answer_state": "conflict_flagged",
+     "judge_reason": "The candidate flags conflicting records and abstains instead of providing the gold count of four.",
+     "judge_raw_verdict": "⚠️",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 461,
+      "completion_tokens": 208,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 461,
+      "reasoning_tokens": 167
+     },
+     "judge_cached": false
+    },
+    "F": {
+     "answer": "Undetermined: the 2023-08-11 record says you had tried **three** different Korean restaurants recently; the 2023-09-30 record says you had tried **four** different ones so far. The later record does not explicitly state a change, so which count should I use?",
+     "answer_chars": 258,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 5734,
+      "completion_tokens": 1311,
+      "prompt_cache_hit_tokens": 5504,
+      "prompt_cache_miss_tokens": 230,
+      "reasoning_tokens": 1248
+     },
+     "reader_cached": false,
+     "verdict": "⚠️",
+     "answer_state": "conflict_flagged",
+     "judge_reason": "The candidate mentions four but hedges with a conflicting prior count of three and does not conclude that four is the answer.",
+     "judge_raw_verdict": "⚠️",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 429,
+      "completion_tokens": 175,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 429,
+      "reasoning_tokens": 127
+     },
+     "judge_cached": false
+    }
+   },
+   "n_contract_chars": {
+    "A": 0,
+    "E": 585,
+    "F": 1612
+   }
+  },
+  {
+   "qid": "lme-oracle-6d550036",
+   "source_item_id": "6d550036",
+   "category": "multi-session",
+   "is_abstention": false,
+   "n_facts": 44,
+   "question": "How many projects have I led or am currently leading?",
+   "gold_answer": "2",
+   "groups": {
+    "A": {
+     "answer": "You have explicitly led **1 project** in these records: the **Marketing Research class project** where you led the data analysis team. The records also mention a current **solo Data Mining class project**, but do not explicitly state that you are leading it.",
+     "answer_chars": 258,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 14496,
+      "completion_tokens": 2043,
+      "prompt_cache_hit_tokens": 14336,
+      "prompt_cache_miss_tokens": 160,
+      "reasoning_tokens": 1990
+     },
+     "reader_cached": false,
+     "verdict": "❌",
+     "answer_state": "answered",
+     "judge_reason": "The candidate concludes only 1 project, which contradicts the gold answer of 2.",
+     "judge_raw_verdict": "❌",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 421,
+      "completion_tokens": 101,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 421,
+      "reasoning_tokens": 63
+     },
+     "judge_cached": false
+    },
+    "E": {
+     "answer": "Two projects:\n\n1. Your Marketing Research class project, where you led the data analysis team — recorded on 2023-05-28.\n2. Your Data Mining class solo project, which you were working on / leading — recorded on 2023-05-24, and referenced again on 2023-05-28 as the customer-data clustering project.\n\nI did not count the 2023-05-28 customer-data project separately because it appears to be the same Data Mining solo project.",
+     "answer_chars": 422,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 14845,
+      "completion_tokens": 2459,
+      "prompt_cache_hit_tokens": 14592,
+      "prompt_cache_miss_tokens": 253,
+      "reasoning_tokens": 2356
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "answered",
+     "judge_reason": "The candidate clearly states two projects, matching the gold answer of 2.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 471,
+      "completion_tokens": 96,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 471,
+      "reasoning_tokens": 61
+     },
+     "judge_cached": false
+    },
+    "F": {
+     "answer": "Based on the record of 2023-05-28, you have led **one project**: the Marketing Research class project where you led the data analysis team for a comprehensive market analysis for a new product launch.",
+     "answer_chars": 200,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 14877,
+      "completion_tokens": 2663,
+      "prompt_cache_hit_tokens": 14720,
+      "prompt_cache_miss_tokens": 157,
+      "reasoning_tokens": 2619
+     },
+     "reader_cached": false,
+     "verdict": "❌",
+     "answer_state": "answered",
+     "judge_reason": "The candidate states one project, but the gold answer is 2.",
+     "judge_raw_verdict": "❌",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 412,
+      "completion_tokens": 77,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 412,
+      "reasoning_tokens": 42
+     },
+     "judge_cached": false
+    }
+   },
+   "n_contract_chars": {
+    "A": 0,
+    "E": 585,
+    "F": 1612
+   }
+  },
+  {
+   "qid": "lme-oracle-8a2466db",
+   "source_item_id": "8a2466db",
+   "category": "preference",
+   "is_abstention": false,
+   "n_facts": 18,
+   "question": "Can you recommend some resources where I can learn more about video editing?",
+   "gold_answer": "The user would prefer responses that suggest resources specifically tailored to Adobe Premiere Pro, especially those that delve into its advanced settings. They might not prefer general video editing resources or resources related to other video editing software.",
+   "groups": {
+    "A": {
+     "answer": "Yes. The records recommend:\n- Adobe Premiere Pro’s official documentation and tutorials\n- YouTube channels like Premiere Bro, Video Copilot, and Adobe Creative Cloud\n- Online courses on Udemy, LinkedIn Learning, and Skillshare\n- Premiere Pro communities and forums, such as Reddit’s r/premierepro and Adobe’s Premiere Pro forum",
+     "answer_chars": 327,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 5635,
+      "completion_tokens": 270,
+      "prompt_cache_hit_tokens": 5501,
+      "prompt_cache_miss_tokens": 134,
+      "reasoning_tokens": 193
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "answered",
+     "judge_reason": "The candidate recommends Adobe Premiere Pro-specific resources, matching the gold preference for tailored Premiere Pro material.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 569,
+      "completion_tokens": 377,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 569,
+      "reasoning_tokens": 336
+     },
+     "judge_cached": false
+    },
+    "E": {
+     "answer": "依据 **2023年5月20日** 的记录，推荐的视频剪辑学习资源有：\n\n- Adobe Premiere Pro 官方文档和教程\n- YouTube 频道：Premiere Bro、Video Copilot、Adobe Creative Cloud\n- 在线课程平台：Udemy、LinkedIn Learning、Skillshare\n- 社区/论坛：Reddit 的 r/premierepro、Adobe Premiere Pro 论坛",
+     "answer_chars": 223,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 5984,
+      "completion_tokens": 404,
+      "prompt_cache_hit_tokens": 5760,
+      "prompt_cache_miss_tokens": 224,
+      "reasoning_tokens": 317
+     },
+     "reader_cached": false,
+     "verdict": "⚠️",
+     "answer_state": "answered",
+     "judge_reason": "It includes Adobe Premiere Pro-specific resources but also general course platforms and omits the emphasis on advanced settings.",
+     "judge_raw_verdict": "⚠️",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 579,
+      "completion_tokens": 390,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 579,
+      "reasoning_tokens": 347
+     },
+     "judge_cached": false
+    },
+    "F": {
+     "answer": "Based on the record of **2023-05-20**, resources recommended for learning more about video editing are:\n\n- Adobe Premiere Pro’s official documentation and tutorials\n- YouTube channels like **Premiere Bro**, **Video Copilot**, and **Adobe Creative Cloud**\n- Online courses on **Udemy**, **LinkedIn Learning**, and **Skillshare**\n- Premiere Pro communities and forums, such as **Reddit’s r/premierepro** and **Adobe’s Premiere Pro forum**",
+     "answer_chars": 436,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 6016,
+      "completion_tokens": 327,
+      "prompt_cache_hit_tokens": 5760,
+      "prompt_cache_miss_tokens": 256,
+      "reasoning_tokens": 222
+     },
+     "reader_cached": false,
+     "verdict": "⚠️",
+     "answer_state": "answered",
+     "judge_reason": "It partially aligns by listing Premiere Pro resources but omits the advanced-settings focus and includes general/other-software options.",
+     "judge_raw_verdict": "⚠️",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 596,
+      "completion_tokens": 1073,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 596,
+      "reasoning_tokens": 1026
+     },
+     "judge_cached": false
+    }
+   },
+   "n_contract_chars": {
+    "A": 0,
+    "E": 585,
+    "F": 1612
+   }
+  },
+  {
+   "qid": "lme-oracle-gpt4_2655b836",
+   "source_item_id": "gpt4_2655b836",
+   "category": "temporal",
+   "is_abstention": false,
+   "n_facts": 36,
+   "question": "What was the first issue I had with my new car after its first service?",
+   "gold_answer": "GPS system not functioning correctly",
+   "groups": {
+    "A": {
+     "answer": "The first issue after the first service was with the car’s GPS system on 3/22. You had to take it back to the dealership, and they replaced the entire system.",
+     "answer_chars": 158,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 9183,
+      "completion_tokens": 196,
+      "prompt_cache_hit_tokens": 8960,
+      "prompt_cache_miss_tokens": 223,
+      "reasoning_tokens": 157
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "answered",
+     "judge_reason": "The candidate identifies the GPS system as the first issue after the first service, matching the gold answer.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 418,
+      "completion_tokens": 103,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 418,
+      "reasoning_tokens": 63
+     },
+     "judge_cached": false
+    },
+    "E": {
+     "answer": "The first issue after your first service was a problem with your car’s GPS system on March 22; you took it back to the dealership and they replaced the entire system.  \n（依据 2023 年 4 月 10 日的记录）",
+     "answer_chars": 192,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 9532,
+      "completion_tokens": 279,
+      "prompt_cache_hit_tokens": 9344,
+      "prompt_cache_miss_tokens": 188,
+      "reasoning_tokens": 224
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "answered",
+     "judge_reason": "The candidate identifies the first issue as a problem with the car's GPS system, matching the gold answer.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 434,
+      "completion_tokens": 115,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 434,
+      "reasoning_tokens": 74
+     },
+     "judge_cached": false
+    },
+    "F": {
+     "answer": "According to the record of 2023-04-10, the first issue after your first service (March 15) was a problem with your car’s GPS system on 3/22; the dealership replaced the entire system.",
+     "answer_chars": 183,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 9564,
+      "completion_tokens": 261,
+      "prompt_cache_hit_tokens": 9344,
+      "prompt_cache_miss_tokens": 220,
+      "reasoning_tokens": 212
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "answered",
+     "judge_reason": "Candidate correctly identifies the first post-service issue as a GPS system problem.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 428,
+      "completion_tokens": 111,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 428,
+      "reasoning_tokens": 77
+     },
+     "judge_cached": false
+    }
+   },
+   "n_contract_chars": {
+    "A": 0,
+    "E": 585,
+    "F": 1612
+   }
+  },
+  {
+   "qid": "lme-oracle-gpt4_70e84552_abs",
+   "source_item_id": "gpt4_70e84552_abs",
+   "category": "abstention",
+   "is_abstention": true,
+   "n_facts": 24,
+   "question": "Which task did I complete first, fixing the fence or purchasing three cows from Peter?",
+   "gold_answer": "The information provided is not enough. You mentioned fixing the fence but did not mention purchasing cows from Peter.",
+   "groups": {
+    "A": {
+     "answer": "The records show you fixed the broken fence three weeks before 2023-05-30, but they do not mention purchasing three cows from Peter. So I can’t determine which task was completed first from these records.",
+     "answer_chars": 204,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 7343,
+      "completion_tokens": 279,
+      "prompt_cache_hit_tokens": 7168,
+      "prompt_cache_miss_tokens": 175,
+      "reasoning_tokens": 233
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "abstained",
+     "judge_reason": "The candidate clearly states the purchasing task is missing and therefore which task came first cannot be determined.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 477,
+      "completion_tokens": 196,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 477,
+      "reasoning_tokens": 155
+     },
+     "judge_cached": false
+    },
+    "E": {
+     "answer": "The records do not contain the answer. There is a record dated 2023-05-30 saying the broken east-side fence was fixed three weeks earlier, but there is no record of purchasing three cows from Peter or when that was completed. So I cannot determine which task was completed first.",
+     "answer_chars": 279,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 7692,
+      "completion_tokens": 329,
+      "prompt_cache_hit_tokens": 7552,
+      "prompt_cache_miss_tokens": 140,
+      "reasoning_tokens": 269
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "abstained",
+     "judge_reason": "The candidate clearly states the records are insufficient and it cannot determine which task was completed first.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 491,
+      "completion_tokens": 117,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 491,
+      "reasoning_tokens": 77
+     },
+     "judge_cached": false
+    },
+    "F": {
+     "answer": "The records do not contain any mention of purchasing three cows from Peter. The 2023-05-30 record says you fixed the broken fence three weeks earlier, but without a record of the cow purchase, I can’t determine which task was completed first.",
+     "answer_chars": 242,
+     "answer_truncated": false,
+     "reader_usage": {
+      "prompt_tokens": 7724,
+      "completion_tokens": 360,
+      "prompt_cache_hit_tokens": 7552,
+      "prompt_cache_miss_tokens": 172,
+      "reasoning_tokens": 306
+     },
+     "reader_cached": false,
+     "verdict": "✅",
+     "answer_state": "abstained",
+     "judge_reason": "The candidate clearly states the cow purchase is missing from the records and therefore the order cannot be determined.",
+     "judge_raw_verdict": "✅",
+     "judge_raw": null,
+     "judge_usage": {
+      "prompt_tokens": 485,
+      "completion_tokens": 115,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 485,
+      "reasoning_tokens": 73
+     },
+     "judge_cached": false
+    }
+   },
+   "n_contract_chars": {
+    "A": 0,
+    "E": 585,
+    "F": 1612
+   }
+  }
+ ]
+}

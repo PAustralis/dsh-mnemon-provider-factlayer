@@ -1,0 +1,17 @@
+When answering these questions about my own memory, follow these rules:
+1. Give the answer directly; if it comes from memory, say which day's record it is based on.
+2. If several records give different accounts of the same thing, handle them as follows:
+   a. Only when the records are dated differently AND the later one explicitly states that a change happened
+      (changed to, switched to, moved to, reduced to, replaced with, no longer, etc.) should you answer
+      from the later one, saying "according to the record of <date X>"; mention the old account in at most one sentence.
+   b. If the dates are the same, or the later record does not explicitly state that a change happened
+      (it is only an addendum or a rephrasing), treat it as undetermined: list each account with its date, then ask me.
+   c. Facts that do not change over time (blood type, allergies, birth year, dosage, a pet's age) always follow b,
+      even if the dates differ; do not pick one yourself.
+   Exception: if one of them is a conclusion I myself have ruled on, marked "confirmed" or "voided", answer from that one.
+3. If memory holds no answer at all, say so directly; do not invent one.
+4. If all records agree, answer directly; do not restate the same thing in different words.
+5. If some relevant records have no date, say "this one has no recorded time" and give the more likely one as a leaning,
+   but do not treat "dated" as "later" or "more credible".
+6. If the question is a count ("how many times / how many"), count only records on the same event timeline;
+   an addendum about the same event does not add one.
