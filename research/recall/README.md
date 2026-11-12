@@ -17,6 +17,8 @@
 | `evidence_labels.json` | 逐题答案要点、strict/judge/union 证据集、R@4/R@20、一致率、E 类、LLM usage |
 | `reader_eval.py` | **读者级端到端**（docs/10）：真实向量 top-4 → deepseek-flash reader → 三档判分；输出 `reader_eval.json` |
 | `reader_eval.json` | 逐题 top-4/回答/判分/证据覆盖 + 汇总 + token |
+| `reader_contract_eval.py` | **契约 v2 三组对照**（docs/11）：A 题库原 preamble / B +契约 / C +契约+日期强调，同一 top-4 与判分口径；A 迁移上一轮缓存（0 调用、逐题复现），B/C 各 40 生成 + 40 判分；输出 `reader_contract_eval.json` |
+| `reader_contract_eval.json` | 三组逐题答案/判分/契约执行度 + 分组汇总 + 配对 + 成本 + 语料重建审计 |
 | `index_text_eval.py` | **日期前缀配对评测**（docs/09）：同一批 119 语料 + 40 题，`raw_date → event_time` 真实入库，比较 v1 content-only 与 v2 日期前缀的 R@1/R@4/R@6/R@20、逐题名次、sid 33；新缓存 `.embedding_cache_indexv2.json` 与旧缓存隔离 |
 | `recall_eval.py` | 主实验：建临时 SQLite（FTS5 三套索引）→ 五路召回 → 31 种组合消融 → k/λ/T 扫描 → 自己写 `results.json` |
 | `make_report.py` | 把 `results.json` 填进 `REPORT.template.md` 的 `{{G1}}`…`{{G11}}` 占位符，渲染成 `REPORT.md` |
@@ -37,10 +39,12 @@ python run_real_embedding.py   # 真实 embedding 重测（联网、计费；向
 python rank_metrics.py         # 生产口径 R@4/R@20 + 失败归因（只读缓存，0 调用、0 费用）
 python evidence_labels.py --judge --no-llm-extract   # 证据级标注（判官缓存命中后 0 调用）
 python reader_eval.py          # 读者级端到端（top-4 → reader → 判分；结果缓存）
+python reader_contract_eval.py # 契约 v2 三组对照（A 组 0 调用；B/C 计费，缓存后复跑 0 调用）
 python index_text_eval.py      # 日期前缀配对评测（首轮 159 条计费，重跑 0 费用）
 ```
 
-报告：[`docs/10-证据级标注与读者指标.md`](../../docs/10-证据级标注与读者指标.md)。
+报告：[`docs/10-证据级标注与读者指标.md`](../../docs/10-证据级标注与读者指标.md)、
+[`docs/11-契约对读者级的影响.md`](../../docs/11-契约对读者级的影响.md)。
 
 依赖：Python 3.7+（本机 3.14.7）、标准库 `sqlite3`（**需要 FTS5 且支持 `tokenize='trigram'`**，本机 SQLite 3.50.4）、`numpy`（`run_real_embedding.py` 另需 `httpx` 与仓库 `.env` 的 `EMBEDDING_*`）。
 除 `run_real_embedding.py` / `index_text_eval.py` 外无网络请求、不下载模型、不装重依赖；两个脚本的向量缓存在 `.embedding_cache*.json`（已 gitignore），删掉才会重新计费（`index_text_eval.py` 用独立的 `.embedding_cache_indexv2.json`）。
