@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """契约对读者级的增益：A（题库原 preamble）/ B（契约 v2）/ C（v2+日期强调）/
-D（契约 v3）/ E（v3+日期强调，可选）对照。
+D（契约 v3）/ E（契约 v4）对照。
 
 要回答的问题
 ------------
@@ -21,8 +21,10 @@ top-4，但读者可答题正确率只有 22/36 = 61.1%；歧义组 C/G/J 的 12
   同样回落，见 ``raw_date_stats``）。
 - D 组：preamble + 契约 **v3** 全文（逐字；第 2 条拆成"可变化属性 a / 稳定事实 b"，
   新增第 5 条"无日期也要给倾向"），记录格式同 A（与 B 严格可比）。
-- E 组（可选，本次默认不跑）：契约 v3 + 日期强调，记录格式同 C；用于验证 D 的
-  变好/变差是否只是日期写法造成的。E 的缓存键与 D 不同，跑 E 的成本 ≈ 再翻一倍。
+- E 组：preamble + 契约 **v4** 全文（逐字）。v4 把 v3 的 2a 收紧为"日期不同、且较晚
+  那条明确写明发生了变化"才可按最新回答；同日/补记/换个说法/稳定事实一律按 b 列出并问；
+  规则 5 明确"有日期 ≠ 更晚/更可信"；新增规则 6 的计数口径。记录格式同 A/B/D，
+  因此 **E 与 D 的唯一差异是契约文本**（配对可归因到条款）。
 
 检索（不联网、不调 embedding）
 ------------------------------
@@ -49,7 +51,7 @@ top-4，但读者可答题正确率只有 22/36 = 61.1%；歧义组 C/G/J 的 12
 ------------------------------------------
 1. 各组总体 ✅/⚠️/❌、可答题正确率，以及 C/G/J（12 题）与 A/B/D/F/H/I（24 题）
    的分组对比；
-2. B 相对 A 的增益与**逐题配对**（变好/变差），以及 D（v3）相对 A/B/C 的配对；
+2. B 相对 A 的增益与**逐题配对**（变好/变差），以及 D（v3）/ E（v4）相对 A/B/C/D 的配对；
 3. E 类（库里无答案）各组"说没有"的比例、编造与机械 novel_numbers 核对；
 4. 成本：各组各自的生成/判分 token，以及缓存命中后复跑 0 调用。
 
@@ -59,9 +61,9 @@ top-4，但读者可答题正确率只有 22/36 = 61.1%；歧义组 C/G/J 的 12
 用法::
 
     python research/recall/reader_contract_eval.py --qids 1,2,7,10,33 --groups B,C
-    python research/recall/reader_contract_eval.py --groups A,B,C,D    # 全量 40 题 × 四组（含 v3）
+    python research/recall/reader_contract_eval.py --groups A,B,C,D,E  # 全量 40 题 × 五组（含 v3/v4）
     python research/recall/reader_contract_eval.py                      # 默认 A,B,C（v2 三组）
-    python research/recall/reader_contract_eval.py --groups B --show-prompts
+    python research/recall/reader_contract_eval.py --groups E --show-prompts
     python research/recall/reader_contract_eval.py --force              # 忽略缓存（计费）
 
 产物：``research/recall/reader_contract_eval.json``。
@@ -156,34 +158,65 @@ CONTRACT_V3 = (
     "5. 如果有关记录没有日期，说明\"这条没记时间\"，但仍要给出更可能的那一条作为倾向，不要只说不知道。\n"
 )
 
+# 契约 v4 原文（逐字使用，缩进与换行都不改）。
+# 与 v3 的差异：2a 从"属性清单 + 以最新为准"改成"日期不同 + 较晚一条明确写明了变化"；
+# 2b 明确覆盖"日期相同 / 只是补记 / 换个说法"；新增 2c（稳定事实永远按 b）；
+# 第 5 条补上"有日期 ≠ 更晚/更可信"；新增第 6 条计数口径。
+CONTRACT_V4 = (
+    "回答这些关于我本人记忆的问题时，请遵守：\n"
+    "1. 直接给出答案；如果答案来自记忆，说明依据的是哪一天记的那条。\n"
+    "2. 如果多条记录对同一件事给了不同的说法，按下面处理：\n"
+    "   a. 只有当两条记录的日期不同、并且较晚的那条明确写明了发生了改变\n"
+    "      （换了、改成、调到、搬到、减到、换成、不再 等），才以较晚的那条为准直接回答，\n"
+    "      并说明\"按 X 年 X 月 X 日的记录\"；旧说法最多用一句话带过。\n"
+    "   b. 如果日期相同、或者较晚的记录没有明确说明发生了改变（只是补记、换个说法），\n"
+    "      就认为无法确定哪条对，把每种说法和日期列出来，然后问我。\n"
+    "   c. 不会随时间变化的事实（血型、过敏、出生年份、药量、宠物的年龄）永远按 b 处理，\n"
+    "      即使日期不同也不要自己挑一条。\n"
+    "   例外：如果其中某条是「已确认」「已作废」这种我本人裁决过的结论，以那条为准直接回答。\n"
+    "3. 如果记忆里根本没有答案，直接说没有，不要编。\n"
+    "4. 如果所有记录说法一致，直接回答，不要把同一件事换个说法重复一遍。\n"
+    "5. 如果有关记录没有日期，说明\"这条没记时间\"，给出更可能的那一条作为倾向，\n"
+    "   但不要把\"有日期\"当成\"更晚\"或\"更可信\"的理由。\n"
+    "6. 如果问题是\"几次/多少个\"这类计数，只数同一次事件时间线上的记录；\n"
+    "   同一件事的补记不算新增。\n"
+)
+
 GROUPS = ("A", "B", "C", "D", "E")
 GROUP_LABEL = {
     "A": "基线：题库原 preamble",
     "B": "契约 v2",
     "C": "契约 v2 + 日期强调（[记录于 YYYY-MM-DD]）",
     "D": "契约 v3",
-    "E": "契约 v3 + 日期强调（[记录于 YYYY-MM-DD]）",
+    "E": "契约 v4",
 }
-CONTRACTS = {"B": CONTRACT_V2, "C": CONTRACT_V2, "D": CONTRACT_V3, "E": CONTRACT_V3}
-CONTRACT_VERSION = {"B": "v2", "C": "v2", "D": "v3", "E": "v3"}
-DATE_EMPHASIS_GROUPS = ("C", "E")
+CONTRACTS = {"B": CONTRACT_V2, "C": CONTRACT_V2, "D": CONTRACT_V3, "E": CONTRACT_V4}
+CONTRACT_VERSION = {"B": "v2", "C": "v2", "D": "v3", "E": "v4"}
+DATE_EMPHASIS_GROUPS = ("C",)
 READER_VERSIONS = {
     "A": READER_PROMPT_VERSION,          # reader-v1：与 reader_eval 同键，可迁移
     "B": "reader-contract-v2",
     "C": "reader-contract-v2-date",
     "D": "reader-contract-v3",
-    "E": "reader-contract-v3-date",
+    "E": "reader-contract-v4",
 }
 GRADER_VERSIONS = {
     "A": GRADER_PROMPT_VERSION,          # reader-grade-v1：同上
     "B": "reader-grade-contract-v2",
     "C": "reader-grade-contract-v2-date",
     "D": "reader-grade-contract-v3",
-    "E": "reader-grade-contract-v3-date",
+    "E": "reader-grade-contract-v4",
 }
+# E 组在缓存键里显式带组名，保证与历史定义（v3+日期）和 D 组不会混键；
+# B/C/D 保持历史键格式，使既有 320 条缓存可以 0 计费复跑。
+KEY_GROUP_TAG = {"E": "E|"}
 
 # 上一轮遗留的 7 道 ✅→⚠️（B 相对 A），用于专项检查 v3 是否把它们拉回 ✅。
 FOCUS_SIDS = (1, 9, 19, 29, 30, 38, 39)
+
+# D 组（v3）剩余的 7 道 ❌，用于检查 v4 是否修好：
+# 2/12/32（同日冲突）、4（稳定事实）、11（跨场景）、20（无日期）、3（计数）。
+FOCUS_D_SIDS = (2, 3, 4, 11, 12, 20, 32)
 
 # 报告口径：答案文件里的类别分组
 AMBIGUOUS_CLASSES = "CGJ"        # 歧义/无日期：标准答案多为"无法确定"
@@ -414,13 +447,12 @@ def verify_prompt_templates(sid, cls, question, records, section) -> dict:
         for group in ("A", "B", "C", "D", "E")
     }
     c_expected = ref.replace(format_records(records), render_records("C", records))
-    e_expected = ref.replace(format_records(records), render_records("E", records))
     return {
         "A_equals_reader_eval": texts["A"] == ref,
         "B_equals_reader_eval": texts["B"] == ref,
         "D_equals_reader_eval": texts["D"] == ref,
+        "E_equals_reader_eval": texts["E"] == ref,
         "C_differs_only_in_record_block": texts["C"] == c_expected,
-        "E_differs_only_in_record_block": texts["E"] == e_expected,
         "A_reader_prompt_equals_reader_eval": build_reader_prompt_group(
             "A", question, records
         ) == build_reader_prompt(question, records),
@@ -459,7 +491,9 @@ def reader_key(group: str, sid: int, question: str, prompt: str, records: list[d
             question,
             json.dumps(records, ensure_ascii=False, sort_keys=True),
         )
-    return _sha(MODEL, READER_VERSIONS[group], str(sid), question, prompt)
+    return _sha(
+        MODEL, KEY_GROUP_TAG.get(group, "") + READER_VERSIONS[group], str(sid), question, prompt
+    )
 
 
 def grader_key(group: str, sid: int, answer: str, prompt: str, records: list[dict]) -> str:
@@ -471,7 +505,9 @@ def grader_key(group: str, sid: int, answer: str, prompt: str, records: list[dic
             answer,
             json.dumps(records, ensure_ascii=False, sort_keys=True),
         )
-    return _sha(MODEL, GRADER_VERSIONS[group], str(sid), answer, prompt)
+    return _sha(
+        MODEL, KEY_GROUP_TAG.get(group, "") + GRADER_VERSIONS[group], str(sid), answer, prompt
+    )
 
 
 # ======================================================================
@@ -803,7 +839,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--labels", default=str(DEFAULT_LABELS))
     parser.add_argument("--answer-key", default=DEFAULT_ANSWER_KEY)
     parser.add_argument("--json", default=str(DEFAULT_JSON))
-    parser.add_argument("--groups", default="A,B,C", help="逗号分隔，默认 A,B,C；D=v3 用 A,B,C,D，E=v3+日期（可选）")
+    parser.add_argument("--groups", default="A,B,C", help="逗号分隔，默认 A,B,C；D=v3 / E=v4 用 A,B,C,D,E")
     parser.add_argument("--qids", default="", help="逗号分隔的题号；默认全部 40 题")
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--force", action="store_true", help="忽略缓存重新调用（计费）")
@@ -1035,6 +1071,8 @@ def main(argv: list[str] | None = None) -> int:
         paired["B_vs_D"] = paired_compare(results["B"], results["D"], "B→D")
     if "C" in results and "D" in results:
         paired["C_vs_D"] = paired_compare(results["C"], results["D"], "C→D")
+    if "D" in results and "E" in results:
+        paired["D_vs_E"] = paired_compare(results["D"], results["E"], "D→E")
 
     # 专项：上一轮 B 相对 A 掉档的 7 题在 D 组是否回到 ✅
     focus = None
@@ -1074,6 +1112,49 @@ def main(argv: list[str] | None = None) -> int:
                 if row["verdicts"].get("D") != "✅" and row["verdicts"].get("B") != "✅"
             ],
             "rows": focus_rows,
+        }
+
+    # 专项：D 组（v3）的 7 道 ❌ —— v4 是否修好（D→E 逐题）
+    focus_d = None
+    if "D" in results and "E" in results:
+        rows_d = {row["sid"]: row for row in results["D"]}
+        rows_e = {row["sid"]: row for row in results["E"]}
+        focus_d_rows = []
+        for sid in FOCUS_D_SIDS:
+            if sid not in rows_d or sid not in rows_e:
+                continue
+            verdicts = {
+                group: {row["sid"]: row for row in rows}[sid]["grade"]["verdict"]
+                for group, rows in results.items()
+                if any(row["sid"] == sid for row in rows)
+            }
+            focus_d_rows.append(
+                {
+                    "sid": sid,
+                    "cls": rows_d[sid]["cls"],
+                    "verdicts": verdicts,
+                    "answer_D": rows_d[sid]["reader_answer"],
+                    "answer_E": rows_e[sid]["reader_answer"],
+                    "reason_E": rows_e[sid]["grade"]["reason"],
+                    "contract_E": rows_e[sid]["contract"],
+                }
+            )
+        focus_d = {
+            "sids": list(FOCUS_D_SIDS),
+            "note": "D 组（v3）剩余的 7 道 ❌：2/12/32（同日）、4（稳定事实）、"
+                    "11（跨场景）、20（无日期）、3（计数）；看 v4 是否修好",
+            "fixed_to_correct": [
+                row["sid"] for row in focus_d_rows
+                if row["verdicts"].get("E") == "✅" and row["verdicts"].get("D") != "✅"
+            ],
+            "to_warn": [
+                row["sid"] for row in focus_d_rows
+                if row["verdicts"].get("E") == "⚠️" and row["verdicts"].get("D") == "❌"
+            ],
+            "still_failed": [
+                row["sid"] for row in focus_d_rows if row["verdicts"].get("E") == "❌"
+            ],
+            "rows": focus_d_rows,
         }
 
     # A 组复现校验：与上一轮 reader_eval.json 逐题一致
@@ -1149,19 +1230,22 @@ def main(argv: list[str] | None = None) -> int:
             for group in groups
         },
         "contract": {
-            "version": "v2/v3",
+            "version": "v2/v3/v4",
             "text": CONTRACT_V2,
             "text_v2": CONTRACT_V2,
             "text_v3": CONTRACT_V3,
+            "text_v4": CONTRACT_V4,
             "preamble": PREAMBLE,
             "placement": "PREAMBLE + 契约全文 + 【用户问】 + 【检索到的记忆】",
             "by_group": {group: CONTRACT_VERSION.get(group) for group in groups},
-            "note": "A 组不注入；B/C 注入 v2，D/E 注入 v3（逐字）；"
-                    "C/E 只把记录前缀从 [date] 改成 [记录于 date]",
+            "note": "A 组不注入；B/C 注入 v2，D 注入 v3，E 注入 v4（逐字）；"
+                    "C 只把记录前缀从 [date] 改成 [记录于 date]；E 的记录格式与 A/B/D 相同，"
+                    "因此 D→E 的差异只有契约文本",
         },
         "summary": summaries,
         "paired": paired,
         "focus_7": focus,
+        "focus_d7": focus_d,
         "replication_A": replication,
         "migration_A": migration if "A" in groups else None,
         "baseline_provenance": provenance if "A" in groups else None,
@@ -1230,6 +1314,15 @@ def main(argv: list[str] | None = None) -> int:
             marks = " ".join(f"{g}={v}" for g, v in row["verdicts"].items())
             print(f"    {row['sid']:>2} {row['cls']}  {marks}")
         print(f"    回到 ✅：{focus['recovered']}；仍非 ✅：{focus['still_warned']}")
+    if focus_d:
+        print("\n  专项（D 的 7 道 ❌）：")
+        for row in focus_d["rows"]:
+            marks = " ".join(f"{g}={v}" for g, v in row["verdicts"].items())
+            print(f"    {row['sid']:>2} {row['cls']}  {marks}")
+        print(
+            f"    修成 ✅：{focus_d['fixed_to_correct']}；"
+            f"❌→⚠️：{focus_d['to_warn']}；仍 ❌：{focus_d['still_failed']}"
+        )
     print("\n  成本（本次调用）：")
     for group in groups:
         c = costs[group]
