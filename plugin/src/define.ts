@@ -13,6 +13,12 @@
  * 因此按 `dsh-mnemon-source-memory-spaces/provider-sdk` → `dsh-mnemon` 顺序探测：
  * 已核实前者是真实导出面，先试它可避免每次装配都白 evaluate 一遍
  * `dsh-mnemon` 主入口的 core；后者保留为回退（宿主若将来重新导出也能命中）。
+ *
+ * 测试注入点 `importModule`：本仓库为让本包在 profile 里解析 peer，故意保留
+ * `node_modules/dsh-mnemon*` 两个 junction（生产需要），裸动态 import 永远成功，
+ * 「SDK 缺失」分支因此无法用 import 真实触发。注入一个解析必然失败的 importer，
+ * 才能在不改动 node_modules 布局的前提下真走这里的 catch 与
+ * `ProviderSdkUnavailableError`（见 `tests/module.test.ts`）。
  */
 
 import type { DefineMemorySpaceProvider } from './contract.js';
@@ -22,6 +28,11 @@ const SDK_CANDIDATES: string[] = [
   'dsh-mnemon-source-memory-spaces/provider-sdk',
   'dsh-mnemon',
 ];
+
+/** 把一个模块 specifier 解析成模块命名空间；默认实现就是原生动态 import。 */
+export type SdkModuleImporter = (specifier: string) => Promise<unknown>;
+
+export const defaultSdkModuleImporter: SdkModuleImporter = (specifier) => import(specifier);
 
 export class ProviderSdkUnavailableError extends Error {
   readonly attempts: string[];
@@ -36,12 +47,14 @@ export class ProviderSdkUnavailableError extends Error {
   }
 }
 
-export async function loadDefineMemorySpaceProvider(): Promise<DefineMemorySpaceProvider> {
+export async function loadDefineMemorySpaceProvider(
+  importModule: SdkModuleImporter = defaultSdkModuleImporter,
+): Promise<DefineMemorySpaceProvider> {
   const attempts: string[] = [];
   for (const specifier of SDK_CANDIDATES) {
     try {
       // 用变量做 specifier：TypeScript 不会在编译期解析它（本包没有装 peer）。
-      const loaded = (await import(specifier)) as Record<string, unknown>;
+      const loaded = (await importModule(specifier)) as Record<string, unknown>;
       const fromNamespace = loaded.defineMemorySpaceProvider;
       const defaultExport = loaded.default;
       const fromDefault =

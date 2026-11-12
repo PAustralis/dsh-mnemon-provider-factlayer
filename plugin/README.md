@@ -217,8 +217,11 @@ provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + fa
    `dsh-mnemon` → `dsh-mnemon-source-memory-spaces/provider-sdk` 顺序探测，两者都没有时抛
    「需要安装 dsh-mnemon」。`peerDependencies` 同时声明了这两个包（以及 `@deepseek-ai/cordis`）。
 2. **入口使用顶层 `await`**：动态 import 必须在模块求值期完成，default export 才能真正经过
-   `defineMemorySpaceProvider` 包装。Node ≥ 20 的 ESM loader 原生支持；本仓库不装 peer，
-   因此单测只能断言「失败文案」而不能断言成功装配（见 `tests/module.test.ts`）。
+   `defineMemorySpaceProvider` 包装。Node ≥ 20 的 ESM loader 原生支持；本仓库为让本包能在
+   profile 里解析 peer，`node_modules/dsh-mnemon` 与 `dsh-mnemon-source-memory-spaces` 保留为
+   指向 profile 的 junction（生产需要，不要删）。因此单测不再断言「裸 import 必失败」，而是
+   给 `loadEntryModule` 注入一个解析必然失败的 importer 来真测「SDK 不可解析」错误分支，
+   并在 peer 可解析时断言入口真的完成装配（见 `tests/module.test.ts`）。
 3. **未与真实 dsh-mnemon 装配联调**：本仓库按任务要求不安装 peer；`host.install` 的形状、
    `providerConnection` 的调用、`discover` 写 `connection` 都按 05/06 的源码行号实现，
    但「装进 profile 后 Memory 页真的出现空间」需要宿主环境验证。
