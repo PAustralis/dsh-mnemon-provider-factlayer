@@ -41,7 +41,7 @@ from pydantic import BaseModel, Field
 
 from .backup import BackupScheduler
 from .config import Config, load_config
-from .db import Database
+from .db import CHECKPOINT_MODES, Database
 from .derive import DerivePipeline
 from .embeddings import (
     EmbeddingConfigError,
@@ -52,6 +52,7 @@ from .embeddings import (
 )
 from .health import health_report
 from .health_cache import HealthCache
+from .maintenance import Maintenance, optimize_fts
 from .rebuild_gate import (
     REBUILDING_ERROR,
     REBUILDING_MESSAGE,
@@ -144,7 +145,10 @@ def create_app(
                 "EMBEDDING_BASE_URL 为空）；检索将降级 bigram"
             )
     validate_config(cfg, provider)
-    db = Database(db_path or cfg.db_path)
+    db = Database(
+        db_path or cfg.db_path,
+        wal_autocheckpoint_pages=cfg.wal_autocheckpoint_pages,
+    )
     # 先共用同一个向量内存矩阵，再构造流水线（构造函数不碰库）：这样 init_db 的
     # 迁移后强制重建能用上配置好的 embedding provider，派生 processor 与检索服务
     # 也共享同一个 VectorIndex（写事务提交后的增量刷新才有效）。
@@ -155,6 +159,7 @@ def create_app(
         embedding_provider=provider,
         embedding_dim=cfg.embedding_dim_int,
         vector_index=vector_index,
+        batch_size=cfg.derive_batch_size,
     )
     init_report = init_db(db, pipeline=pipeline)
     if init_report.rebuild_attempted:
@@ -175,6 +180,13 @@ def create_app(
         db,
         interval_seconds=cfg.backup_interval_seconds,
         keep=cfg.backup_keep,
+    )
+    # WAL 检查点与 FTS5 optimize 的后台策略（复用下面的 derive-backup-loop 线程）。
+    maintenance = Maintenance(
+        db,
+        checkpoint_interval_seconds=cfg.wal_checkpoint_interval_seconds,
+        checkpoint_idle_seconds=cfg.wal_checkpoint_idle_seconds,
+        fts_optimize_interval_seconds=cfg.fts_optimize_interval_seconds,
     )
     # 重建期闸门 + /health 快照缓存都在进程内：重建只有一个，/health 只读缓存。
     rebuild_gate = RebuildGate()
@@ -221,6 +233,15 @@ def create_app(
                 backup_scheduler.maybe_backup()
             except Exception as exc:  # 不吞异常：完整堆栈已在调度器内记日志，状态进 /health
                 logger.error("scheduled backup check failed: %s", exc)
+            # 维护动作互不影响，也不拖垮派生/备份：全部只记日志，状态进 /health。
+            try:
+                maintenance.maybe_checkpoint_truncate()
+            except Exception:
+                logger.exception("background wal checkpoint maintenance failed")
+            try:
+                maintenance.maybe_optimize_fts()
+            except Exception:
+                logger.exception("background fts optimize maintenance failed")
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -257,6 +278,7 @@ def create_app(
     app.state.config = cfg
     app.state.retrieval = retrieval
     app.state.backup_scheduler = backup_scheduler
+    app.state.maintenance = maintenance
     app.state.rebuild_gate = rebuild_gate
     app.state.health_cache = health_cache
     app.state.derive_loop_enabled = derive_loop_enabled
@@ -414,7 +436,37 @@ def create_app(
         with rebuild_gate.rebuilding():
             counts = pipeline.rebuild_all()
             retrieval.invalidate_caches()
-        return {"ok": True, "counts": counts}
+            # 重建后合并 FTS5 段；optimize 失败只记日志/写 /health，不让重建失败。
+            try:
+                fts_status = optimize_fts(db, reason="admin_rebuild")
+            except Exception:
+                logger.exception(
+                    "admin rebuild 后的 FTS5 optimize 失败（状态见 /health.fts_optimize）"
+                )
+                fts_status = {"ok": False, "errors": ["optimize failed"]}
+        return {"ok": True, "counts": counts, "fts_optimize": fts_status}
+
+    @app.post("/admin/checkpoint")
+    def admin_checkpoint(
+        request: Request,
+        mode: str = Query("PASSIVE"),
+    ) -> dict:
+        """手动 WAL 检查点（默认 PASSIVE，不阻塞读者）。
+
+        返回 ``{busy, log_pages, checkpointed_pages}``；busy=1 表示 TRUNCATE 被
+        读者/写者挡住（状态会进 ``/health.sqlite.last_checkpoint_error``），不是 500。
+        """
+        _require_admin(request)
+        normalized = mode.upper()
+        if normalized not in CHECKPOINT_MODES:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"未知 checkpoint mode={mode!r}；"
+                    f"可用：{', '.join(CHECKPOINT_MODES)}"
+                ),
+            )
+        return db.wal_checkpoint(normalized)
 
     @app.get("/admin/search")
     def admin_search(

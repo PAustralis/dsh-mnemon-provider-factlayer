@@ -366,6 +366,43 @@ def _assert_matches(
         )
 
 
+def write_embedding_rows(
+    conn: sqlite3.Connection,
+    rows: list[tuple[str, list[float]]],
+    *,
+    model_id: str,
+    configured_dim: int | None,
+    executemany=None,
+) -> int:
+    """在调用方事务内**批量**写入向量行 + 指纹；返回写入行数。
+
+    与 :func:`write_embedding_row` 等价，但用 ``executemany`` 一批写入，供派生
+    重建使用（``executemany`` 可注入 ``Database.executemany`` 以便测试统计）。
+    """
+    if not rows:
+        return 0
+    dim = len(rows[0][1])
+    if dim == 0:
+        raise RuntimeError("embedding 向量为空")
+    packed: list[tuple[str, bytes, str, int]] = []
+    for memory_id, vector in rows:
+        if len(vector) != dim:
+            raise RuntimeError(
+                f"embedding 向量维度不一致：{memory_id} {len(vector)} != {dim}"
+            )
+        packed.append((memory_id, pack_vector(vector), model_id, dim))
+    # 指纹只写一次（后续批次 _write_fingerprint 只做校验，幂等）。
+    _write_fingerprint(conn, model_id, dim, configured_dim)
+    run = executemany or conn.executemany
+    run(
+        conn,
+        "INSERT OR REPLACE INTO embeddings(memory_id, vector, model_id, dim) "
+        "VALUES (?, ?, ?, ?)",
+        packed,
+    )
+    return len(packed)
+
+
 def write_embedding_row(
     conn: sqlite3.Connection,
     memory_id: str,

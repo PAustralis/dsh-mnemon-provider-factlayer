@@ -488,6 +488,16 @@ def _rebuild_after_migration(
 
             pipeline = DerivePipeline(db, stub_success=True)
         outcome = pipeline.rebuild_after_migration()
+        # 重建写入大量 FTS5 行后合并段；失败只记日志/写 /health.fts_optimize，
+        # 绝不因为 optimize 失败而让启动重建整体失败。
+        try:
+            from .maintenance import optimize_fts
+
+            optimize_fts(db, reason="migration_rebuild")
+        except Exception:
+            logger.exception(
+                "迁移重建后的 FTS5 optimize 失败（状态见 /health.fts_optimize）"
+            )
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
         logger.error(

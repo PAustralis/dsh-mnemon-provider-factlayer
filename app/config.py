@@ -108,6 +108,13 @@ class Config:
     derive_loop_enabled: bool        # 是否启动后台派生循环线程
     derive_stub_success: bool        # 派生 stub 是否直接视为成功（未接真实 processor 的 stage）
 
+    # ---- SQLite 运维（2026-11-12） ----
+    wal_autocheckpoint_pages: int = 1000   # PRAGMA wal_autocheckpoint（页）
+    wal_checkpoint_interval_seconds: int = 300  # 后台 TRUNCATE 最小间隔；0 = 关闭
+    wal_checkpoint_idle_seconds: float = 60.0   # 距上次写入多久才算「无写入空闲」
+    fts_optimize_interval_seconds: int = 86400  # 后台 FTS5 optimize 间隔；0 = 关闭
+    derive_batch_size: int = 500                # 派生重建 executemany 每批行数
+
     # ---- 检索层：R1 向量 ----
     embedding_backend: str = "openai-compat"
     embedding_base_url: str = ""
@@ -195,6 +202,11 @@ class Config:
             "weak_best_rank": self.weak_best_rank,
             "auto_degrade": self.auto_degrade,
             "score_semantics": SCORE_SEMANTICS,
+            "wal_autocheckpoint_pages": self.wal_autocheckpoint_pages,
+            "wal_checkpoint_interval_seconds": self.wal_checkpoint_interval_seconds,
+            "wal_checkpoint_idle_seconds": self.wal_checkpoint_idle_seconds,
+            "fts_optimize_interval_seconds": self.fts_optimize_interval_seconds,
+            "derive_batch_size": self.derive_batch_size,
             "admin_token_set": bool(self.admin_token),
             "canary_enabled": self.canary_enabled,
             "canary_size": self.canary_size,
@@ -247,6 +259,19 @@ def load_config() -> Config:
         backup_interval_seconds=_env_int("DSH_BACKUP_INTERVAL_SECONDS", default=86400),
         derive_loop_enabled=_env_bool("DSH_DERIVE_LOOP_ENABLED", default=loop_default),
         derive_stub_success=_env_bool("DSH_DERIVE_STUB_SUCCESS", default=True),
+        wal_autocheckpoint_pages=_env_int(
+            "DSH_WAL_AUTOCHECKPOINT_PAGES", default=1000
+        ),
+        wal_checkpoint_interval_seconds=_env_int(
+            "DSH_WAL_CHECKPOINT_INTERVAL_SECONDS", default=300
+        ),
+        wal_checkpoint_idle_seconds=_env_float(
+            "DSH_WAL_CHECKPOINT_IDLE_SECONDS", default=60.0
+        ),
+        fts_optimize_interval_seconds=_env_int(
+            "DSH_FTS_OPTIMIZE_INTERVAL_SECONDS", default=86400
+        ),
+        derive_batch_size=_env_int("DSH_DERIVE_BATCH_SIZE", default=500),
         embedding_backend=embedding_backend,
         embedding_base_url=embedding_base_url,
         embedding_api_key=_env_raw(

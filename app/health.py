@@ -8,6 +8,7 @@ from . import voided as voided_mod
 from .contract import PROVIDER_MANIFEST
 from .db import Database
 from .derive import STAGES, DerivePipeline
+from .maintenance import fts_optimize_state
 from .schema import (
     MIGRATION_NEEDS_REBUILD_KEY,
     MIGRATION_REBUILD_KEY,
@@ -15,6 +16,22 @@ from .schema import (
 )
 
 LAST_BACKUP_AT_KEY = "last_backup_at"
+
+
+def sqlite_state(db: Database) -> dict:
+    """SQLite 文件/WAL/检查点可观测状态（后台快照里刷新）。"""
+    sizes = db.file_sizes()
+    checkpoint = db.checkpoint_state()
+    return {
+        "db_bytes": sizes["db_bytes"],
+        "wal_bytes": sizes["wal_bytes"],
+        "wal_autocheckpoint": db.wal_autocheckpoint_pages,
+        "last_checkpoint_at": checkpoint["last_checkpoint_at"],
+        "last_checkpoint_mode": checkpoint["last_checkpoint_mode"],
+        # 失败（尤其 TRUNCATE 被常驻读者挡住）必须可观测，不能静默。
+        "last_checkpoint_error": checkpoint["last_checkpoint_error"],
+        "last_checkpoint_result": checkpoint["last_checkpoint_result"],
+    }
 
 
 def last_backup_at(db: Database) -> int | None:
@@ -99,6 +116,8 @@ def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None,
         "migration_needs_rebuild": migration["needs_rebuild"],
         "migration": migration["last"],
         "index": index,
+        "sqlite": sqlite_state(db),
+        "fts_optimize": fts_optimize_state(db),
         "alerts": alerts,
     }
     if retrieval is not None:

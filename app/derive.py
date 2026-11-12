@@ -16,6 +16,7 @@ stage ∈ {fts, embedding, entity, graph}：
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 from typing import Callable
@@ -28,7 +29,7 @@ from .embeddings import (
     VectorIndex,
     redact_error,
     store_embedding,
-    write_embedding_row,
+    write_embedding_rows,
 )
 from .write_path import now_ms
 
@@ -36,6 +37,7 @@ logger = logging.getLogger("factlayer.derive")
 
 STAGES = ("fts", "embedding", "entity", "graph")
 BATCH_LIMIT = 50
+DEFAULT_BATCH_SIZE = 500
 
 # embedding 失败退避：1s / 2s / 4s … 上限 60s（连续第 3 次失败会先触发熔断）。
 EMBEDDING_BACKOFF_BASE_SECONDS = 1.0
@@ -112,6 +114,22 @@ def make_embedding_processor(
 
 
 class DerivePipeline:
+    @staticmethod
+    def _resolve_batch_size(batch_size: int | None) -> int:
+        """批大小：显式参数 > ``DSH_DERIVE_BATCH_SIZE`` > 500；非法值回退默认。"""
+        if batch_size is None:
+            raw = os.environ.get("DSH_DERIVE_BATCH_SIZE")
+            try:
+                batch_size = int(raw) if raw not in (None, "") else DEFAULT_BATCH_SIZE
+            except ValueError:
+                logger.warning(
+                    "DSH_DERIVE_BATCH_SIZE=%r 不是整数，回退默认 %d",
+                    raw,
+                    DEFAULT_BATCH_SIZE,
+                )
+                batch_size = DEFAULT_BATCH_SIZE
+        return max(1, int(batch_size))
+
     def __init__(
         self,
         db: Database,
@@ -121,12 +139,14 @@ class DerivePipeline:
         embedding_dim: int | None = None,
         fts_enabled: bool = True,
         vector_index: VectorIndex | None = None,
+        batch_size: int | None = None,
         clock: Callable[[], float] | None = None,
     ) -> None:
         self.db = db
         self.vector_index = vector_index
         self.embedding_provider = embedding_provider
         self.embedding_dim = embedding_dim
+        self.batch_size = self._resolve_batch_size(batch_size)
         self.failures: dict[str, int] = {stage: 0 for stage in STAGES}
         # 最近一次 embedding 派生失败的**脱敏**错误（/health 可读，不含 key）
         self.last_embedding_error: str | None = None
@@ -365,6 +385,38 @@ class DerivePipeline:
                 )
 
         counts = {stage: 0 for stage in STAGES}
+        # 先在事务外把三类派生行的参数算好，再在写事务里按 batch_size 用
+        # executemany 批量写入（避免逐条 INSERT 的 Python/SQLite 往返）。
+        done_at = now_ms()
+        ngram_rows: list[tuple[str, str]] = []
+        bigram_rows: list[tuple[int, str]] = []
+        trigram_rows: list[tuple[int, str]] = []
+        embedding_rows: list[tuple[str, list[float]]] = []
+        derive_rows_by_memory: list[list[tuple[str, str, int]]] = []
+        for memory in rows:
+            memory_id = memory["id"]
+            content = memory["content"]
+            rowid = int(memory["gseq"])
+            ngrams = textnorm.ngram_text(content)
+            trigram_text = textnorm.normalize(content)
+            ngram_rows.append((memory_id, ngrams))
+            bigram_rows.append((rowid, ngrams))
+            trigram_rows.append((rowid, trigram_text))
+            counts["fts"] += 1
+            if not skip_embedding:
+                if self.embedding_provider is not None:
+                    embedding_rows.append((memory_id, vectors[memory_id]))
+                counts["embedding"] += 1  # stub 语义：无 provider 视为完成
+            counts["entity"] += 1
+            counts["graph"] += 1
+            stages_done: list[tuple[str, str, int]] = []
+            for stage in STAGES:
+                if skip_embedding and stage == "embedding":
+                    continue  # 未派生：留空水位，/health 可见、后续 tick 可重试
+                stages_done.append((memory_id, stage, done_at))
+            derive_rows_by_memory.append(stages_done)
+
+        batches = 0
         with self.db.write_txn() as conn:
             conn.execute("DELETE FROM derive_state")
             conn.execute("DELETE FROM entities")
@@ -377,46 +429,51 @@ class DerivePipeline:
                 conn.execute(
                     "DELETE FROM meta WHERE key IN ('embedding_model','embedding_dim')"
                 )
-            done_at = now_ms()
-            for memory in rows:
-                memory_id = memory["id"]
-                content = memory["content"]
-                rowid = int(memory["gseq"])
-                ngrams = textnorm.ngram_text(content)
-                trigram_text = textnorm.normalize(content)
-                conn.execute(
+            total = len(rows)
+            for start in range(0, total, self.batch_size):
+                end = min(start + self.batch_size, total)
+                batches += 1
+                self.db.executemany(
+                    conn,
                     "INSERT INTO memories_ngrams(memory_id, ngram_text) VALUES (?, ?)",
-                    (memory_id, ngrams),
+                    ngram_rows[start:end],
                 )
-                conn.execute(
+                self.db.executemany(
+                    conn,
                     "INSERT INTO memories_fts_bigram(rowid, ngram_text) VALUES (?, ?)",
-                    (rowid, ngrams),
+                    bigram_rows[start:end],
                 )
-                conn.execute(
+                self.db.executemany(
+                    conn,
                     "INSERT INTO memories_fts_trigram(rowid, content) VALUES (?, ?)",
-                    (rowid, trigram_text),
+                    trigram_rows[start:end],
                 )
-                counts["fts"] += 1
-                if not skip_embedding:
-                    if self.embedding_provider is not None:
-                        write_embedding_row(
-                            conn,
-                            memory_id,
-                            vectors[memory_id],
-                            model_id=self.embedding_provider.model_id,
-                            configured_dim=self.embedding_dim,
-                        )
-                    counts["embedding"] += 1  # stub 语义：无 provider 视为完成
-                counts["entity"] += 1
-                counts["graph"] += 1
-                for stage in STAGES:
-                    if skip_embedding and stage == "embedding":
-                        continue  # 未派生：留空水位，/health 可见、后续 tick 可重试
-                    conn.execute(
-                        "INSERT OR REPLACE INTO derive_state(memory_id, stage, done_at) "
-                        "VALUES (?,?,?)",
-                        (memory_id, stage, done_at),
+                if not skip_embedding and self.embedding_provider is not None:
+                    write_embedding_rows(
+                        conn,
+                        embedding_rows[start:end],
+                        model_id=self.embedding_provider.model_id,
+                        configured_dim=self.embedding_dim,
+                        executemany=self.db.executemany,
                     )
+                derive_batch = [
+                    row
+                    for group in derive_rows_by_memory[start:end]
+                    for row in group
+                ]
+                self.db.executemany(
+                    conn,
+                    "INSERT OR REPLACE INTO derive_state(memory_id, stage, done_at) "
+                    "VALUES (?,?,?)",
+                    derive_batch,
+                )
+        logger.info(
+            "rebuild 批量写入：rows=%d batch_size=%d batches=%d "
+            "(ngrams/fts/embeddings/derive_state 均 executemany)",
+            total,
+            self.batch_size,
+            batches,
+        )
         if self.vector_index is not None:
             self.vector_index.invalidate()
         if not skip_embedding:
