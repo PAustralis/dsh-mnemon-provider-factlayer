@@ -15,9 +15,12 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger("factlayer.config")
 
 KNOWN_ROUTES = ("vector", "bigram", "trigram", "graph")
 # 2026-11-11 真实 embedding 重测：向量单路 R@6=0.8729（bigram 0.4875，等权融合
@@ -79,6 +82,25 @@ def _env_int(*names: str, default: int) -> int:
         return int(raw)
     except ValueError:
         return default
+
+
+def _env_non_negative_int(*names: str, default: int) -> int:
+    """读整数并要求 ≥ 0；负数记 warning 后回退默认值（与 ``db.py`` 同口径）。
+
+    ``DSH_WAL_AUTOCHECKPOINT_PAGES`` 有两个读取点：``Database`` 构造时自己读一次
+    环境变量，``load_config`` 又读一次并显式传进 ``Database``。两处语义必须一致，
+    否则同一个变量会出现「config 快照说负数、实际连接回退 1000」的分裂。
+    """
+    value = _env_int(*names, default=default)
+    if value < 0:
+        logger.warning(
+            "%s=%r 不能为负，回退默认 %d 页（与 Database 行为一致）",
+            names[0],
+            _env_raw(*names),
+            default,
+        )
+        return default
+    return value
 
 
 def _env_float(*names: str, default: float) -> float:
@@ -259,7 +281,7 @@ def load_config() -> Config:
         backup_interval_seconds=_env_int("DSH_BACKUP_INTERVAL_SECONDS", default=86400),
         derive_loop_enabled=_env_bool("DSH_DERIVE_LOOP_ENABLED", default=loop_default),
         derive_stub_success=_env_bool("DSH_DERIVE_STUB_SUCCESS", default=True),
-        wal_autocheckpoint_pages=_env_int(
+        wal_autocheckpoint_pages=_env_non_negative_int(
             "DSH_WAL_AUTOCHECKPOINT_PAGES", default=1000
         ),
         wal_checkpoint_interval_seconds=_env_int(

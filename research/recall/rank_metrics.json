@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-12T05:20:07.229683+00:00",
+ "generated_at": "2026-11-12T05:36:48.398087+00:00",
  "route": "vector",
  "final_k_prod": 4,
  "eval_final_k": 6,
@@ -17,7 +17,7 @@
   "cache_hits": 159,
   "cache_misses": 0,
   "api_calls": 0,
-  "note": "只读 .embedding_cache.json；不 import httpx、不构造 provider"
+  "note": "只读 .embedding_cache.json；不构造 provider、不发请求"
  },
  "metrics": {
   "r1": 0.34375,
@@ -201,7 +201,7 @@
     "rank": 9,
     "sim": 0.417428,
     "lex_overlap": 3,
-    "bigram_rank": null,
+    "bigram_rank": 1,
     "is_evidence": true,
     "scenario": 33,
     "raw_date": "2025",
@@ -287,7 +287,7 @@
     "rank": 5,
     "sim": 0.447941,
     "lex_overlap": 2,
-    "bigram_rank": null,
+    "bigram_rank": 3,
     "is_evidence": true,
     "scenario": 33,
     "raw_date": "2026-11-05",
@@ -332,7 +332,7 @@
     "rank": 6,
     "sim": 0.391179,
     "lex_overlap": 1,
-    "bigram_rank": null,
+    "bigram_rank": 3,
     "is_evidence": false,
     "scenario": 2,
     "raw_date": "2026-07-30",
@@ -461,7 +461,7 @@
     "rank": 8,
     "sim": 0.381572,
     "lex_overlap": 1,
-    "bigram_rank": null,
+    "bigram_rank": 3,
     "is_evidence": false,
     "scenario": 7,
     "raw_date": "2026-09-18",
@@ -547,7 +547,7 @@
     "rank": 7,
     "sim": 0.413568,
     "lex_overlap": 1,
-    "bigram_rank": null,
+    "bigram_rank": 2,
     "is_evidence": false,
     "scenario": 10,
     "raw_date": "日期不详",
@@ -1761,7 +1761,7 @@
      "raw_date": "2026-08-12",
      "text": "客厅空调调到 26 度刚刚好，一整天都舒服。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -1785,7 +1785,7 @@
      "raw_date": "2026-07-30",
      "text": "空调滤网该洗了，出风有股味。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": false,
      "category": "2_rank_5_20"
     }
@@ -1947,7 +1947,7 @@
      "raw_date": "2026-03-10",
      "text": "我的车是白色的 Model 3，提车那天还下了小雨。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -1959,7 +1959,7 @@
      "raw_date": "2026-09-02",
      "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     }
@@ -2035,7 +2035,7 @@
      "raw_date": "2026-06-11",
      "text": "我家那只橘猫叫「布丁」，特别能吃。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2165,7 +2165,7 @@
      "raw_date": "2026-05-09",
      "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 6,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2189,7 +2189,7 @@
      "raw_date": "2026-11-02",
      "text": "现在家里网络很稳，光猫换了之后没再出过问题。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 5,
      "is_evidence": true,
      "category": "hit"
     }
@@ -2261,7 +2261,7 @@
      "raw_date": "2026-09-18",
      "text": "体检预约在 9 月 28 日上午，空腹去。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": false,
      "category": "2_rank_5_20"
     },
@@ -2273,7 +2273,7 @@
      "raw_date": "2026-09-28",
      "text": "体检做完了，医生说血压 118/76，其他等报告。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 4,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2369,7 +2369,7 @@
      "raw_date": "2026-01-14",
      "text": "香菜我是真的受不了，闻到味道就难受。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2381,7 +2381,7 @@
      "raw_date": "2026-06-03",
      "text": "点外卖永远备注「不要香菜」，这习惯改不了。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 4,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2393,7 +2393,7 @@
      "raw_date": "2026-09-27",
      "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2405,7 +2405,7 @@
      "raw_date": "2025",
      "text": "火锅蘸料我从来不放香菜。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     }
@@ -2473,7 +2473,7 @@
      "raw_date": "2026-03-02",
      "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2485,7 +2485,7 @@
      "raw_date": "2026-08-14",
      "text": "物业重新分配车位，我的月租车位换到 B1 区 A17 了，离电梯近多了。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 4,
      "is_evidence": true,
      "category": "hit"
     }
@@ -2567,7 +2567,7 @@
      "raw_date": "日期不详",
      "text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 4,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2579,7 +2579,7 @@
      "raw_date": "日期不详",
      "text": "手机壳买厚一点，我老摔手机。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": false,
      "category": "2_rank_5_20"
     }
@@ -2647,7 +2647,7 @@
      "raw_date": "2026-05-12",
      "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2729,7 +2729,7 @@
      "raw_date": "2026-10-05",
      "text": "今天把阳台的绿萝搬到南边了，那边光照好。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2741,7 +2741,7 @@
      "raw_date": "2026-10-05",
      "text": "南边晒得太狠，绿萝叶子都蔫了，又搬回北阳台。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2753,7 +2753,7 @@
      "raw_date": "2026-09-11",
      "text": "给绿萝换了盆，根都长满了。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     }
@@ -2915,7 +2915,7 @@
      "raw_date": "2026-01-20",
      "text": "体检报告上写我是 O 型血。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -2927,7 +2927,7 @@
      "raw_date": "2026-08",
      "text": "我是 A 型血，献血的时候护士说的。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     }
@@ -3003,7 +3003,7 @@
      "raw_date": "2026-03-08",
      "text": "我对虾过敏，吃了会起疹子，挺严重的。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -3133,7 +3133,7 @@
      "raw_date": "2026-03-15",
      "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
      "lex_overlap": 6,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -3145,7 +3145,7 @@
      "raw_date": "2026-07-21",
      "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     },
@@ -3359,7 +3359,7 @@
      "raw_date": "2026-08-19",
      "text": "早上六点半起，出门前还能看二十分钟书。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 4,
      "is_evidence": true,
      "category": "hit"
     }
@@ -3427,7 +3427,7 @@
      "raw_date": "2025-12",
      "text": "我一般凌晨一点才睡，刷手机停不下来。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -3439,7 +3439,7 @@
      "raw_date": "2026-10-02",
      "text": "调整作息了，现在 23 点前必须上床，手机放客厅。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 6,
      "is_evidence": true,
      "category": "hit"
     }
@@ -3613,7 +3613,7 @@
      "raw_date": "2026-10-25",
      "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 8,
      "is_evidence": true,
      "category": "hit"
     }
@@ -3855,7 +3855,7 @@
      "raw_date": "2026-04-02",
      "text": "医生给我开了降压药，每天 5mg，早上吃。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -3867,7 +3867,7 @@
      "raw_date": "2026-10-19",
      "text": "降压药是 10mg 的，每天早上吃一片。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     }
@@ -3943,7 +3943,7 @@
      "raw_date": "2026-01-06",
      "text": "路由器挪到电视柜第二层了，信号比原来好。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4071,7 +4071,7 @@
      "raw_date": "2026-01-15",
      "text": "我一直以为季度奖是三个月工资，还跟老婆算了半天怎么花。",
      "lex_overlap": 4,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4153,7 +4153,7 @@
      "raw_date": "2026-02-18",
      "text": "续了车险，还是原来那家公司，三者险买到 300 万。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4247,7 +4247,7 @@
      "raw_date": "2026-03-02",
      "text": "现在每周去三次健身房，周一、三、五。",
      "lex_overlap": 4,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4259,7 +4259,7 @@
      "raw_date": "2026-06-18",
      "text": "一周三练已经固定下来了。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4271,7 +4271,7 @@
      "raw_date": "2026-09",
      "text": "最近还是保持每周去三次，练完拉伸十分钟。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     }
@@ -4433,7 +4433,7 @@
      "raw_date": "日期不详",
      "text": "公司给换了 ThinkPad，现在出门基本只带它。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4525,7 +4525,7 @@
      "raw_date": "2026-11-01",
      "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     }
@@ -4593,7 +4593,7 @@
      "raw_date": "2026-09-14",
      "text": "今天开始戒咖啡，改喝白开水，心跳快得受不了。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4605,7 +4605,7 @@
      "raw_date": "2026-09-14",
      "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "hit"
     }
@@ -4675,7 +4675,7 @@
      "raw_date": "2025",
      "text": "体检查出血脂偏高，医生让我少吃油腻。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "2_rank_5_20"
     },
@@ -4699,7 +4699,7 @@
      "raw_date": "2026-11-05",
      "text": "今年体检尿酸偏高，又开始忌口。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 3,
      "is_evidence": true,
      "category": "2_rank_5_20"
     }
@@ -4767,7 +4767,7 @@
      "raw_date": "2026-06-01",
      "text": "我家猫今年三岁，是只狸花。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4779,7 +4779,7 @@
      "raw_date": "2026-10-22",
      "text": "我家猫已经五岁了，精力还是很旺。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     }
@@ -4855,7 +4855,7 @@
      "raw_date": "2026-05-17",
      "text": "洗衣液一直买蓝月亮的，别的用不惯。",
      "lex_overlap": 2,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -4983,7 +4983,7 @@
      "raw_date": "2026-06-08",
      "text": "猫一直软便，我怀疑是猫粮的问题，换了两三种粮。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -5065,7 +5065,7 @@
      "raw_date": "2026-04-12",
      "text": "带猫去打了疫苗，是三联，加一针狂犬。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },
@@ -5077,7 +5077,7 @@
      "raw_date": "2026-04-12",
      "text": "疫苗一共花了 380，猫在诊室里一直叫。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 2,
      "is_evidence": true,
      "category": "hit"
     },
@@ -5251,7 +5251,7 @@
      "raw_date": "2026-01-12",
      "text": "每天三杯美式，早中晚各一杯。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 4,
      "is_evidence": true,
      "category": "hit"
     },
@@ -5263,7 +5263,7 @@
      "raw_date": "2026-11-03",
      "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
      "lex_overlap": 3,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     }
@@ -5333,7 +5333,7 @@
      "raw_date": "日期不详",
      "text": "我开车上班，走滨江路，四十分钟。",
      "lex_overlap": 1,
-     "bigram_rank": null,
+     "bigram_rank": 1,
      "is_evidence": true,
      "category": "hit"
     },

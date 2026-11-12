@@ -39,14 +39,14 @@ python -m app.main     # 等价入口，同样用工厂创建 app
 python -m pytest       # 运行测试
 ```
 
-`app.main` 不再在模块级创建 `app`（工厂模式）：`import app.main` 无副作用，不会在当前目录生成 `facts.db`。启动后后台线程每 `DSH_BACKUP_INTERVAL_SECONDS`（默认 86400，设 0 关闭）检查一次 `last_backup_at`，到期自动备份；备份失败会在 `/health` 的 `last_backup_error` / `backup_consecutive_failures` 暴露，完整堆栈只写服务端日志。同一后台线程还负责 SQLite 维护：无写入空闲时执行 WAL `TRUNCATE` 检查点（`DSH_WAL_CHECKPOINT_INTERVAL_SECONDS`/`DSH_WAL_CHECKPOINT_IDLE_SECONDS`），并按 `DSH_FTS_OPTIMIZE_INTERVAL_SECONDS`（默认 86400）执行 FTS5 optimize；两者失败只记日志并进 `/health`。
+`app.main` 不再在模块级创建 `app`（工厂模式）：`import app.main` 无副作用，不会在当前目录生成 `facts.db`。启动后后台线程每 `DSH_BACKUP_INTERVAL_SECONDS`（默认 86400，设 0 关闭）检查一次 `last_backup_at`，到期自动备份；备份失败会在 `/health` 的 `last_backup_error` / `backup_consecutive_failures` 暴露，完整堆栈只写服务端日志。同一后台线程还负责 SQLite 维护：无写入空闲时执行 WAL `TRUNCATE` 检查点（`DSH_WAL_CHECKPOINT_INTERVAL_SECONDS`/`DSH_WAL_CHECKPOINT_IDLE_SECONDS`），并按 `DSH_FTS_OPTIMIZE_INTERVAL_SECONDS`（默认 86400）执行 FTS5 optimize；两者失败只记日志并进 `/health`。派生、备份、检查点、optimize 任一开启就会启动该线程，`/health.maintenance` 可看到 `loop_enabled` 及两项维护的启用状态；全关时启动日志会写明「维护线程未启动」。「空闲 N 秒」是进程本地判定（用单调时钟），重启后视为从未写入。
 
 主要端点：`POST /memories`、`GET /memories/{id}`（全文）、`GET /memories?session_id=`（输出处截断至 1200 字符并标注）、`POST /supersedes`、`POST /search`、`GET /health`、`GET /spaces`（对接层 discover），以及 admin 端点 `GET /admin/search`（`include_superseded=1`，模型路径不可达）、`POST /admin/rebuild`（完成后自动 FTS5 optimize）、`POST /admin/checkpoint`（默认 `PASSIVE`；支持 `?mode=TRUNCATE`）、`POST /admin/canary`、`POST /admin/backup`。
 
 对接层（第三层，`plugin/`）的 shim 侧约定（docs/06 v3）：
 
 - **`GET /spaces`**：`[{"id": "<FACTLAYER_SPACE_ID>", "name": "factlayer"}]`，只读配置、O(1)，不查库。适配器的 `externalId` 与 `connection.memoryBodyId` 都取这个值。
-- **`GET /health` 是后台快照**：后台线程每 `HEALTH_REFRESH_SECONDS`（默认 5）刷新 pending / 索引缺口 / 备份状态 / 熔断 / 金丝雀，请求只读缓存（O(1)）；快照未就绪时返回 `{"status": "starting"}`，重建期带 `rebuilding: true`。快照还包含 `sqlite`（`db_bytes` / `wal_bytes` / `wal_autocheckpoint` / `last_checkpoint_at/mode/error`）与 `fts_optimize`（`last_at` / `last_error`）两个运维段。
+- **`GET /health` 是后台快照**：后台线程每 `HEALTH_REFRESH_SECONDS`（默认 5）刷新 pending / 索引缺口 / 备份状态 / 熔断 / 金丝雀，请求只读缓存（O(1)）；快照未就绪时返回 `{"status": "starting"}`，重建期带 `rebuilding: true`。快照还包含 `sqlite`（`db_bytes` / `wal_bytes` / `wal_autocheckpoint` / `last_checkpoint_at/mode/error`）、`fts_optimize`（`last_at` / `last_error`）与 `maintenance`（后台线程 `loop_enabled` + checkpoint/optimize 是否启用）三个运维段。
 - **重建期不静默返回部分结果**：`POST /admin/rebuild` 触发即置 rebuilding 标志，期间 `POST /search` 与 `/memories`（读/写）返回 `503 {"error":"rebuilding","message":"索引重建中，请稍后"}`，完成/失败后恢复。
 - **`/search` 不按 `session_id` 过滤**（session 只用于写入分组与会话展开），因此 A 机写入、B 机也能搜到。
 

@@ -93,7 +93,8 @@ class Database:
         self.last_checkpoint_mode: str | None = None
         self.last_checkpoint_error: str | None = None
         self.last_checkpoint_result: dict | None = None
-        self._last_write_monotonic = 0.0
+        # None = 本进程从未成功写过（不是「时间 0」）；进程重启后同样回到 None。
+        self._last_write_monotonic: float | None = None
         self._write_conn = self._new_conn()
         self._checkpoint_conn = self._new_conn(
             busy_timeout_ms=checkpoint_busy_timeout_ms
@@ -168,9 +169,14 @@ class Database:
         conn.executemany(sql, params)
 
     def seconds_since_last_write(self, now: float | None = None) -> float:
-        """距离最近一次成功 COMMIT 的秒数；从未写入过返回很大值（视为空闲）。"""
+        """距离最近一次成功 COMMIT 的秒数；**本进程**从未写入过返回 ``inf``。
+
+        判定基准是进程内单调时钟，因此「空闲 > N 秒」只在进程生命周期内成立：
+        重启后内存里的时间戳清零，会被视为「从未写入」（即已空闲），而不是
+        沿用库文件或墙钟上的历史写入时间。
+        """
         current = time.monotonic() if now is None else float(now)
-        if self._last_write_monotonic <= 0:
+        if self._last_write_monotonic is None:
             return float("inf")
         return max(0.0, current - self._last_write_monotonic)
 

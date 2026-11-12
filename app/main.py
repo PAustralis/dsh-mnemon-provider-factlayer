@@ -181,19 +181,35 @@ def create_app(
         interval_seconds=cfg.backup_interval_seconds,
         keep=cfg.backup_keep,
     )
+    # 派生循环、自动备份、WAL 检查点、FTS5 optimize 共用同一个后台线程：
+    # **任一开启**都要起线程，否则 derive=0 + backup=0 的合法部署（bigram-only
+    # 无备份）会让检查点与 optimize 一次都不跑且无任何告警。
+    # derive_loop_enabled 已由 config.load_config 按「vector + embedding 已配置」
+    # 默认开启（显式 DSH_DERIVE_LOOP_ENABLED=0 才关），否则写入后 embedding
+    # 永久 pending、默认向量路线永久降级（联调实测 P0）。
+    derive_loop_enabled = cfg.derive_loop_enabled
+    loop_needed = (
+        derive_loop_enabled
+        or cfg.backup_interval_seconds > 0
+        or cfg.wal_checkpoint_interval_seconds > 0
+        or cfg.fts_optimize_interval_seconds > 0
+    )
     # WAL 检查点与 FTS5 optimize 的后台策略（复用下面的 derive-backup-loop 线程）。
     maintenance = Maintenance(
         db,
         checkpoint_interval_seconds=cfg.wal_checkpoint_interval_seconds,
         checkpoint_idle_seconds=cfg.wal_checkpoint_idle_seconds,
         fts_optimize_interval_seconds=cfg.fts_optimize_interval_seconds,
+        loop_enabled=loop_needed,
     )
     # 重建期闸门 + /health 快照缓存都在进程内：重建只有一个，/health 只读缓存。
     rebuild_gate = RebuildGate()
 
     def _compute_health() -> dict:
         """/health 的全部昂贵统计：只在后台刷新线程（或启动 prime）里执行。"""
-        report = health_report(db, pipeline, backup_scheduler, retrieval)
+        report = health_report(
+            db, pipeline, backup_scheduler, retrieval, maintenance
+        )
         if cfg.canary_enabled:
             # 金丝雀查询不计入检索统计（直接走 bigram_route）
             try:
@@ -215,33 +231,35 @@ def create_app(
 
     stop_event = threading.Event()
     loop_thread: threading.Thread | None = None
-    # 派生循环与自动备份共用同一个后台线程：任一开启即启动。
-    # derive_loop_enabled 已由 config.load_config 按「vector + embedding 已配置」
-    # 默认开启（显式 DSH_DERIVE_LOOP_ENABLED=0 才关），否则写入后 embedding
-    # 永久 pending、默认向量路线永久降级（联调实测 P0）。
-    derive_loop_enabled = cfg.derive_loop_enabled
-    loop_needed = derive_loop_enabled or cfg.backup_interval_seconds > 0
 
     def _loop() -> None:
-        while not stop_event.wait(DERIVE_LOOP_INTERVAL_SECONDS):
-            if derive_loop_enabled:
+        try:
+            while not stop_event.wait(DERIVE_LOOP_INTERVAL_SECONDS):
+                if derive_loop_enabled:
+                    try:
+                        pipeline.tick()
+                    except Exception:  # 派生失败不拖垮备份检查
+                        logger.exception("derive loop tick failed")
                 try:
-                    pipeline.tick()
-                except Exception:  # 派生失败不拖垮备份检查
-                    logger.exception("derive loop tick failed")
+                    backup_scheduler.maybe_backup()
+                except Exception as exc:  # 不吞异常：完整堆栈已在调度器内记日志，状态进 /health
+                    logger.error("scheduled backup check failed: %s", exc)
+                # 维护动作互不影响，也不拖垮派生/备份：全部只记日志，状态进 /health。
+                try:
+                    maintenance.maybe_checkpoint_truncate()
+                except Exception:
+                    logger.exception("background wal checkpoint maintenance failed")
+                try:
+                    maintenance.maybe_optimize_fts()
+                except Exception:
+                    logger.exception("background fts optimize maintenance failed")
+        finally:
+            # 后台线程的 SQLite 读连接是 thread-local：必须在自己线程里关闭，
+            # 否则每次重起线程都会泄漏一个只读连接（与 health-cache 同口径）。
             try:
-                backup_scheduler.maybe_backup()
-            except Exception as exc:  # 不吞异常：完整堆栈已在调度器内记日志，状态进 /health
-                logger.error("scheduled backup check failed: %s", exc)
-            # 维护动作互不影响，也不拖垮派生/备份：全部只记日志，状态进 /health。
-            try:
-                maintenance.maybe_checkpoint_truncate()
+                db.close_thread_read_conn()
             except Exception:
-                logger.exception("background wal checkpoint maintenance failed")
-            try:
-                maintenance.maybe_optimize_fts()
-            except Exception:
-                logger.exception("background fts optimize maintenance failed")
+                logger.exception("background loop read connection close failed")
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -260,10 +278,24 @@ def create_app(
                     "deriveloop started (routes=%s)", ",".join(cfg.route_names)
                 )
             logger.info(
-                "background loop started (interval=%ss, derive=%s, backup_interval=%ss)",
+                "background loop started (interval=%ss, derive=%s, backup_interval=%ss, "
+                "wal_checkpoint_interval=%ss, fts_optimize_interval=%ss)",
                 DERIVE_LOOP_INTERVAL_SECONDS,
                 derive_loop_enabled,
                 cfg.backup_interval_seconds,
+                cfg.wal_checkpoint_interval_seconds,
+                cfg.fts_optimize_interval_seconds,
+            )
+        else:
+            # 全关也必须留痕：否则「检查点/optimize 从未运行」只能靠猜。
+            logger.info(
+                "维护线程未启动：derive=%s，backup_interval=%ss，"
+                "wal_checkpoint_interval=%ss，fts_optimize_interval=%ss；"
+                "checkpoint/optimize 均关闭",
+                derive_loop_enabled,
+                cfg.backup_interval_seconds,
+                cfg.wal_checkpoint_interval_seconds,
+                cfg.fts_optimize_interval_seconds,
             )
         yield
         health_cache.stop()
@@ -439,6 +471,8 @@ def create_app(
             # 重建后合并 FTS5 段；optimize 失败只记日志/写 /health，不让重建失败。
             try:
                 fts_status = optimize_fts(db, reason="admin_rebuild")
+                # 同步后台维护缓存：否则下一 tick 会按旧时间再 optimize 一遍。
+                maintenance.note_optimize_attempt()
             except Exception:
                 logger.exception(
                     "admin rebuild 后的 FTS5 optimize 失败（状态见 /health.fts_optimize）"

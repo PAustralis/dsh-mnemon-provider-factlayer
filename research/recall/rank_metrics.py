@@ -19,9 +19,11 @@ provider 契约的 ``FINAL_K`` 实际是 **4**（``docs/05`` 的返回条数）�
   + ``bm25 ASC, rowid ASC``，与 ``run_real_embedding.build_bigram_db`` 同构；
   构造器一致性做逐 token 冻结校验（不一致直接退出）。
 
-**钱**：本脚本不 import httpx、不构造 provider、不打开任何 socket。向量只从缓存
+**钱**：本脚本不构造 provider、不发任何网络请求、不打开 socket，向量只从缓存
 读；缓存缺一条就整体退出并报告缺哪条，绝不回落到联网补算。所以每次运行都是
 0 次 API 调用、0 token。命中率不是 100% 视为缓存损坏/模型变更，同样退出。
+（``httpx`` 会被 ``run_real_embedding`` 在 import 期一并载入，但这不等于联网：
+本脚本从不实例化 client，也就没有请求。）
 
 指标
 ----
@@ -33,7 +35,9 @@ provider 契约的 ``FINAL_K`` 实际是 **4**（``docs/05`` 的返回条数）�
 失败归因
 --------
 对每个「gold 不在 top-4」的 (query, gold) 对算四个机械特征：向量名次、余弦、
-与 query 的二元组词面交集、bigram 路名次。互斥分类：
+与 query 的二元组词面交集、bigram 路名次。**两种 route 都建 bigram 索引**：
+vector 路由下它是独立的交叉判据（否则 `bigram_rank` 恒为 None，① 的「bigram
+也搜不到」就只是没算过的假设）；bigram 路由下它就是主排序本身。互斥分类：
 
 - ①（无法召回）名次 > 20 且 词面交集 = 0 且 bigram 前 50 也搜不到；
 - ②（排序问题）名次在 5–20；
@@ -190,7 +194,7 @@ def build_matrix(
         "cache_hits": len(texts),
         "cache_misses": 0,
         "api_calls": 0,
-        "note": "只读 .embedding_cache.json；不 import httpx、不构造 provider",
+        "note": "只读 .embedding_cache.json；不构造 provider、不发请求",
     }
 
 
@@ -321,11 +325,12 @@ def main(argv: list[str] | None = None) -> int:
         f"（model={model}, dim={cache_meta['dim']}），本次 API 调用 0 次"
     )
 
-    con = build_bigram_index() if args.route == "bigram" else None
+    # 两种 route 都建：vector 路由下 bigram 名次是失败归因的独立交叉判据，
+    # 不能因为「主排序不是 bigram」就省掉（那会把「没算过」当成「搜不到」）。
+    con = build_bigram_index()
     bigram_cache: dict[str, list[int]] = {}
-    if con is not None:
-        for item in queries:
-            bigram_cache[item["q"]] = rank_bigram(con, item["q"])
+    for item in queries:
+        bigram_cache[item["q"]] = rank_bigram(con, item["q"])
 
     def _bigram_rank_of(query: str, doc: int) -> int | None:
         ranking = bigram_cache.get(query)
@@ -352,9 +357,7 @@ def main(argv: list[str] | None = None) -> int:
         for doc in gold:
             rank = position.get(doc)
             lex = len(set(bigrams_of(item["q"])) & set(bigrams_of(doc_texts[doc])))
-            bigram_rank = (
-                _bigram_rank_of(item["q"], doc) if con is not None else None
-            )
+            bigram_rank = _bigram_rank_of(item["q"], doc)
             entries.append(
                 {
                     "doc": doc,

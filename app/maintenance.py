@@ -156,23 +156,53 @@ class Maintenance:
         fts_optimize_interval_seconds: int = 86400,
         clock: Callable[[], float] | None = None,
         wall_clock: Callable[[], float] | None = None,
+        loop_enabled: bool = True,
     ) -> None:
         self.db = db
         self.checkpoint_interval_seconds = int(checkpoint_interval_seconds)
         self.checkpoint_idle_seconds = max(0.0, float(checkpoint_idle_seconds))
         self.fts_optimize_interval_seconds = int(fts_optimize_interval_seconds)
+        # 后台维护线程是否真的会被 app.main 启动（/health 用来回答「为什么没跑」）。
+        self.loop_enabled = bool(loop_enabled)
         self._clock = clock or time.monotonic
         self._wall_clock = wall_clock or time.time
         # 启动后先等一个完整间隔再尝试；有 meta 记录则按上次尝试续算。
+        # 两个间隔都只用单调时钟：墙钟回拨/校时不会让维护停摆或提前。
         self._last_checkpoint_attempt = self._clock()
         self._last_optimize_attempt = self._initial_optimize_attempt()
 
     def _initial_optimize_attempt(self) -> float:
-        """用 wall-clock 秒表示的上次 optimize 尝试时间（无记录 = 当前/已有值）。"""
+        """把 meta 里的 wall-clock 上次尝试时间一次性换算成单调时钟参照。
+
+        启动时只读一次 meta；之后 ``maybe_optimize_fts`` 不再查库（每 5s 一次的
+        后台 tick 不应产生额外 SELECT）。启动后 admin 重建刚做过 optimize 时，
+        调用方用 :meth:`note_optimize_attempt` 同步这个缓存。
+        """
+        now_mono = self._clock()
         raw = _meta_int(self.db, FTS_OPTIMIZE_LAST_ATTEMPT_KEY)
         if raw is None:
-            return getattr(self, "_last_optimize_attempt", self._wall_clock())
-        return raw / 1000.0
+            return now_mono
+        age = max(0.0, self._wall_clock() - raw / 1000.0)
+        return now_mono - age
+
+    def note_optimize_attempt(self) -> None:
+        """外部（admin rebuild 等）刚执行过 optimize：同步缓存，下一 tick 不重做。"""
+        self._last_optimize_attempt = self._clock()
+
+    def state(self) -> dict:
+        """``/health.maintenance``：后台维护线程与两项维护的启用状态。"""
+        return {
+            "loop_enabled": self.loop_enabled,
+            "checkpoint": {
+                "enabled": self.checkpoint_interval_seconds > 0,
+                "interval_seconds": self.checkpoint_interval_seconds,
+                "idle_seconds": self.checkpoint_idle_seconds,
+            },
+            "fts_optimize": {
+                "enabled": self.fts_optimize_interval_seconds > 0,
+                "interval_seconds": self.fts_optimize_interval_seconds,
+            },
+        }
 
     def maybe_checkpoint_truncate(self) -> dict | None:
         """无写入空闲且到期时执行 TRUNCATE；不满足条件或失败返回 None。"""
@@ -208,13 +238,10 @@ class Maintenance:
         """按 ``DSH_FTS_OPTIMIZE_INTERVAL_SECONDS`` 到期时执行一次 optimize。"""
         if self.fts_optimize_interval_seconds <= 0:
             return None
-        # admin 重建也会 optimize：以 meta 里的最近尝试为准，避免刚做过又做一遍。
-        last_attempt = max(
-            self._last_optimize_attempt,
-            self._initial_optimize_attempt(),
-        )
-        now = self._wall_clock()
-        if now - last_attempt < self.fts_optimize_interval_seconds:
+        # admin 重建也会 optimize：note_optimize_attempt() 会同步缓存，
+        # 这里只比较单调时钟，不每 tick 读 meta。
+        now = self._clock()
+        if now - self._last_optimize_attempt < self.fts_optimize_interval_seconds:
             return None
         self._last_optimize_attempt = now
         try:

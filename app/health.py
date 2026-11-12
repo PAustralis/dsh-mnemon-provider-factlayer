@@ -73,7 +73,13 @@ def index_row_counts(db: Database) -> dict:
     }
 
 
-def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None, retrieval=None) -> dict:
+def health_report(
+    db: Database,
+    pipeline: DerivePipeline,
+    backup_scheduler=None,
+    retrieval=None,
+    maintenance=None,
+) -> dict:
     """备份状态来自调度器；没有调度器（测试/只读用法）时报告「无失败」。
 
     检索层接入后（``retrieval`` 非 None）额外暴露（v8 §5/F）：
@@ -120,6 +126,10 @@ def health_report(db: Database, pipeline: DerivePipeline, backup_scheduler=None,
         "fts_optimize": fts_optimize_state(db),
         "alerts": alerts,
     }
+    if maintenance is not None:
+        # 「后台维护线程到底起没起、checkpoint/optimize 是否启用」必须可观测：
+        # 只靠日志无法在 /health 上回答「为什么这个库从不 checkpoint」。
+        report["maintenance"] = maintenance.state()
     if retrieval is not None:
         snapshot = retrieval.cfg.snapshot()
         snapshot["effective_routes"] = list(retrieval.routes)

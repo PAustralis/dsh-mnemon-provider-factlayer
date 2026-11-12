@@ -393,7 +393,9 @@ def write_embedding_rows(
         packed.append((memory_id, pack_vector(vector), model_id, dim))
     # 指纹只写一次（后续批次 _write_fingerprint 只做校验，幂等）。
     _write_fingerprint(conn, model_id, dim, configured_dim)
-    run = executemany or conn.executemany
+    # 默认路径必须直接调 conn.executemany(sql, params)：sqlite3.Connection 的绑定
+    # 方法不接受把 conn 再作为第一个参数传进来（否则 TypeError: expected 2 args）。
+    run = executemany or (lambda c, s, p: c.executemany(s, p))
     run(
         conn,
         "INSERT OR REPLACE INTO embeddings(memory_id, vector, model_id, dim) "

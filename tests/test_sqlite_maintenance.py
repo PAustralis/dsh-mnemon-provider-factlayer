@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from app.config import load_config
 from app.db import Database
 from app.derive import DerivePipeline
+from app.embeddings import write_embedding_rows
 from app.main import create_app
 from app.maintenance import Maintenance, optimize_fts
 from app.schema import init_db
@@ -93,6 +94,21 @@ def test_wal_autocheckpoint_defaults_to_1000(tmp_path, monkeypatch):
             database.read_conn.execute("PRAGMA wal_autocheckpoint").fetchone()[0]
             == 1000
         )
+    finally:
+        database.close()
+
+
+def test_negative_autocheckpoint_warns_and_falls_back(tmp_path, monkeypatch, caplog):
+    """config 与 Database 对同一个环境变量必须同口径：负数 → warning + 1000。"""
+    monkeypatch.setenv("DSH_WAL_AUTOCHECKPOINT_PAGES", "-5")
+    with caplog.at_level(logging.WARNING, logger="factlayer.config"):
+        cfg = load_config()
+    assert cfg.wal_autocheckpoint_pages == 1000
+    assert "不能为负" in caplog.text
+
+    database = Database(str(tmp_path / "wal-negative.db"))
+    try:
+        assert database.wal_autocheckpoint_pages == 1000
     finally:
         database.close()
 
@@ -314,7 +330,7 @@ def test_maintenance_optimize_respects_interval(db):
         db,
         checkpoint_interval_seconds=0,
         fts_optimize_interval_seconds=10,
-        wall_clock=lambda: now[0],
+        clock=lambda: now[0],
     )
     assert maintenance.maybe_optimize_fts() is None  # 启动时先等一个完整间隔
     now[0] = 111.0
@@ -322,6 +338,65 @@ def test_maintenance_optimize_respects_interval(db):
     assert result is not None and result["ok"] is True
     now[0] = 115.0
     assert maintenance.maybe_optimize_fts() is None  # 距上次不足 10s
+
+
+def test_optimize_uses_monotonic_clock_not_wall_clock(db):
+    """墙钟回拨/校时不得让 optimize 停摆：间隔只比较单调时钟（审查 #6）。
+
+    meta 里的上次尝试时间比当前墙钟"未来" 1000 秒（模拟校时前写入/回拨），
+    旧实现用 wall clock 会认为还没到期，一直不 optimize。
+    """
+    with db.write_txn() as conn:
+        conn.execute(
+            "INSERT INTO meta(key, value) VALUES(?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            ("fts_optimize_last_attempt_at", "2000000000"),
+        )
+    now = [100.0]
+    maintenance = Maintenance(
+        db,
+        checkpoint_interval_seconds=0,
+        fts_optimize_interval_seconds=10,
+        clock=lambda: now[0],
+        wall_clock=lambda: 1000.0,  # 比 meta 里的 2,000,000s 早得多
+    )
+    assert maintenance.maybe_optimize_fts() is None
+    now[0] = 111.0  # 单调钟走过完整的 10s 间隔
+    result = maintenance.maybe_optimize_fts()
+    assert result is not None, "间隔应按单调时钟判断，不能被墙钟回拨卡死"
+    assert result["ok"] is True
+
+
+def test_optimize_does_not_read_meta_on_every_tick(db, monkeypatch):
+    """meta 的上次 optimize 时间只在构造时读一次（审查 #3）。"""
+    maintenance = Maintenance(
+        db,
+        checkpoint_interval_seconds=0,
+        fts_optimize_interval_seconds=1000,
+        clock=lambda: 1.0,
+    )
+    import app.maintenance as maintenance_mod
+
+    calls: list[str] = []
+
+    def spy(database, key):
+        calls.append(key)
+        return None
+
+    monkeypatch.setattr(maintenance_mod, "get_meta", spy)
+    for _ in range(5):
+        assert maintenance.maybe_optimize_fts() is None
+    assert calls == [], f"每 tick 不应查询 meta：{calls}"
+
+
+def test_admin_rebuild_updates_maintenance_optimize_cache(client):
+    """admin 重建后同步缓存，避免下一 tick 按旧时间再 optimize 一遍（审查 #3）。"""
+    maintenance = client.app.state.maintenance
+    maintenance._clock = lambda: 4242.0
+    maintenance._last_optimize_attempt = 0.0
+    resp = client.post("/admin/rebuild")
+    assert resp.status_code == 200
+    assert maintenance._last_optimize_attempt == 4242.0
 
 
 # ---------------------------------------------------------------- 批量插入
@@ -422,6 +497,41 @@ def test_rebuild_batches_embedding_rows_with_provider(client, db, monkeypatch):
         "SELECT value FROM meta WHERE key='embedding_dim'"
     ).fetchone()
     assert store["value"] == "4"
+
+
+def test_write_embedding_rows_default_path_uses_conn_executemany(db):
+    """不传 executemany 时必须走 conn.executemany(sql, params)（审查 #1 回归）。"""
+    memory_ids = []
+    for i in range(2):
+        record = create_memory(
+            db,
+            client_write_id=f"cw-embed-default-{i}",
+            content=f"默认批量写向量 {i}",
+            session_id="s-embed-default",
+            source_client="t",
+        )
+        memory_ids.append(record["id"])
+    rows = [
+        (memory_ids[0], [1.0, 0.0, 0.0]),
+        (memory_ids[1], [0.0, 1.0, 0.0]),
+    ]
+    with db.write_txn() as conn:
+        written = write_embedding_rows(
+            conn, rows, model_id="fake-default", configured_dim=3
+        )
+    assert written == 2
+    stored = db.read_conn.execute(
+        "SELECT memory_id, model_id, dim FROM embeddings ORDER BY memory_id"
+    ).fetchall()
+    assert {
+        (row["memory_id"], row["model_id"], row["dim"]) for row in stored
+    } == {(memory_id, "fake-default", 3) for memory_id in memory_ids}
+    assert (
+        db.read_conn.execute(
+            "SELECT value FROM meta WHERE key='embedding_model'"
+        ).fetchone()["value"]
+        == "fake-default"
+    )
 
 
 def test_optimize_fts_direct_is_idempotent(db):
