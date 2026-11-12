@@ -1,0 +1,5 @@
+# LongMemEval 原始/转换数据：固定字节（不做 CRLF 归一化），
+# 否则 Windows 上 core.autocrlf=true 会把 LF 转成 CRLF，SHA256SUMS / manifest 的哈希就复算不出来。
+research/bench/raw/longmemeval/*.json -text
+research/bench/converted/*.jsonl -text
+research/bench/converted/samples/*.jsonl -text
