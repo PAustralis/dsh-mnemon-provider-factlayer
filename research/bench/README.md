@@ -3,6 +3,10 @@
 > 只做**数据下载 / 转换 / 自动校验**：没有改 `app/`、没有改 profile、没有跑评测。
 > 转换器：[`convert_longmemeval.py`](convert_longmemeval.py)　校验器：[`check_bank.py`](check_bank.py)
 > 报告：[`docs/14-LongMemEval题库转换报告.md`](../../docs/14-LongMemEval题库转换报告.md)
+>
+> **2026-11-12 glm 审查后修订**：s split 对重复 `haystack_session_ids` 去重（13 题、143 条重复
+> `fact_id` → 0）；结构校验覆盖 s（0 问题）；泄漏检查改为 470 道非 abs 题**全量**筛查，并产出
+> `converted/longmemeval_clean.jsonl` 干净子集。详见 `docs/14` §10 与本文 §6。
 
 ## 1. 来源、版本、许可
 
@@ -42,11 +46,13 @@ python research/bench/convert_longmemeval.py --split m --out research/bench/conv
 | `raw/longmemeval/longmemeval_s_cleaned.json` | 277.4 MB | ❌ gitignore | 原始文件（>50MB） |
 | `raw/longmemeval/SHA256SUMS` | — | ✅ | oracle/s 本地实测，m 为 LFS oid |
 | `converted/longmemeval.jsonl` | 16.5 MB | ✅ | **读者级题库**（oracle，500 题） |
-| `converted/local/longmemeval_s.jsonl` | 307.4 MB | ❌ gitignore | **证据级题库**（s，500 题）；`converted/local/` 整目录不入库 |
+| `converted/local/longmemeval_s.jsonl` | 307.3 MB | ❌ gitignore | **证据级题库**（s，500 题，去重后 246,595 轮）；`converted/local/` 整目录不入库 |
 | `converted/samples/longmemeval_s_first20.jsonl` | 11.8 MB | ✅ | s 的前 20 条转换结果（格式样本） |
-| `manifest.json` | 0.4 MB | ✅ | 逐题映射：kept/discarded、原因、fact 计数、split 用途、数据集元信息 |
-| `checks.json` | 70 KB | ✅ | 五组自动检查结果（覆盖 / 泄漏 / 重建 / 时间戳 / 语言） |
-| `.llm_cache_checks.json` | — | ❌ gitignore | LLM 调用缓存（160 次真实调用） |
+| `converted/longmemeval_clean.jsonl` | 11.3 MB | ✅ | **干净子集**（337/500 题；排除全量泄漏命中的 163 题，保留 30 道 abs） |
+| `manifest.json` | 0.4 MB | ✅ | 逐题映射 + `clean_set` + `leak_screening` |
+| `checks.json` | 480 KB | ✅ | 覆盖 / 全量泄漏 / 重建 / 时间戳 / 语言；逐题 `leak_suspected` |
+| `.llm_cache_checks.json` | — | ❌ gitignore | 抽样检查缓存（160 次首轮 + 90 次口径调试） |
+| `.llm_cache_bench_leak.json` | — | ❌ gitignore | 全量泄漏缓存（940 次调用，约 3.14M tokens） |
 
 大文件按仓库既有约定放 gitignore，仓库里留**哈希 + manifest + 样本**；README 给出重新下载/转换命令。
 
@@ -80,6 +86,9 @@ python research/bench/convert_longmemeval.py --split m --out research/bench/conv
 ```
 
 - `text` 只保留对话原文（user/assistant 的 `content`），不改写、不把答案塞进事实。
+- `fact_id = "{session_id}#t{turn}"` 在题内唯一：转换时对 `haystack_session_ids` **去重**（保留首次出现顺序）。
+  原始 s 有 13 题各带 1 个重复会话（共 143 条重复 `fact_id`，均为干扰会话、0 个 answer session），
+  去重后 gold 不变，s 事实数 246,738 → 246,595。
 - `date` 是**会话发生时间**（`date_kind=session_time`），不是文本里的事件时间；详见 `checks.json.timestamps`。
 - `gold_evidence_fact_ids` 由 `has_answer:true` 的**轮**定位；`answer_session_ids` 只用于校验落点。
   21 道 `_abs` 题在整份数据里没有任何 `has_answer:true` 轮，这类题改用 `answer_session_ids` 的
@@ -104,7 +113,7 @@ python research/bench/convert_longmemeval.py --split m --out research/bench/conv
 | split | 用途 | 每题规模 | 是否入库 |
 |---|---|---|---|
 | `oracle` | **读者级**：只含证据会话，测 reader 读证据 + 冲突/弃权处理 | 948 会话 / 10,960 轮（中位 23 轮/题，中位 2 条 gold） | ✅ |
-| `s` | **证据级**：含干扰，测检索 R@k（约 115k tokens/题） | 23,854 会话 / 246,738 轮（中位 48 会话、491 轮/题） | ❌ 本地 |
+| `s` | **证据级**：含干扰，测检索 R@k（约 115k tokens/题） | 23,854 个唯一会话 / 246,595 轮（中位 48 会话、491 轮/题） | ❌ 本地 |
 | `m` | 证据级（大规模，约 500 会话/题） | 2.7GB 原始；未转换 | ❌ 未下载 |
 
 **每个 split 都是 500 题、同一批 `question_id`**；gold 证据在三个 split 里完全一致
@@ -120,20 +129,31 @@ python research/bench/fetch_raw.py --files oracle s
 python research/bench/convert_longmemeval.py --split oracle
 python research/bench/convert_longmemeval.py --split s --out research/bench/converted/local/longmemeval_s.jsonl
 
-# 自动校验（--dry-run 只跑确定性部分；命中缓存 0 调用）
+# 自动校验：--dry-run 只跑确定性部分（oracle + s 结构校验，0 调用）；
+# 不带 --dry-run 会全量筛查 470 道非 abs 题（约 940 次调用），并写 clean.jsonl / manifest
 python research/bench/check_bank.py --dry-run
 python research/bench/check_bank.py --samples 30
+
+# 调试：只筛前 N 题，不写干净集
+python research/bench/check_bank.py --leak-limit 3
 ```
 
 ## 6. 自动校验结果（摘要）
 
 | 检查 | 结果 |
 |---|---|
-| 覆盖 | 500/500 转换成功，**0 丢弃**；结构校验 0 问题；21 题 abstention 用会话级回落（已标注） |
-| 答案泄漏（n=30，去 gold 轮后能答对） | **12/30 = 40%**（95% CI 24.6%–57.7%）；答案词主要来自 **assistant 复述**（44 处 vs user 24 处） |
+| 覆盖 + 结构 | 500/500 转换成功，**0 丢弃**；oracle 与 s 结构校验均 **0 问题**（含 fact_id 唯一、`distractor = facts − gold`）；21 题 abstention 用会话级回落（已标注） |
+| 答案泄漏（**全量 n=470**，去 gold 轮后能答对） | **163/470 = 34.68%**（95% CI 30.52%–39.09%）；初版抽样 n=30 为 12/30 = 40%；答案词主要来自 **assistant 复述**（528 处 vs user 262 处）；干净集 **337/500** |
 | 转换损坏（n=30，只给 gold 轮） | **6/30 = 20%**（95% CI 9.5%–37.3%）：2 道 multi-session 计数（gold 轮不足以推出答案）、4 道 preference（gold 答案是偏好元描述，通用判分偏严） |
 | 时间戳语义 | `session_time`：948/948 星期与日历一致、0 条晚于 `question_date`、386/387 条文本显式日期 ≠ 会话日期 |
 | 语言（n=10，中/英契约） | 中文契约 7/10、英文契约 6/10；一致 9/10（both correct 6、both wrong 3、zh-only 1），未观察到系统性语言效应 |
 
-调用与成本：首轮 **160 次** deepseek-flash 调用、271,535 prompt + 42,595 completion = **314,130 tokens**；
-重跑命中缓存 0 调用。逐题明细见 [`checks.json`](checks.json)，分析见 `docs/14`。
+**泄漏分类别**（全量）：knowledge-update 39/72（54.2%）、other 32/64（50.0%）、preference 13/30（43.3%）、
+multi-session 35/121（28.9%）、assistant 16/56（28.6%）、temporal 28/127（22.1%）。
+
+调用与成本：全量泄漏 **940 次** deepseek-flash 调用（934 次新调用 + 6 次命中 3 题冒烟缓存），
+2,851,565 prompt + 283,634 completion = **3,135,199 tokens**；缓存
+`.llm_cache_bench_leak.json`（gitignore），重跑 0 调用。抽样检查首轮 160 次 / 314,130 tokens
+（另有 90 次抽样口径调试调用）。账户余额实测 26.20 → 21.93 CNY（−4.27；21:24 后本地账本记录的其它
+DSH 模型调用约 0.32 CNY，故本脚本约 3.9 CNY）。逐题明细见 [`checks.json`](checks.json)，
+分析见 `docs/14` §10。

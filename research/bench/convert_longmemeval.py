@@ -242,9 +242,31 @@ def convert_item(item: dict, split: str, seq: int) -> tuple[dict | None, dict]:
     is_abs = str(qid).endswith("_abs")
     category = "abstention" if is_abs else TYPE_TO_CATEGORY.get(qtype, "other")
 
+    # 去重：同一 session_id 在 haystack_session_ids 里出现多次时只展开首次出现。
+    # 否则 fact_id="{session_id}#t{idx}" 会在题内重复，破坏事实层主键（s split 实测 13 题）。
+    # 重复会话都是干扰会话（0 个 answer session），去重不改变 gold，只减少 n_facts。
+    first_by_sid: dict[str, object] = {}
+    dedup_ids: list[str] = []
+    dedup_sessions: list = []
+    dedup_dates: list[str] = []
+    duplicate_sessions: list[dict] = []
+    duplicate_mismatch = 0
+    for sid, session, date_raw in zip(session_ids, sessions, session_dates):
+        if sid in first_by_sid:
+            if first_by_sid[sid] != session:
+                duplicate_mismatch += 1
+            duplicate_sessions.append(
+                {"session_id": sid, "turns": len(session) if isinstance(session, list) else 0}
+            )
+            continue
+        first_by_sid[sid] = session
+        dedup_ids.append(sid)
+        dedup_sessions.append(session)
+        dedup_dates.append(date_raw)
+
     facts: list[dict] = []
     bad_ts = 0
-    for sid, session, date_raw in zip(session_ids, sessions, session_dates):
+    for sid, session, date_raw in zip(dedup_ids, dedup_sessions, dedup_dates):
         date, _time = parse_ts(date_raw)
         if date is None:
             bad_ts += 1
@@ -258,7 +280,7 @@ def convert_item(item: dict, split: str, seq: int) -> tuple[dict | None, dict]:
         meta.update(status="discarded", discard_reason="no_turns")
         return None, meta
 
-    sid_set = set(session_ids)
+    sid_set = set(dedup_ids)
     answer_sid_set = set(answer_sids)
     unknown = answer_sid_set - sid_set
     if unknown:
@@ -307,8 +329,14 @@ def convert_item(item: dict, split: str, seq: int) -> tuple[dict | None, dict]:
         n_gold=len(gold),
         n_distractor=len(distractors),
         evidence_source=evidence_source,
-        n_sessions=len(sessions),
+        n_sessions=len(dedup_ids),
     )
+    if duplicate_sessions:
+        meta["duplicate_sessions_removed"] = len(duplicate_sessions)
+        meta["duplicate_session_ids"] = [d["session_id"] for d in duplicate_sessions]
+        meta["duplicate_session_turns_dropped"] = sum(d["turns"] for d in duplicate_sessions)
+        if duplicate_mismatch:
+            meta["duplicate_session_content_mismatches"] = duplicate_mismatch
     return converted, meta
 
 
@@ -329,7 +357,9 @@ def run_split(split: str, out_path: Path | None, manifest_only: bool = False) ->
     kept: list[dict] = []
     entries: list[dict] = []
     tmp = out_path.with_suffix(out_path.suffix + ".part")
-    with tmp.open("w", encoding="utf-8") as fh:
+    # 显式 LF：数据文件在 .gitattributes 里是 -text，换行必须由写入方固定，
+    # 否则 Windows 默认换行会让 SHA256 随平台变化（哈希不可复算）。
+    with tmp.open("w", encoding="utf-8", newline="\n") as fh:
         seq = 0
         for item in iter_json_array(raw):
             seq += 1
@@ -376,6 +406,11 @@ def run_split(split: str, out_path: Path | None, manifest_only: bool = False) ->
         "sum_facts": sum(r["n_facts"] for r in kept),
         "sum_gold": sum(r["n_gold"] for r in kept),
         "sum_distractor": sum(r["n_distractor"] for r in kept),
+        "sum_sessions": sum(e.get("n_sessions", 0) for e in entries if e["status"] == "kept"),
+        "duplicate_sessions_removed": sum(e.get("duplicate_sessions_removed", 0) for e in entries),
+        "questions_with_duplicate_sessions": sum(
+            1 for e in entries if e.get("duplicate_sessions_removed")
+        ),
     }
     return {"summary": summary, "entries": entries, "kept": kept}
 
@@ -401,20 +436,24 @@ def main() -> int:
     args = ap.parse_args()
 
     splits = ["oracle", "s", "m"] if args.split == "all" else [args.split]
-    manifest: dict = {
-        "generated_by": "research/bench/convert_longmemeval.py",
-        "source": "LongMemEval cleaned (xiaowu0162/longmemeval-cleaned)",
-        "dataset": DATASET,
-        "splits": {},
-        "records": {},
-    }
+    old: dict = {}
     if args.manifest.exists():
         try:
             old = json.loads(args.manifest.read_text(encoding="utf-8"))
-            manifest["records"] = old.get("records", {})
-            manifest["splits"] = old.get("splits", {})
         except Exception:  # noqa: BLE001
-            pass
+            old = {}
+    manifest: dict = {
+        **old,
+        "generated_by": "research/bench/convert_longmemeval.py",
+        "source": "LongMemEval cleaned (xiaowu0162/longmemeval-cleaned)",
+        "dataset": DATASET,
+        "splits": old.get("splits", {}),
+        "records": old.get("records", {}),
+    }
+    # 转换产物一旦变化，旧 clean_set / leak_screening 的哈希就不再对应；
+    # 这些字段由 check_bank.py 在筛查后重新写入，避免 manifest 里留下失效引用。
+    for stale in ("clean_set", "leak_screening", "eval_exclusions"):
+        manifest.pop(stale, None)
 
     for split in splits:
         out = args.out if args.split != "all" else None
@@ -429,6 +468,12 @@ def main() -> int:
         )
         if s["discard_reasons"]:
             print(f"   discard_reasons={s['discard_reasons']}", flush=True)
+        if s["duplicate_sessions_removed"]:
+            print(
+                f"   dedupe: {s['duplicate_sessions_removed']} duplicate sessions in "
+                f"{s['questions_with_duplicate_sessions']} questions removed",
+                flush=True,
+            )
         manifest["splits"][split] = s
         for e in result["entries"]:
             manifest["records"][e["id"]] = e
@@ -436,7 +481,7 @@ def main() -> int:
         if split in ("s", "m"):
             args.sample_dir.mkdir(parents=True, exist_ok=True)
             sample_path = args.sample_dir / f"longmemeval_{split}_first{args.sample_size}.jsonl"
-            with sample_path.open("w", encoding="utf-8") as fh:
+            with sample_path.open("w", encoding="utf-8", newline="\n") as fh:
                 for rec in result["kept"][: args.sample_size]:
                     fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
             s["sample_file"] = str(sample_path.relative_to(REPO_ROOT)).replace("\\", "/")
