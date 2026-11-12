@@ -23,7 +23,7 @@ python research/bench/fetch_raw.py --files oracle s m
 
 本次实测：直连可用（约 0.9 MB/s），oracle 15.4MB / 17s，s 277.4MB / 309s；内容长度与 HF 侧完全一致。
 
-**哈希口径**：HF 的 `ETag` 是 **xetHash，不是 sha256**（实测 oracle/s 的 ETag 与本地 sha256 都不同，见 `checks.json` 无关）。
+**哈希口径**：HF 的 `ETag` 是 **xetHash，不是 sha256**（实测 oracle/s 的 ETag 与本地 sha256 都不同；ETag 对应 HF tree API 里的 `xetHash` 字段）。
 权威 sha256 是 HF LFS oid，已用 tree API 核对：oracle/s 的 oid **等于**本地实测 sha256（`821a2034…` / `d6f21ea9…`），可作来源证明。
 `m` **没有下载**（2,737,100,077 bytes；step 2 不需要，转换产物约 3GB 无法入库），其权威 sha256 记录在
 [`raw/longmemeval/SHA256SUMS`](raw/longmemeval/SHA256SUMS) 的注释里（取自 LFS oid，本地未复算）。
