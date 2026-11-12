@@ -45,6 +45,10 @@ research/recall/.embedding_cache.tmp
 research/recall/.embedding_cache_indexv2.json
 research/recall/.embedding_cache_indexv2.tmp
 
+# LLM 判官 / 读者评测缓存（花钱产物，本地保留，不入库）
+research/recall/.llm_cache_*.json
+research/recall/.llm_cache_*.tmp
+
 # 编辑器 / 系统
 .idea/
 .vscode/

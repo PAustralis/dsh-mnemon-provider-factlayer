@@ -13,6 +13,10 @@
 | `real_embedding_results.json` | 真实 embedding 重测的全部指标、CI、成本、逐题明细、产品路径复算结果 |
 | `rank_metrics.py` | **生产口径 R@1/R@3/R@4/R@6/R@20/MRR + 逐题 gold 排名 + 失败归因**；只读缓存（0 次 API 调用），`--route vector\|bigram`、`--json` 落盘 |
 | `rank_metrics.json` | `rank_metrics.py --json` 的产物：主指标 + bootstrap CI + 逐题排名 + 33 条漏项逐条特征 + 人工证据标注 |
+| `evidence_labels.py` | **证据级自动标注**（docs/10）：答案文件判分要点 + 正文/元数据确定性匹配 + 可选 deepseek-flash 判官；输出 `evidence_labels.json` |
+| `evidence_labels.json` | 逐题答案要点、strict/judge/union 证据集、R@4/R@20、一致率、E 类、LLM usage |
+| `reader_eval.py` | **读者级端到端**（docs/10）：真实向量 top-4 → deepseek-flash reader → 三档判分；输出 `reader_eval.json` |
+| `reader_eval.json` | 逐题 top-4/回答/判分/证据覆盖 + 汇总 + token |
 | `index_text_eval.py` | **日期前缀配对评测**（docs/09）：同一批 119 语料 + 40 题，`raw_date → event_time` 真实入库，比较 v1 content-only 与 v2 日期前缀的 R@1/R@4/R@6/R@20、逐题名次、sid 33；新缓存 `.embedding_cache_indexv2.json` 与旧缓存隔离 |
 | `recall_eval.py` | 主实验：建临时 SQLite（FTS5 三套索引）→ 五路召回 → 31 种组合消融 → k/λ/T 扫描 → 自己写 `results.json` |
 | `make_report.py` | 把 `results.json` 填进 `REPORT.template.md` 的 `{{G1}}`…`{{G11}}` 占位符，渲染成 `REPORT.md` |
@@ -31,8 +35,12 @@ python make_report.py     # 渲染 REPORT.md
 python map_golden.py      # 可选：重跑映射诊断
 python run_real_embedding.py   # 真实 embedding 重测（联网、计费；向量按文本缓存，重跑 0 费用）
 python rank_metrics.py         # 生产口径 R@4/R@20 + 失败归因（只读缓存，0 调用、0 费用）
+python evidence_labels.py --judge --no-llm-extract   # 证据级标注（判官缓存命中后 0 调用）
+python reader_eval.py          # 读者级端到端（top-4 → reader → 判分；结果缓存）
 python index_text_eval.py      # 日期前缀配对评测（首轮 159 条计费，重跑 0 费用）
 ```
+
+报告：[`docs/10-证据级标注与读者指标.md`](../../docs/10-证据级标注与读者指标.md)。
 
 依赖：Python 3.7+（本机 3.14.7）、标准库 `sqlite3`（**需要 FTS5 且支持 `tokenize='trigram'`**，本机 SQLite 3.50.4）、`numpy`（`run_real_embedding.py` 另需 `httpx` 与仓库 `.env` 的 `EMBEDDING_*`）。
 除 `run_real_embedding.py` / `index_text_eval.py` 外无网络请求、不下载模型、不装重依赖；两个脚本的向量缓存在 `.embedding_cache*.json`（已 gitignore），删掉才会重新计费（`index_text_eval.py` 用独立的 `.embedding_cache_indexv2.json`）。

@@ -1,0 +1,10435 @@
+{
+ "generated_at": "2026-11-12T14:13:57+0800",
+ "supervision": {
+  "answer_key": "C:\\Users\\ZhaoY\\Desktop\\读者测试40-答案.md",
+  "answer_key_fields": [
+   "标准答案",
+   "可接受",
+   "不合格",
+   "类别",
+   "类别判分细则"
+  ],
+  "answer_key_scenes_parsed": 40,
+  "question_bank": "C:\\Users\\ZhaoY\\Desktop\\读者测试40-题库.md",
+  "question_bank_keyword_scan": {
+   "supporting_facts": false,
+   "supporting facts": false,
+   "答案": false,
+   "评分": false,
+   "标准答案": false
+  },
+  "question_bank_has_supporting_facts": false,
+  "grades_class_crosscheck": {
+   "path": "E:\\Tools\\projects\\dsh-mnemon-provider-graphiti\\research\\phase2\\grades.py",
+   "parsed": 40,
+   "mismatches": [],
+   "match": true,
+   "note": "只做类别交叉校验；grades.py 的 ✅/⚠️/❌ 是回答判分表，不是逐记录标签"
+  },
+  "note": "题库本身没有 supporting_facts/答案字段；逐题判分要点在答案文件里。grades.py / grades_new.py 只有回答级 ✅/⚠️/❌ 表与 CLASS 映射，不能当逐记录证据标签。"
+ },
+ "method": {
+  "strict": "答案要点（标准答案+可接受，去掉不合格里的单点否定）与正文+元数据匹配；正文要点优先，正文零命中时才单用日期要点",
+  "judge": "deepseek-flash，温度 0，3 票多数；prompt=judge-v1",
+  "union": "strict ∪ judge",
+  "unanswerable": [
+   7,
+   17,
+   27,
+   37
+  ],
+  "fallback_llm_extract": []
+ },
+ "cache": {
+  "cache_path": "E:\\dsh-mnemon-provider-graphiti\\research\\recall\\.embedding_cache.json",
+  "model": "qwen3.7-text-embedding",
+  "dim": 1024,
+  "docs": 119,
+  "queries": 40,
+  "cache_hits": 159,
+  "api_calls": 0
+ },
+ "metrics": {
+  "strict": {
+   "n_questions": 36,
+   "evidence_pairs": 63,
+   "r4_macro": 0.9722222222222222,
+   "r20_macro": 1.0,
+   "r4_pair": 0.9682539682539683,
+   "r20_pair": 1.0,
+   "hits4": 61,
+   "hits20": 63,
+   "per_question": [
+    {
+     "sid": 1,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      0,
+      1
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 2,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      2,
+      3
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 3,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      6,
+      7
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 4,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      8,
+      9
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 5,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      10
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 6,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      16
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 8,
+     "evidence_n": 4,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 4,
+     "hit20": 4,
+     "evidence_in_top4": [
+      23,
+      24,
+      25,
+      26
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 9,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      28
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 10,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      30
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 11,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      32
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 12,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      34,
+      35
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 13,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      38
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 14,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      40,
+      41
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 15,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      42
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 16,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      48,
+      49
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 18,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      55,
+      56,
+      57
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 19,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      59
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 20,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      61,
+      62
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 21,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      63,
+      64
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 22,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      65,
+      66
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 23,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      67,
+      68
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 24,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      70,
+      71
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 25,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      72
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 26,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      78
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 28,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      83,
+      84,
+      85
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 29,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      87
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 30,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      89
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 31,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      91,
+      92
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 32,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      93,
+      94
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 33,
+     "evidence_n": 2,
+     "r4": 0.0,
+     "r20": 1.0,
+     "hit4": 0,
+     "hit20": 2,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": [
+      95,
+      96
+     ]
+    },
+    {
+     "sid": 34,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      98,
+      99
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 35,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      100
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 36,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      106
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 38,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      111,
+      112,
+      113
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 39,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      115
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 40,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      116,
+      117,
+      118
+     ],
+     "evidence_missing_top4": []
+    }
+   ]
+  },
+  "judge": {
+   "n_questions": 35,
+   "evidence_pairs": 61,
+   "r4_macro": 0.9571428571428572,
+   "r20_macro": 1.0,
+   "r4_pair": 0.9672131147540983,
+   "r20_pair": 1.0,
+   "hits4": 59,
+   "hits20": 61,
+   "per_question": [
+    {
+     "sid": 1,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      0,
+      1
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 2,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      2,
+      3
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 4,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      8,
+      9
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 5,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      10
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 6,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      16
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 8,
+     "evidence_n": 4,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 4,
+     "hit20": 4,
+     "evidence_in_top4": [
+      23,
+      24,
+      25,
+      26
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 9,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      28
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 10,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      29,
+      30
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 11,
+     "evidence_n": 2,
+     "r4": 0.5,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 2,
+     "evidence_in_top4": [
+      32
+     ],
+     "evidence_missing_top4": [
+      33
+     ]
+    },
+    {
+     "sid": 12,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      34,
+      35
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 13,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      38
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 14,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      40,
+      41
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 15,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      42
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 16,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      48
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 18,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      55,
+      56,
+      57
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 19,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      58,
+      59
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 20,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      61
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 21,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      63,
+      64
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 22,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      65,
+      66
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 23,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      68
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 24,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      70,
+      71
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 25,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      72
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 26,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      78
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 28,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      83,
+      84,
+      85
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 29,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      87
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 30,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      88,
+      89
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 31,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      91,
+      92
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 32,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      93,
+      94
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 33,
+     "evidence_n": 1,
+     "r4": 0.0,
+     "r20": 1.0,
+     "hit4": 0,
+     "hit20": 1,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": [
+      95
+     ]
+    },
+    {
+     "sid": 34,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      98,
+      99
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 35,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      100
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 36,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      106
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 38,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      111,
+      112,
+      113
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 39,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      115
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 40,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      116,
+      117,
+      118
+     ],
+     "evidence_missing_top4": []
+    }
+   ]
+  },
+  "union": {
+   "n_questions": 36,
+   "evidence_pairs": 67,
+   "r4_macro": 0.9583333333333334,
+   "r20_macro": 1.0,
+   "r4_pair": 0.9552238805970149,
+   "r20_pair": 1.0,
+   "hits4": 64,
+   "hits20": 67,
+   "per_question": [
+    {
+     "sid": 1,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      0,
+      1
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 2,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      2,
+      3
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 3,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      6,
+      7
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 4,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      8,
+      9
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 5,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      10
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 6,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      16
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 8,
+     "evidence_n": 4,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 4,
+     "hit20": 4,
+     "evidence_in_top4": [
+      23,
+      24,
+      25,
+      26
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 9,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      28
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 10,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      29,
+      30
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 11,
+     "evidence_n": 2,
+     "r4": 0.5,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 2,
+     "evidence_in_top4": [
+      32
+     ],
+     "evidence_missing_top4": [
+      33
+     ]
+    },
+    {
+     "sid": 12,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      34,
+      35
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 13,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      38
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 14,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      40,
+      41
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 15,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      42
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 16,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      48,
+      49
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 18,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      55,
+      56,
+      57
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 19,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      58,
+      59
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 20,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      61,
+      62
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 21,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      63,
+      64
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 22,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      65,
+      66
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 23,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      67,
+      68
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 24,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      70,
+      71
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 25,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      72
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 26,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      78
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 28,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      83,
+      84,
+      85
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 29,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      87
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 30,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      88,
+      89
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 31,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      91,
+      92
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 32,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      93,
+      94
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 33,
+     "evidence_n": 2,
+     "r4": 0.0,
+     "r20": 1.0,
+     "hit4": 0,
+     "hit20": 2,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": [
+      95,
+      96
+     ]
+    },
+    {
+     "sid": 34,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      98,
+      99
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 35,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      100
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 36,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      106
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 38,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      111,
+      112,
+      113
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 39,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      115
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 40,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      116,
+      117,
+      118
+     ],
+     "evidence_missing_top4": []
+    }
+   ]
+  },
+  "strict_all40_with_empty_as_zero": {
+   "n_questions": 40,
+   "evidence_pairs": 63,
+   "r4_macro": 0.875,
+   "r20_macro": 0.9,
+   "r4_pair": 0.9682539682539683,
+   "r20_pair": 1.0,
+   "hits4": 61,
+   "hits20": 63,
+   "per_question": [
+    {
+     "sid": 1,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      0,
+      1
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 2,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      2,
+      3
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 3,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      6,
+      7
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 4,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      8,
+      9
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 5,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      10
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 6,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      16
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 7,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 8,
+     "evidence_n": 4,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 4,
+     "hit20": 4,
+     "evidence_in_top4": [
+      23,
+      24,
+      25,
+      26
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 9,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      28
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 10,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      30
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 11,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      32
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 12,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      34,
+      35
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 13,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      38
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 14,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      40,
+      41
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 15,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      42
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 16,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      48,
+      49
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 17,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 18,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      55,
+      56,
+      57
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 19,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      59
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 20,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      61,
+      62
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 21,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      63,
+      64
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 22,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      65,
+      66
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 23,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      67,
+      68
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 24,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      70,
+      71
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 25,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      72
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 26,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      78
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 27,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 28,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      83,
+      84,
+      85
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 29,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      87
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 30,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      89
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 31,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      91,
+      92
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 32,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      93,
+      94
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 33,
+     "evidence_n": 2,
+     "r4": 0.0,
+     "r20": 1.0,
+     "hit4": 0,
+     "hit20": 2,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": [
+      95,
+      96
+     ]
+    },
+    {
+     "sid": 34,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      98,
+      99
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 35,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      100
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 36,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      106
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 37,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 38,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      111,
+      112,
+      113
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 39,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      115
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 40,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      116,
+      117,
+      118
+     ],
+     "evidence_missing_top4": []
+    }
+   ]
+  },
+  "union_all40_with_empty_as_zero": {
+   "n_questions": 40,
+   "evidence_pairs": 67,
+   "r4_macro": 0.8625,
+   "r20_macro": 0.9,
+   "r4_pair": 0.9552238805970149,
+   "r20_pair": 1.0,
+   "hits4": 64,
+   "hits20": 67,
+   "per_question": [
+    {
+     "sid": 1,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      0,
+      1
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 2,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      2,
+      3
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 3,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      6,
+      7
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 4,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      8,
+      9
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 5,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      10
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 6,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      16
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 7,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 8,
+     "evidence_n": 4,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 4,
+     "hit20": 4,
+     "evidence_in_top4": [
+      23,
+      24,
+      25,
+      26
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 9,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      28
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 10,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      29,
+      30
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 11,
+     "evidence_n": 2,
+     "r4": 0.5,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 2,
+     "evidence_in_top4": [
+      32
+     ],
+     "evidence_missing_top4": [
+      33
+     ]
+    },
+    {
+     "sid": 12,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      34,
+      35
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 13,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      38
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 14,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      40,
+      41
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 15,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      42
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 16,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      48,
+      49
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 17,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 18,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      55,
+      56,
+      57
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 19,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      58,
+      59
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 20,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      61,
+      62
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 21,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      63,
+      64
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 22,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      65,
+      66
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 23,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      67,
+      68
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 24,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      70,
+      71
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 25,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      72
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 26,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      78
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 27,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 28,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      83,
+      84,
+      85
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 29,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      87
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 30,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      88,
+      89
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 31,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      91,
+      92
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 32,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      93,
+      94
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 33,
+     "evidence_n": 2,
+     "r4": 0.0,
+     "r20": 1.0,
+     "hit4": 0,
+     "hit20": 2,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": [
+      95,
+      96
+     ]
+    },
+    {
+     "sid": 34,
+     "evidence_n": 2,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 2,
+     "hit20": 2,
+     "evidence_in_top4": [
+      98,
+      99
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 35,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      100
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 36,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      106
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 37,
+     "evidence_n": 0,
+     "r4": 0.0,
+     "r20": 0.0,
+     "hit4": 0,
+     "hit20": 0,
+     "evidence_in_top4": [],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 38,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      111,
+      112,
+      113
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 39,
+     "evidence_n": 1,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 1,
+     "hit20": 1,
+     "evidence_in_top4": [
+      115
+     ],
+     "evidence_missing_top4": []
+    },
+    {
+     "sid": 40,
+     "evidence_n": 3,
+     "r4": 1.0,
+     "r20": 1.0,
+     "hit4": 3,
+     "hit20": 3,
+     "evidence_in_top4": [
+      116,
+      117,
+      118
+     ],
+     "evidence_missing_top4": []
+    }
+   ]
+  },
+  "manual_reference": {
+   "note": "rank_metrics.py 里的手工 EVIDENCE，仅作参照，不参与本次标注",
+   "metrics": {
+    "n_questions": 40,
+    "evidence_pairs": 88,
+    "r4_macro": 0.9666666666666666,
+    "r20_macro": 1.0,
+    "r4_pair": 0.9545454545454546,
+    "r20_pair": 1.0,
+    "hits4": 84,
+    "hits20": 88,
+    "per_question": [
+     {
+      "sid": 1,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       0,
+       1
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 2,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       2,
+       3
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 3,
+      "evidence_n": 3,
+      "r4": 0.6666666666666666,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 3,
+      "evidence_in_top4": [
+       6,
+       7
+      ],
+      "evidence_missing_top4": [
+       5
+      ]
+     },
+     {
+      "sid": 4,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       8,
+       9
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 5,
+      "evidence_n": 1,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 1,
+      "hit20": 1,
+      "evidence_in_top4": [
+       10
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 6,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       16,
+       17,
+       18
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 7,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       20,
+       21
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 8,
+      "evidence_n": 4,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 4,
+      "hit20": 4,
+      "evidence_in_top4": [
+       23,
+       24,
+       25,
+       26
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 9,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       27,
+       28
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 10,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       29,
+       30
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 11,
+      "evidence_n": 1,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 1,
+      "hit20": 1,
+      "evidence_in_top4": [
+       32
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 12,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       34,
+       35,
+       36
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 13,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       37,
+       38
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 14,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       40,
+       41
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 15,
+      "evidence_n": 1,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 1,
+      "hit20": 1,
+      "evidence_in_top4": [
+       42
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 16,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       48,
+       49
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 17,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       51,
+       52
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 18,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       55,
+       56,
+       57
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 19,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       58,
+       59
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 20,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       60,
+       61,
+       62
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 21,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       63,
+       64
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 22,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       65,
+       66
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 23,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       67,
+       68
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 24,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       70,
+       71
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 25,
+      "evidence_n": 1,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 1,
+      "hit20": 1,
+      "evidence_in_top4": [
+       72
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 26,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       78,
+       79
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 27,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       80,
+       81,
+       82
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 28,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       83,
+       84,
+       85
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 29,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       86,
+       87
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 30,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       88,
+       89,
+       90
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 31,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       91,
+       92
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 32,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       93,
+       94
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 33,
+      "evidence_n": 3,
+      "r4": 0.0,
+      "r20": 1.0,
+      "hit4": 0,
+      "hit20": 3,
+      "evidence_in_top4": [],
+      "evidence_missing_top4": [
+       95,
+       96,
+       97
+      ]
+     },
+     {
+      "sid": 34,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       98,
+       99
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 35,
+      "evidence_n": 1,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 1,
+      "hit20": 1,
+      "evidence_in_top4": [
+       100
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 36,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       106,
+       107
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 37,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       108,
+       109
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 38,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       111,
+       112,
+       113
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 39,
+      "evidence_n": 2,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 2,
+      "hit20": 2,
+      "evidence_in_top4": [
+       114,
+       115
+      ],
+      "evidence_missing_top4": []
+     },
+     {
+      "sid": 40,
+      "evidence_n": 3,
+      "r4": 1.0,
+      "r20": 1.0,
+      "hit4": 3,
+      "hit20": 3,
+      "evidence_in_top4": [
+       116,
+       117,
+       118
+      ],
+      "evidence_missing_top4": []
+     }
+    ]
+   },
+   "strict_agreement_pairs": {
+    "pairs": 88,
+    "agree": 63,
+    "rate": 0.7159090909090909
+   }
+  }
+ },
+ "agreement": {
+  "pair_total": 119,
+  "pair_agree": 109,
+  "pair_agree_rate": 0.9159663865546218,
+  "strict_only": 6,
+  "judge_only": 4,
+  "n_questions": 40,
+  "same_set": 31,
+  "mean_jaccard": 0.875,
+  "disagreements": [
+   {
+    "sid": 3,
+    "strict_only": [
+     6,
+     7
+    ],
+    "judge_only": [],
+    "unanswerable": false
+   },
+   {
+    "sid": 10,
+    "strict_only": [],
+    "judge_only": [
+     29
+    ],
+    "unanswerable": false
+   },
+   {
+    "sid": 11,
+    "strict_only": [],
+    "judge_only": [
+     33
+    ],
+    "unanswerable": false
+   },
+   {
+    "sid": 16,
+    "strict_only": [
+     49
+    ],
+    "judge_only": [],
+    "unanswerable": false
+   },
+   {
+    "sid": 19,
+    "strict_only": [],
+    "judge_only": [
+     58
+    ],
+    "unanswerable": false
+   },
+   {
+    "sid": 20,
+    "strict_only": [
+     62
+    ],
+    "judge_only": [],
+    "unanswerable": false
+   },
+   {
+    "sid": 23,
+    "strict_only": [
+     67
+    ],
+    "judge_only": [],
+    "unanswerable": false
+   },
+   {
+    "sid": 30,
+    "strict_only": [],
+    "judge_only": [
+     88
+    ],
+    "unanswerable": false
+   },
+   {
+    "sid": 33,
+    "strict_only": [
+     96
+    ],
+    "judge_only": [],
+    "unanswerable": false
+   }
+  ],
+  "note": "只计数，不裁决；strict-only/judge-only 不自动改判"
+ },
+ "usage": {
+  "judge": {
+   "prompt_tokens": 109134,
+   "completion_tokens": 83383,
+   "total_tokens": 192517
+  },
+  "fallback_extract": {
+   "prompt_tokens": 0,
+   "completion_tokens": 0,
+   "total_tokens": 0
+  }
+ },
+ "per_question": [
+  {
+   "sid": 1,
+   "cls": "B",
+   "cls_name": "补录旧事实",
+   "question": "我现在开的是什么车?",
+   "answer_points": {
+    "content": [
+     "2026 年 4 月换",
+     "比亚迪海豹",
+     "海豹",
+     "旧车"
+    ],
+    "dates": [
+     [
+      2026,
+      4,
+      null
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": [
+     "速腾",
+     "开海豹,速腾是以前那台"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 0,
+     "scenario": 1,
+     "raw_date": "2026-04-18",
+     "text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。"
+    },
+    {
+     "doc": 1,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     0,
+     1
+    ],
+    "match_reasons": {
+     "0": {
+      "content": [
+       "比亚迪海豹",
+       "海豹"
+      ],
+      "date": [
+       [
+        2026,
+        4,
+        null
+       ]
+      ]
+     },
+     "1": {
+      "content": [
+       "海豹"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     0,
+     1
+    ],
+    "votes": [
+     {
+      "sid": 1,
+      "doc_text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。",
+      "raw_date": "2026-04-18",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 996,
+       "completion_tokens": 400,
+       "total_tokens": 1396
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接说明2026年4月18日提回新车比亚迪海豹，可作为“现在开的是海豹”的答案依据。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 1,
+      "doc_text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+      "raw_date": "2026-10-07",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1020,
+       "completion_tokens": 488,
+       "total_tokens": 1508
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录明确说海豹是今年四月才换的，而2025年开的是旧速腾，能支撑现在开的是比亚迪海豹。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    0,
+    1
+   ],
+   "unanswerable": false,
+   "top4": [
+    1,
+    66,
+    0,
+    65
+   ],
+   "top4_detail": [
+    {
+     "doc": 1,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 66,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "车没卖，最后还是留着继续开，通勤没车太麻烦。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 0,
+     "scenario": 1,
+     "raw_date": "2026-04-18",
+     "text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 65,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "把车卖了，以后都坐地铁，省心。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    0,
+    1
+   ]
+  },
+  {
+   "sid": 2,
+   "cls": "G",
+   "cls_name": "同日期冲突",
+   "question": "我客厅空调一般开多少度?",
+   "answer_points": {
+    "content": [
+     "26 度",
+     "28 度"
+    ],
+    "dates": [
+     [
+      2026,
+      8,
+      12
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 2,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "客厅空调调到 26 度刚刚好，一整天都舒服。"
+    },
+    {
+     "doc": 3,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "26 度还是有点冷，改成 28 度了，这样才不冻脚。"
+    },
+    {
+     "doc": 4,
+     "scenario": 2,
+     "raw_date": "2026-07-30",
+     "text": "空调滤网该洗了，出风有股味。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     2,
+     3
+    ],
+    "match_reasons": {
+     "2": {
+      "content": [
+       "26 度"
+      ],
+      "date": [
+       [
+        2026,
+        8,
+        12
+       ]
+      ]
+     },
+     "3": {
+      "content": [
+       "26 度",
+       "28 度"
+      ],
+      "date": [
+       [
+        2026,
+        8,
+        12
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     2,
+     3
+    ],
+    "votes": [
+     {
+      "sid": 2,
+      "doc_text": "客厅空调调到 26 度刚刚好，一整天都舒服。",
+      "raw_date": "2026-08-12",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1020,
+       "completion_tokens": 746,
+       "total_tokens": 1766
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录是 2026-08-12“调到 26 度”的一方，属于构成同日记忆冲突所必需的一条，但不能单独确定最终设置。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 2,
+      "doc_text": "26 度还是有点冷，改成 28 度了，这样才不冻脚。",
+      "raw_date": "2026-08-12",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1035,
+       "completion_tokens": 979,
+       "total_tokens": 2014
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录是构成同一天26度与28度记忆冲突的必需一方，单独可支撑“无法确定”的判断。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 2,
+      "doc_text": "空调滤网该洗了，出风有股味。",
+      "raw_date": "2026-07-30",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 1014,
+       "completion_tokens": 353,
+       "total_tokens": 1367
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只提到空调滤网需要清洗和出风有异味，没有提供客厅空调温度设置信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    2,
+    3
+   ],
+   "unanswerable": false,
+   "top4": [
+    2,
+    3,
+    60,
+    104
+   ],
+   "top4_detail": [
+    {
+     "doc": 2,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "客厅空调调到 26 度刚刚好，一整天都舒服。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 3,
+     "scenario": 2,
+     "raw_date": "2026-08-12",
+     "text": "26 度还是有点冷，改成 28 度了，这样才不冻脚。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 60,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 104,
+     "scenario": 35,
+     "raw_date": "2026-07-04",
+     "text": "空调遥控器的电池该换了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    2,
+    3
+   ]
+  },
+  {
+   "sid": 3,
+   "cls": "H",
+   "cls_name": "粗粒度日期",
+   "question": "我 2026 年一共换了几次工作?",
+   "answer_points": {
+    "content": [
+     "8 月各一次",
+     "两次",
+     "2025 年那次入职不",
+     "2026 年内",
+     "明 3 月",
+     "8 月又从创业团队离开",
+     "8 月又",
+     "创业团队离开"
+    ],
+    "dates": [
+     [
+      2026,
+      3,
+      null
+     ],
+     [
+      2026,
+      8,
+      null
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 5,
+     "scenario": 3,
+     "raw_date": "2025",
+     "text": "入职了现在这家做 SaaS 的公司，做后端。"
+    },
+    {
+     "doc": 6,
+     "scenario": 3,
+     "raw_date": "2026-03",
+     "text": "从这家 SaaS 公司离职，去了朋友介绍的创业团队。"
+    },
+    {
+     "doc": 7,
+     "scenario": 3,
+     "raw_date": "2026-08-15",
+     "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     6,
+     7
+    ],
+    "match_reasons": {
+     "6": {
+      "content": [],
+      "date": [
+       [
+        2026,
+        3,
+        null
+       ]
+      ]
+     },
+     "7": {
+      "content": [],
+      "date": [
+       [
+        2026,
+        8,
+        null
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [],
+    "votes": [
+     {
+      "sid": 3,
+      "doc_text": "入职了现在这家做 SaaS 的公司，做后端。",
+      "raw_date": "2025",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 975,
+       "completion_tokens": 787,
+       "total_tokens": 1762
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明2025年入职SaaS公司，未提供2026年换工作的次数或关键时间点，无法支撑答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 3,
+      "doc_text": "从这家 SaaS 公司离职，去了朋友介绍的创业团队。",
+      "raw_date": "2026-03",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 984,
+       "completion_tokens": 730,
+       "total_tokens": 1714
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明2026年3月换了一次工作，无法单独推出全年共换两次，需要结合8月那次记录。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 3,
+      "doc_text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。",
+      "raw_date": "2026-08-15",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 987,
+       "completion_tokens": 719,
+       "total_tokens": 1706
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只提供2026年8月的一次跳槽，无法单独推出全年共换几次工作，需另一条记录补全3月那次。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    6,
+    7
+   ],
+   "unanswerable": false,
+   "top4": [
+    32,
+    33,
+    7,
+    6
+   ],
+   "top4_detail": [
+    {
+     "doc": 32,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 33,
+     "scenario": 11,
+     "raw_date": "2026-11-08",
+     "text": "补记一下，去年在美团那两年其实挺累的，天天加班。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 7,
+     "scenario": 3,
+     "raw_date": "2026-08-15",
+     "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。",
+     "strict_evidence": true,
+     "judge_evidence": false
+    },
+    {
+     "doc": 6,
+     "scenario": 3,
+     "raw_date": "2026-03",
+     "text": "从这家 SaaS 公司离职，去了朋友介绍的创业团队。",
+     "strict_evidence": true,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    6,
+    7
+   ]
+  },
+  {
+   "sid": 4,
+   "cls": "C",
+   "cls_name": "晚但记错",
+   "question": "我的车是什么颜色、什么型号?",
+   "answer_points": {
+    "content": [
+     "白色 Model 3",
+     "黑色 Model Y",
+     "不上",
+     "明可能"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 8,
+     "scenario": 4,
+     "raw_date": "2026-03-10",
+     "text": "我的车是白色的 Model 3，提车那天还下了小雨。"
+    },
+    {
+     "doc": 9,
+     "scenario": 4,
+     "raw_date": "2026-09-02",
+     "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     8,
+     9
+    ],
+    "match_reasons": {
+     "8": {
+      "content": [
+       "白色 Model 3"
+      ],
+      "date": []
+     },
+     "9": {
+      "content": [
+       "黑色 Model Y"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     8,
+     9
+    ],
+    "votes": [
+     {
+      "sid": 4,
+      "doc_text": "我的车是白色的 Model 3，提车那天还下了小雨。",
+      "raw_date": "2026-03-10",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1005,
+       "completion_tokens": 707,
+       "total_tokens": 1712
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录是记忆冲突的一方，直接给出“白色 Model 3”，与另一条记录共同构成无法确定的依据。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 4,
+      "doc_text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
+      "raw_date": "2026-09-02",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1005,
+       "completion_tokens": 612,
+       "total_tokens": 1617
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接给出“黑色 Model Y”，是构成白色 Model 3 与黑色 Model Y 记忆冲突、从而无法确定的必需一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    8,
+    9
+   ],
+   "unanswerable": false,
+   "top4": [
+    8,
+    9,
+    1,
+    0
+   ],
+   "top4_detail": [
+    {
+     "doc": 8,
+     "scenario": 4,
+     "raw_date": "2026-03-10",
+     "text": "我的车是白色的 Model 3，提车那天还下了小雨。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 9,
+     "scenario": 4,
+     "raw_date": "2026-09-02",
+     "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 1,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 0,
+     "scenario": 1,
+     "raw_date": "2026-04-18",
+     "text": "今天把新车提回来了，比亚迪海豹，开起来比原来那台安静太多。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    8,
+    9
+   ]
+  },
+  {
+   "sid": 5,
+   "cls": "I",
+   "cls_name": "无关干扰",
+   "question": "我家猫叫什么名字?",
+   "answer_points": {
+    "content": [
+     "橘猫",
+     "布丁",
+     "你家橘猫叫布丁"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 10,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。"
+    },
+    {
+     "doc": 11,
+     "scenario": 5,
+     "raw_date": "2026-02-03",
+     "text": "周末把阳台的纱窗换成了金刚网，防猫抓。"
+    },
+    {
+     "doc": 12,
+     "scenario": 5,
+     "raw_date": "2026-09-20",
+     "text": "买了台扫地机器人，猫一开始怕得不行。"
+    },
+    {
+     "doc": 13,
+     "scenario": 5,
+     "raw_date": "2025-12-08",
+     "text": "冰箱冷冻室结霜太厚，断电化了一下午。"
+    },
+    {
+     "doc": 14,
+     "scenario": 5,
+     "raw_date": "2026-05-15",
+     "text": "换了新的燃气灶，火明显比原来稳。"
+    },
+    {
+     "doc": 15,
+     "scenario": 5,
+     "raw_date": "2026-10-02",
+     "text": "楼下新开了家面馆，牛肉面还行。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     10
+    ],
+    "match_reasons": {
+     "10": {
+      "content": [
+       "橘猫",
+       "布丁"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     10
+    ],
+    "votes": [
+     {
+      "sid": 5,
+      "doc_text": "我家那只橘猫叫「布丁」，特别能吃。",
+      "raw_date": "2026-06-11",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 861,
+       "completion_tokens": 227,
+       "total_tokens": 1088
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明我家橘猫叫「布丁」，给出了问题所问的猫名字。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 5,
+      "doc_text": "周末把阳台的纱窗换成了金刚网，防猫抓。",
+      "raw_date": "2026-02-03",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 284,
+       "total_tokens": 1154
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到防猫抓，没有给出猫的名字，无法支撑答案“布丁”。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 5,
+      "doc_text": "买了台扫地机器人，猫一开始怕得不行。",
+      "raw_date": "2026-09-20",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 858,
+       "completion_tokens": 271,
+       "total_tokens": 1129
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"该记录只提到猫怕扫地机器人，并未给出猫的名字，无法支撑答案“布丁”。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 5,
+      "doc_text": "冰箱冷冻室结霜太厚，断电化了一下午。",
+      "raw_date": "2025-12-08",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 864,
+       "completion_tokens": 239,
+       "total_tokens": 1103
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只讲冰箱冷冻室化霜，完全未提及猫或猫的名字。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 5,
+      "doc_text": "换了新的燃气灶，火明显比原来稳。",
+      "raw_date": "2026-05-15",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 858,
+       "completion_tokens": 206,
+       "total_tokens": 1064
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只提到更换燃气灶，没有提供任何关于猫名字的信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 5,
+      "doc_text": "楼下新开了家面馆，牛肉面还行。",
+      "raw_date": "2026-10-02",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 858,
+       "completion_tokens": 267,
+       "total_tokens": 1125
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只提到新开面馆，未包含任何关于猫名字的信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    10
+   ],
+   "unanswerable": false,
+   "top4": [
+    98,
+    10,
+    91,
+    99
+   ],
+   "top4_detail": [
+    {
+     "doc": 98,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 10,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 91,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 99,
+     "scenario": 34,
+     "raw_date": "2026-10-22",
+     "text": "我家猫已经五岁了，精力还是很旺。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    10
+   ]
+  },
+  {
+   "sid": 6,
+   "cls": "D",
+   "cls_name": "历史信念",
+   "question": "五月那次家里断网,当时我以为是什么原因?",
+   "answer_points": {
+    "content": [
+     "路由器坏",
+     "器坏",
+     "路由器老化",
+     "老化",
+     "买新路由器之前认定"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "光猫问题",
+     "路由器",
+     "由器"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 16,
+     "scenario": 6,
+     "raw_date": "2026-05-09",
+     "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。"
+    },
+    {
+     "doc": 17,
+     "scenario": 6,
+     "raw_date": "2026-05-12",
+     "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。"
+    },
+    {
+     "doc": 18,
+     "scenario": 6,
+     "raw_date": "2026-11-02",
+     "text": "现在家里网络很稳，光猫换了之后没再出过问题。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     16
+    ],
+    "match_reasons": {
+     "16": {
+      "content": [
+       "路由器老化",
+       "老化"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     16
+    ],
+    "votes": [
+     {
+      "sid": 6,
+      "doc_text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
+      "raw_date": "2026-05-09",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 939,
+       "completion_tokens": 393,
+       "total_tokens": 1332
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明当时一开始认定断网原因是路由器老化。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 6,
+      "doc_text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。",
+      "raw_date": "2026-05-12",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 942,
+       "completion_tokens": 698,
+       "total_tokens": 1640
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说后来发现是光猫问题，并未表达“当时以为路由器老化/坏了”，属于后来查明事实而非当时信念。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 6,
+      "doc_text": "现在家里网络很稳，光猫换了之后没再出过问题。",
+      "raw_date": "2026-11-02",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 930,
+       "completion_tokens": 585,
+       "total_tokens": 1515
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明后来光猫换了网络变稳，未涉及五月当时以为的断网原因。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    16
+   ],
+   "unanswerable": false,
+   "top4": [
+    17,
+    16,
+    18,
+    72
+   ],
+   "top4_detail": [
+    {
+     "doc": 17,
+     "scenario": 6,
+     "raw_date": "2026-05-12",
+     "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 16,
+     "scenario": 6,
+     "raw_date": "2026-05-09",
+     "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 18,
+     "scenario": 6,
+     "raw_date": "2026-11-02",
+     "text": "现在家里网络很稳，光猫换了之后没再出过问题。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 72,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    16
+   ]
+  },
+  {
+   "sid": 7,
+   "cls": "E",
+   "cls_name": "配额截断",
+   "question": "我上次体检的尿酸值是多少?",
+   "answer_points": {
+    "content": [
+     "尿酸",
+     "血压 118"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "具体数值",
+     "数值"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 19,
+     "scenario": 7,
+     "raw_date": "2026-09-18",
+     "text": "体检预约在 9 月 28 日上午，空腹去。"
+    },
+    {
+     "doc": 20,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。"
+    },
+    {
+     "doc": 21,
+     "scenario": 7,
+     "raw_date": "2026-10-09",
+     "text": "报告出来了，医生让我少熬夜、少吃海鲜。"
+    },
+    {
+     "doc": 22,
+     "scenario": 7,
+     "raw_date": "2026-10-15",
+     "text": "开始每天走一万步，坚持了半个月。"
+    }
+   ],
+   "strict": {
+    "docs": [],
+    "match_reasons": {
+     "20": {
+      "content": [
+       "血压 118"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [],
+    "votes": [
+     {
+      "sid": 7,
+      "doc_text": "体检预约在 9 月 28 日上午，空腹去。",
+      "raw_date": "2026-09-18",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 981,
+       "completion_tokens": 410,
+       "total_tokens": 1391
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到体检预约时间和空腹要求，未提供任何尿酸数值，也不能说明记忆中没有尿酸值。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 7,
+      "doc_text": "体检做完了，医生说血压 118/76，其他等报告。",
+      "raw_date": "2026-09-28",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 981,
+       "completion_tokens": 1022,
+       "total_tokens": 2003
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到血压 118/76 和等报告，没有给出尿酸值，也不能直接支撑“没有记录”这一答案要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 7,
+      "doc_text": "报告出来了，医生让我少熬夜、少吃海鲜。",
+      "raw_date": "2026-10-09",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 969,
+       "completion_tokens": 562,
+       "total_tokens": 1531
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只提到医生建议少熬夜、少吃海鲜，没有给出尿酸值，也未明确说明记忆中没有尿酸记录。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 7,
+      "doc_text": "开始每天走一万步，坚持了半个月。",
+      "raw_date": "2026-10-15",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 966,
+       "completion_tokens": 323,
+       "total_tokens": 1289
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只讲每天走一万步，和体检尿酸值无关，无法支撑答案要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [],
+   "unanswerable": true,
+   "top4": [
+    97,
+    20,
+    96,
+    21
+   ],
+   "top4_detail": [
+    {
+     "doc": 97,
+     "scenario": 33,
+     "raw_date": "2026-11-05",
+     "text": "今年体检尿酸偏高，又开始忌口。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 20,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 96,
+     "scenario": 33,
+     "raw_date": "2026-03-20",
+     "text": "复查了，血脂已经正常。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 21,
+     "scenario": 7,
+     "raw_date": "2026-10-09",
+     "text": "报告出来了，医生让我少熬夜、少吃海鲜。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": []
+  },
+  {
+   "sid": 8,
+   "cls": "F",
+   "cls_name": "近似重复",
+   "question": "我吃香菜吗?",
+   "answer_points": {
+    "content": [
+     "香菜",
+     "很讨厌",
+     "讨厌",
+     "讨厌香菜"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "不吃香菜",
+     "不吃"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 23,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。"
+    },
+    {
+     "doc": 24,
+     "scenario": 8,
+     "raw_date": "2026-06-03",
+     "text": "点外卖永远备注「不要香菜」，这习惯改不了。"
+    },
+    {
+     "doc": 25,
+     "scenario": 8,
+     "raw_date": "2026-09-27",
+     "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。"
+    },
+    {
+     "doc": 26,
+     "scenario": 8,
+     "raw_date": "2025",
+     "text": "火锅蘸料我从来不放香菜。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     23,
+     24,
+     25,
+     26
+    ],
+    "match_reasons": {
+     "23": {
+      "content": [
+       "香菜"
+      ],
+      "date": []
+     },
+     "24": {
+      "content": [
+       "香菜"
+      ],
+      "date": []
+     },
+     "25": {
+      "content": [
+       "香菜",
+       "讨厌",
+       "讨厌香菜"
+      ],
+      "date": []
+     },
+     "26": {
+      "content": [
+       "香菜"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     23,
+     24,
+     25,
+     26
+    ],
+    "votes": [
+     {
+      "sid": 8,
+      "doc_text": "香菜我是真的受不了，闻到味道就难受。",
+      "raw_date": "2026-01-14",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 891,
+       "completion_tokens": 333,
+       "total_tokens": 1224
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接表明说话者受不了香菜、闻到就难受，足以支撑“不吃且讨厌香菜”的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 8,
+      "doc_text": "点外卖永远备注「不要香菜」，这习惯改不了。",
+      "raw_date": "2026-06-03",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 900,
+       "completion_tokens": 318,
+       "total_tokens": 1218
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接表明点外卖永远备注不要香菜，能支撑回答不吃香菜。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 8,
+      "doc_text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
+      "raw_date": "2026-09-27",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 906,
+       "completion_tokens": 416,
+       "total_tokens": 1322
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接表明“我这种讨厌香菜的”，即我讨厌香菜，足以支撑不吃香菜的结论。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 8,
+      "doc_text": "火锅蘸料我从来不放香菜。",
+      "raw_date": "2025",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 703,
+       "total_tokens": 1576
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接表明火锅蘸料从来不放香菜，可支撑“不吃香菜”的回答要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    23,
+    24,
+    25,
+    26
+   ],
+   "unanswerable": false,
+   "top4": [
+    23,
+    25,
+    24,
+    26
+   ],
+   "top4_detail": [
+    {
+     "doc": 23,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 25,
+     "scenario": 8,
+     "raw_date": "2026-09-27",
+     "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 24,
+     "scenario": 8,
+     "raw_date": "2026-06-03",
+     "text": "点外卖永远备注「不要香菜」，这习惯改不了。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 26,
+     "scenario": 8,
+     "raw_date": "2025",
+     "text": "火锅蘸料我从来不放香菜。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    }
+   ],
+   "evidence_in_top4": [
+    23,
+    24,
+    25,
+    26
+   ]
+  },
+  {
+   "sid": 9,
+   "cls": "A",
+   "cls_name": "正常更正",
+   "question": "我现在公司车位在哪儿?",
+   "answer_points": {
+    "content": [
+     "B1 区 A17",
+     "B1 区",
+     "3 月是 B2",
+     "8 月调",
+     "B1 A17"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "B2"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 27,
+     "scenario": 9,
+     "raw_date": "2026-03-02",
+     "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。"
+    },
+    {
+     "doc": 28,
+     "scenario": 9,
+     "raw_date": "2026-08-14",
+     "text": "物业重新分配车位，我的月租车位换到 B1 区 A17 了，离电梯近多了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     28
+    ],
+    "match_reasons": {
+     "28": {
+      "content": [
+       "B1 区 A17",
+       "B1 区"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     28
+    ],
+    "votes": [
+     {
+      "sid": 9,
+      "doc_text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
+      "raw_date": "2026-03-02",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 969,
+       "completion_tokens": 623,
+       "total_tokens": 1592
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"该记录只说2026年3月在B2区有固定车位，无法推出当前车位是B1区A17。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 9,
+      "doc_text": "物业重新分配车位，我的月租车位换到 B1 区 A17 了，离电梯近多了。",
+      "raw_date": "2026-08-14",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 993,
+       "completion_tokens": 373,
+       "total_tokens": 1366
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接说明我的月租车位已换到 B1 区 A17，足以回答当前车位位置。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    28
+   ],
+   "unanswerable": false,
+   "top4": [
+    27,
+    28,
+    9,
+    61
+   ],
+   "top4_detail": [
+    {
+     "doc": 27,
+     "scenario": 9,
+     "raw_date": "2026-03-02",
+     "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 28,
+     "scenario": 9,
+     "raw_date": "2026-08-14",
+     "text": "物业重新分配车位，我的月租车位换到 B1 区 A17 了，离电梯近多了。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 9,
+     "scenario": 4,
+     "raw_date": "2026-09-02",
+     "text": "我的车是黑色的 Model Y，停在地库最里面那个位置。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 61,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    28
+   ]
+  },
+  {
+   "sid": 10,
+   "cls": "J",
+   "cls_name": "无日期对照",
+   "question": "我现在用什么手机?",
+   "answer_points": {
+    "content": [
+     "Pixel 9",
+     "Pixel"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 29,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "我一直用 iPhone，习惯了。"
+    },
+    {
+     "doc": 30,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。"
+    },
+    {
+     "doc": 31,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "手机壳买厚一点，我老摔手机。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     30
+    ],
+    "match_reasons": {
+     "30": {
+      "content": [
+       "Pixel 9",
+       "Pixel"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     29,
+     30
+    ],
+    "votes": [
+     {
+      "sid": 10,
+      "doc_text": "我一直用 iPhone，习惯了。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1014,
+       "completion_tokens": 2977,
+       "total_tokens": 3991
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录是“一直用 iPhone”这一冲突方，与“换了新手机”构成无日期对照，是判断当前手机需确认的必需证据。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 10,
+      "doc_text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1041,
+       "completion_tokens": 1835,
+       "total_tokens": 2876
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明用户换了新手机且是 Pixel 9，能支撑答案要点，但日期不详需注意先后不可考。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 10,
+      "doc_text": "手机壳买厚一点，我老摔手机。",
+      "raw_date": "日期不详",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 1029,
+       "completion_tokens": 386,
+       "total_tokens": 1415
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"该记录只提到买厚手机壳和常摔手机，未给出当前使用的手机型号或可推断答案的关键信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    29,
+    30
+   ],
+   "unanswerable": false,
+   "top4": [
+    29,
+    30,
+    58,
+    89
+   ],
+   "top4_detail": [
+    {
+     "doc": 29,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "我一直用 iPhone，习惯了。",
+     "strict_evidence": false,
+     "judge_evidence": true
+    },
+    {
+     "doc": 30,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "换了新手机，是 Pixel 9，主要是想试试原生安卓。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 58,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 89,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    29,
+    30
+   ]
+  },
+  {
+   "sid": 11,
+   "cls": "B",
+   "cls_name": "补录旧事实",
+   "question": "我现在在哪家公司上班?",
+   "answer_points": {
+    "content": [
+     "2026 年 5 月跳",
+     "一家做推荐算法",
+     "11-08 那条说"
+    ],
+    "dates": [
+     [
+      2026,
+      5,
+      null
+     ],
+     [
+      2026,
+      11,
+      8
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": [
+     "美团",
+     "不在美团",
+     "美团",
+     "美团经历"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 32,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。"
+    },
+    {
+     "doc": 33,
+     "scenario": 11,
+     "raw_date": "2026-11-08",
+     "text": "补记一下，去年在美团那两年其实挺累的，天天加班。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     32
+    ],
+    "match_reasons": {
+     "32": {
+      "content": [
+       "一家做推荐算法"
+      ],
+      "date": [
+       [
+        2026,
+        5,
+        null
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     32,
+     33
+    ],
+    "votes": [
+     {
+      "sid": 11,
+      "doc_text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+      "raw_date": "2026-05-12",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 960,
+       "completion_tokens": 461,
+       "total_tokens": 1421
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明2026年5月跳槽后现在在一家做推荐算法的公司，支撑标准答案中当前公司的要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 11,
+      "doc_text": "补记一下，去年在美团那两年其实挺累的，天天加班。",
+      "raw_date": "2026-11-08",
+      "votes": [
+       "no",
+       "yes",
+       "yes"
+      ],
+      "yes": 2,
+      "no": 1,
+      "majority": "yes",
+      "confidence": 0.667,
+      "usage": {
+       "prompt_tokens": 966,
+       "completion_tokens": 1853,
+       "total_tokens": 2819
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说明去年在美团，未提供2026年5月后当前所在公司的信息，不能回答现在在哪家公司上班。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    32,
+    33
+   ],
+   "unanswerable": false,
+   "top4": [
+    32,
+    5,
+    61,
+    7
+   ],
+   "top4_detail": [
+    {
+     "doc": 32,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 5,
+     "scenario": 3,
+     "raw_date": "2025",
+     "text": "入职了现在这家做 SaaS 的公司，做后端。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 61,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 7,
+     "scenario": 3,
+     "raw_date": "2026-08-15",
+     "text": "创业团队撑不住了，我又跳到一家做跨境电商的公司。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    32
+   ]
+  },
+  {
+   "sid": 12,
+   "cls": "G",
+   "cls_name": "同日期冲突",
+   "question": "我家阳台那盆绿萝现在放在哪边?",
+   "answer_points": {
+    "content": [
+     "南边",
+     "北边",
+     "相同",
+     "未知"
+    ],
+    "dates": [
+     [
+      2026,
+      10,
+      5
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 34,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "今天把阳台的绿萝搬到南边了，那边光照好。"
+    },
+    {
+     "doc": 35,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "南边晒得太狠，绿萝叶子都蔫了，又搬回北阳台。"
+    },
+    {
+     "doc": 36,
+     "scenario": 12,
+     "raw_date": "2026-09-11",
+     "text": "给绿萝换了盆，根都长满了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     34,
+     35
+    ],
+    "match_reasons": {
+     "34": {
+      "content": [
+       "南边"
+      ],
+      "date": [
+       [
+        2026,
+        10,
+        5
+       ]
+      ]
+     },
+     "35": {
+      "content": [
+       "南边"
+      ],
+      "date": [
+       [
+        2026,
+        10,
+        5
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     34,
+     35
+    ],
+    "votes": [
+     {
+      "sid": 12,
+      "doc_text": "今天把阳台的绿萝搬到南边了，那边光照好。",
+      "raw_date": "2026-10-05",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 969,
+       "completion_tokens": 1366,
+       "total_tokens": 2335
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"这条记录是同日与另一条相反搬迁记录构成记忆冲突、从而只能回答“无法确定”的必需一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 12,
+      "doc_text": "南边晒得太狠，绿萝叶子都蔫了，又搬回北阳台。",
+      "raw_date": "2026-10-05",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 984,
+       "completion_tokens": 1613,
+       "total_tokens": 2597
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"这条记录是2026-10-05同一天绿萝位置冲突中“搬回北阳台”的一方，属于判断最终位置无法确定的必需记录。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 12,
+      "doc_text": "给绿萝换了盆，根都长满了。",
+      "raw_date": "2026-09-11",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 957,
+       "completion_tokens": 385,
+       "total_tokens": 1342
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说给绿萝换盆，未涉及阳台摆放位置，无法支撑判断绿萝现在在哪边。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    34,
+    35
+   ],
+   "unanswerable": false,
+   "top4": [
+    34,
+    35,
+    36,
+    72
+   ],
+   "top4_detail": [
+    {
+     "doc": 34,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "今天把阳台的绿萝搬到南边了，那边光照好。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 35,
+     "scenario": 12,
+     "raw_date": "2026-10-05",
+     "text": "南边晒得太狠，绿萝叶子都蔫了，又搬回北阳台。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 36,
+     "scenario": 12,
+     "raw_date": "2026-09-11",
+     "text": "给绿萝换了盆，根都长满了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 72,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    34,
+    35
+   ]
+  },
+  {
+   "sid": 13,
+   "cls": "H",
+   "cls_name": "粗粒度日期",
+   "question": "我 2026 年买的那台相机是什么型号?",
+   "answer_points": {
+    "content": [
+     "2026 年入手",
+     "富士 X-T5",
+     "2025 年 12 月买",
+     "X-T5"
+    ],
+    "dates": [
+     [
+      2025,
+      12,
+      null
+     ],
+     [
+      2026,
+      5,
+      null
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": [
+     "索尼 A7C"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 37,
+     "scenario": 13,
+     "raw_date": "2025-12-20",
+     "text": "买了台索尼 A7C，配了个 35mm 定焦。"
+    },
+    {
+     "doc": 38,
+     "scenario": 13,
+     "raw_date": "2026",
+     "text": "今年入手了富士 X-T5，主要是喜欢它的直出色彩。"
+    },
+    {
+     "doc": 39,
+     "scenario": 13,
+     "raw_date": "2026-10-08",
+     "text": "又添了一颗 56mm 镜头，拍人像用。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     38
+    ],
+    "match_reasons": {
+     "38": {
+      "content": [
+       "富士 X-T5",
+       "X-T5"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     38
+    ],
+    "votes": [
+     {
+      "sid": 13,
+      "doc_text": "买了台索尼 A7C，配了个 35mm 定焦。",
+      "raw_date": "2025-12-20",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 921,
+       "completion_tokens": 1355,
+       "total_tokens": 2276
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明 2025-12-20 买了索尼 A7C，并不能推出 2026 年买的相机型号是富士 X-T5。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 13,
+      "doc_text": "今年入手了富士 X-T5，主要是喜欢它的直出色彩。",
+      "raw_date": "2026",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 906,
+       "completion_tokens": 338,
+       "total_tokens": 1244
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录明确说明2026年入手了富士X-T5，直接对应问题所需的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 13,
+      "doc_text": "又添了一颗 56mm 镜头，拍人像用。",
+      "raw_date": "2026-10-08",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 918,
+       "completion_tokens": 362,
+       "total_tokens": 1280
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到 2026 年添置了 56mm 镜头，并未给出相机的品牌或型号。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    38
+   ],
+   "unanswerable": false,
+   "top4": [
+    39,
+    38,
+    37,
+    1
+   ],
+   "top4_detail": [
+    {
+     "doc": 39,
+     "scenario": 13,
+     "raw_date": "2026-10-08",
+     "text": "又添了一颗 56mm 镜头，拍人像用。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 38,
+     "scenario": 13,
+     "raw_date": "2026",
+     "text": "今年入手了富士 X-T5，主要是喜欢它的直出色彩。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 37,
+     "scenario": 13,
+     "raw_date": "2025-12-20",
+     "text": "买了台索尼 A7C，配了个 35mm 定焦。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 1,
+     "scenario": 1,
+     "raw_date": "2026-10-07",
+     "text": "补记一句，2025 年那会儿我还开着那台老速腾，海豹是今年四月才换的。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    38
+   ]
+  },
+  {
+   "sid": 14,
+   "cls": "C",
+   "cls_name": "晚但记错",
+   "question": "我是什么血型?",
+   "answer_points": {
+    "content": [
+     "O 型",
+     "A 型"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 40,
+     "scenario": 14,
+     "raw_date": "2026-01-20",
+     "text": "体检报告上写我是 O 型血。"
+    },
+    {
+     "doc": 41,
+     "scenario": 14,
+     "raw_date": "2026-08",
+     "text": "我是 A 型血，献血的时候护士说的。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     40,
+     41
+    ],
+    "match_reasons": {
+     "40": {
+      "content": [
+       "O 型"
+      ],
+      "date": []
+     },
+     "41": {
+      "content": [
+       "A 型"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     40,
+     41
+    ],
+    "votes": [
+     {
+      "sid": 14,
+      "doc_text": "体检报告上写我是 O 型血。",
+      "raw_date": "2026-01-20",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 912,
+       "completion_tokens": 1107,
+       "total_tokens": 2019
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接给出 O 型血，是构成血型记录冲突（O 型 vs A 型）的必要一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 14,
+      "doc_text": "我是 A 型血，献血的时候护士说的。",
+      "raw_date": "2026-08",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 909,
+       "completion_tokens": 1077,
+       "total_tokens": 1986
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接给出血型为 A 型，是构成“O 型 vs A 型”记忆冲突的必需一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    40,
+    41
+   ],
+   "unanswerable": false,
+   "top4": [
+    40,
+    41,
+    20,
+    25
+   ],
+   "top4_detail": [
+    {
+     "doc": 40,
+     "scenario": 14,
+     "raw_date": "2026-01-20",
+     "text": "体检报告上写我是 O 型血。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 41,
+     "scenario": 14,
+     "raw_date": "2026-08",
+     "text": "我是 A 型血，献血的时候护士说的。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 20,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 25,
+     "scenario": 8,
+     "raw_date": "2026-09-27",
+     "text": "朋友说香菜是基因问题，我这种讨厌香菜的应该就是。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    40,
+    41
+   ]
+  },
+  {
+   "sid": 15,
+   "cls": "I",
+   "cls_name": "无关干扰",
+   "question": "我对什么食物过敏?",
+   "answer_points": {
+    "content": [
+     "甲壳类",
+     "壳类",
+     "虾",
+     "对虾过敏",
+     "对虾"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 42,
+     "scenario": 15,
+     "raw_date": "2026-03-08",
+     "text": "我对虾过敏，吃了会起疹子，挺严重的。"
+    },
+    {
+     "doc": 43,
+     "scenario": 15,
+     "raw_date": "2026-07-19",
+     "text": "新买的净水器滤芯三个月就得换一次。"
+    },
+    {
+     "doc": 44,
+     "scenario": 15,
+     "raw_date": "2025-11-02",
+     "text": "公司楼下那家咖啡店的美式太淡了。"
+    },
+    {
+     "doc": 45,
+     "scenario": 15,
+     "raw_date": "2026-01-30",
+     "text": "把卧室的窗帘换成了遮光的，睡眠好多了。"
+    },
+    {
+     "doc": 46,
+     "scenario": 15,
+     "raw_date": "2026-09-05",
+     "text": "电动车电池冬天掉电太快。"
+    },
+    {
+     "doc": 47,
+     "scenario": 15,
+     "raw_date": "2026-02-22",
+     "text": "周末把书架重新装了一遍，书终于有地方放了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     42
+    ],
+    "match_reasons": {
+     "42": {
+      "content": [
+       "虾",
+       "对虾过敏",
+       "对虾"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     42
+    ],
+    "votes": [
+     {
+      "sid": 15,
+      "doc_text": "我对虾过敏，吃了会起疹子，挺严重的。",
+      "raw_date": "2026-03-08",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 289,
+       "total_tokens": 1159
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接说明对虾过敏，符合问题所需答案要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 15,
+      "doc_text": "新买的净水器滤芯三个月就得换一次。",
+      "raw_date": "2026-07-19",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 867,
+       "completion_tokens": 281,
+       "total_tokens": 1148
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只提到净水器滤芯更换，与食物过敏无关，无法推出过敏原。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 15,
+      "doc_text": "公司楼下那家咖啡店的美式太淡了。",
+      "raw_date": "2025-11-02",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 867,
+       "completion_tokens": 238,
+       "total_tokens": 1105
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到咖啡店美式太淡，与食物过敏无关，无法推出对虾过敏。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 15,
+      "doc_text": "把卧室的窗帘换成了遮光的，睡眠好多了。",
+      "raw_date": "2026-01-30",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 256,
+       "total_tokens": 1126
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只讲更换遮光窗帘改善睡眠，完全没有提到食物过敏或虾等过敏原信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 15,
+      "doc_text": "电动车电池冬天掉电太快。",
+      "raw_date": "2026-09-05",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 852,
+       "completion_tokens": 260,
+       "total_tokens": 1112
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只讲电动车电池冬天掉电，未提及任何食物过敏信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 15,
+      "doc_text": "周末把书架重新装了一遍，书终于有地方放了。",
+      "raw_date": "2026-02-22",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 270,
+       "total_tokens": 1140
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只讲装书架，未提及任何食物过敏信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    42
+   ],
+   "unanswerable": false,
+   "top4": [
+    42,
+    48,
+    49,
+    23
+   ],
+   "top4_detail": [
+    {
+     "doc": 42,
+     "scenario": 15,
+     "raw_date": "2026-03-08",
+     "text": "我对虾过敏，吃了会起疹子，挺严重的。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 48,
+     "scenario": 16,
+     "raw_date": "2026-03-15",
+     "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 49,
+     "scenario": 16,
+     "raw_date": "2026-07-21",
+     "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 23,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    42
+   ]
+  },
+  {
+   "sid": 16,
+   "cls": "D",
+   "cls_name": "历史信念",
+   "question": "我以前一直以为自己对什么过敏?",
+   "answer_points": {
+    "content": [
+     "芒果",
+     "芒果过敏",
+     "实际查出来"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "实际查出来是尘螨",
+     "尘螨"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 48,
+     "scenario": 16,
+     "raw_date": "2026-03-15",
+     "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。"
+    },
+    {
+     "doc": 49,
+     "scenario": 16,
+     "raw_date": "2026-07-21",
+     "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。"
+    },
+    {
+     "doc": 50,
+     "scenario": 16,
+     "raw_date": "2026-08-03",
+     "text": "开始每周洗床单、用除螨仪。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     48,
+     49
+    ],
+    "match_reasons": {
+     "48": {
+      "content": [
+       "芒果",
+       "芒果过敏"
+      ],
+      "date": []
+     },
+     "49": {
+      "content": [
+       "芒果"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     48
+    ],
+    "votes": [
+     {
+      "sid": 16,
+      "doc_text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
+      "raw_date": "2026-03-15",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 882,
+       "completion_tokens": 400,
+       "total_tokens": 1282
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明自己一直以为对芒果过敏，恰好回答了问题所问的“以前以为”的对象。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 16,
+      "doc_text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
+      "raw_date": "2026-07-21",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 888,
+       "completion_tokens": 635,
+       "total_tokens": 1523
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说查出尘螨过敏、芒果没事，未说明以前一直以为对芒果过敏这一历史信念。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 16,
+      "doc_text": "开始每周洗床单、用除螨仪。",
+      "raw_date": "2026-08-03",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 505,
+       "total_tokens": 1378
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录只提到洗床单和用除螨仪，暗示尘螨相关处理，并未说明用户以前以为自己芒果过敏。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    48,
+    49
+   ],
+   "unanswerable": false,
+   "top4": [
+    48,
+    49,
+    42,
+    23
+   ],
+   "top4_detail": [
+    {
+     "doc": 48,
+     "scenario": 16,
+     "raw_date": "2026-03-15",
+     "text": "我一直以为自己芒果过敏，吃了嘴边痒就再没碰过。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 49,
+     "scenario": 16,
+     "raw_date": "2026-07-21",
+     "text": "去查了过敏原，结果是尘螨重度过敏，芒果根本没事。",
+     "strict_evidence": true,
+     "judge_evidence": false
+    },
+    {
+     "doc": 42,
+     "scenario": 15,
+     "raw_date": "2026-03-08",
+     "text": "我对虾过敏，吃了会起疹子，挺严重的。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 23,
+     "scenario": 8,
+     "raw_date": "2026-01-14",
+     "text": "香菜我是真的受不了，闻到味道就难受。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    48,
+    49
+   ]
+  },
+  {
+   "sid": 17,
+   "cls": "E",
+   "cls_name": "配额截断",
+   "question": "我上次去日本住的那家酒店叫什么名字?",
+   "answer_points": {
+    "content": [
+     "京都买刀这些"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "店名",
+     "心斋桥",
+     "斋桥"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 51,
+     "scenario": 17,
+     "raw_date": "2026-04-02",
+     "text": "订了 5 月 12 号飞大阪的机票，往返。"
+    },
+    {
+     "doc": 52,
+     "scenario": 17,
+     "raw_date": "2026-05-12",
+     "text": "到大阪了，心斋桥人太多了。"
+    },
+    {
+     "doc": 53,
+     "scenario": 17,
+     "raw_date": "2026-05-16",
+     "text": "在京都买了把厨刀，退税排了半小时队。"
+    },
+    {
+     "doc": 54,
+     "scenario": 17,
+     "raw_date": "2026-05-20",
+     "text": "回国了，行李箱塞满了零食。"
+    }
+   ],
+   "strict": {
+    "docs": [],
+    "match_reasons": {}
+   },
+   "judge": {
+    "docs": [],
+    "votes": [
+     {
+      "sid": 17,
+      "doc_text": "订了 5 月 12 号飞大阪的机票，往返。",
+      "raw_date": "2026-04-02",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 972,
+       "completion_tokens": 720,
+       "total_tokens": 1692
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"该记录只提到订机票，未提供任何酒店名称或住宿信息，无法支撑回答问题。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 17,
+      "doc_text": "到大阪了，心斋桥人太多了。",
+      "raw_date": "2026-05-12",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 951,
+       "completion_tokens": 832,
+       "total_tokens": 1783
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录只提到到大阪和心斋桥人多，没有涉及酒店名称或住宿信息，无法支撑答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 17,
+      "doc_text": "在京都买了把厨刀，退税排了半小时队。",
+      "raw_date": "2026-05-16",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 960,
+       "completion_tokens": 387,
+       "total_tokens": 1347
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只提到在京都买厨刀和退税排队，与酒店名称无关，不能推出任何住宿信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 17,
+      "doc_text": "回国了，行李箱塞满了零食。",
+      "raw_date": "2026-05-20",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 945,
+       "completion_tokens": 299,
+       "total_tokens": 1244
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只说回国时行李箱装满零食，没有提到任何酒店名称或住宿信息，无法支撑答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [],
+   "unanswerable": true,
+   "top4": [
+    92,
+    51,
+    52,
+    91
+   ],
+   "top4_detail": [
+    {
+     "doc": 92,
+     "scenario": 31,
+     "raw_date": "2026-11-01",
+     "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 51,
+     "scenario": 17,
+     "raw_date": "2026-04-02",
+     "text": "订了 5 月 12 号飞大阪的机票，往返。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 52,
+     "scenario": 17,
+     "raw_date": "2026-05-12",
+     "text": "到大阪了，心斋桥人太多了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 91,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": []
+  },
+  {
+   "sid": 18,
+   "cls": "F",
+   "cls_name": "近似重复",
+   "question": "我早上一般几点起?",
+   "answer_points": {
+    "content": [
+     "六点半",
+     "点半",
+     "6:30"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 55,
+     "scenario": 18,
+     "raw_date": "2026-02-11",
+     "text": "闹钟定在 6:30，起来先喝一杯水。"
+    },
+    {
+     "doc": 56,
+     "scenario": 18,
+     "raw_date": "2026-05-04",
+     "text": "六点半起床已经成习惯了，不用闹钟也能醒。"
+    },
+    {
+     "doc": 57,
+     "scenario": 18,
+     "raw_date": "2026-08-19",
+     "text": "早上六点半起，出门前还能看二十分钟书。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     55,
+     56,
+     57
+    ],
+    "match_reasons": {
+     "55": {
+      "content": [
+       "6:30"
+      ],
+      "date": []
+     },
+     "56": {
+      "content": [
+       "六点半",
+       "点半"
+      ],
+      "date": []
+     },
+     "57": {
+      "content": [
+       "六点半",
+       "点半"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     55,
+     56,
+     57
+    ],
+    "votes": [
+     {
+      "sid": 18,
+      "doc_text": "闹钟定在 6:30，起来先喝一杯水。",
+      "raw_date": "2026-02-11",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 876,
+       "completion_tokens": 550,
+       "total_tokens": 1426
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录明确提到闹钟定在6:30并起来，直接支撑六点半起床这一答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 18,
+      "doc_text": "六点半起床已经成习惯了，不用闹钟也能醒。",
+      "raw_date": "2026-05-04",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 255,
+       "total_tokens": 1125
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明六点半起床已成习惯，能支撑回答一般几点起。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 18,
+      "doc_text": "早上六点半起，出门前还能看二十分钟书。",
+      "raw_date": "2026-08-19",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 284,
+       "total_tokens": 1154
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明早上六点半起，能支撑标准答案6:30。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    55,
+    56,
+    57
+   ],
+   "unanswerable": false,
+   "top4": [
+    56,
+    55,
+    57,
+    58
+   ],
+   "top4_detail": [
+    {
+     "doc": 56,
+     "scenario": 18,
+     "raw_date": "2026-05-04",
+     "text": "六点半起床已经成习惯了，不用闹钟也能醒。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 55,
+     "scenario": 18,
+     "raw_date": "2026-02-11",
+     "text": "闹钟定在 6:30，起来先喝一杯水。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 57,
+     "scenario": 18,
+     "raw_date": "2026-08-19",
+     "text": "早上六点半起，出门前还能看二十分钟书。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 58,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    55,
+    56,
+    57
+   ]
+  },
+  {
+   "sid": 19,
+   "cls": "A",
+   "cls_name": "正常更正",
+   "question": "我现在一般几点睡?",
+   "answer_points": {
+    "content": [
+     "23 点前 上床",
+     "23 点前"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "晚上十一点",
+     "一点"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 58,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。"
+    },
+    {
+     "doc": 59,
+     "scenario": 19,
+     "raw_date": "2026-10-02",
+     "text": "调整作息了，现在 23 点前必须上床，手机放客厅。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     59
+    ],
+    "match_reasons": {
+     "59": {
+      "content": [
+       "23 点前"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     58,
+     59
+    ],
+    "votes": [
+     {
+      "sid": 19,
+      "doc_text": "我一般凌晨一点才睡，刷手机停不下来。",
+      "raw_date": "2025-12",
+      "votes": [
+       "no",
+       "yes",
+       "yes"
+      ],
+      "yes": 2,
+      "no": 1,
+      "majority": "yes",
+      "confidence": 0.667,
+      "usage": {
+       "prompt_tokens": 885,
+       "completion_tokens": 1304,
+       "total_tokens": 2189
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只说明当时一般凌晨一点才睡，无法支撑“现在一般23点前上床”的标准答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 19,
+      "doc_text": "调整作息了，现在 23 点前必须上床，手机放客厅。",
+      "raw_date": "2026-10-02",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 906,
+       "completion_tokens": 273,
+       "total_tokens": 1179
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接说明现在23点前必须上床，直接支撑标准答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    58,
+    59
+   ],
+   "unanswerable": false,
+   "top4": [
+    58,
+    59,
+    56,
+    105
+   ],
+   "top4_detail": [
+    {
+     "doc": 58,
+     "scenario": 19,
+     "raw_date": "2025-12",
+     "text": "我一般凌晨一点才睡，刷手机停不下来。",
+     "strict_evidence": false,
+     "judge_evidence": true
+    },
+    {
+     "doc": 59,
+     "scenario": 19,
+     "raw_date": "2026-10-02",
+     "text": "调整作息了，现在 23 点前必须上床，手机放客厅。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 56,
+     "scenario": 18,
+     "raw_date": "2026-05-04",
+     "text": "六点半起床已经成习惯了，不用闹钟也能醒。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 105,
+     "scenario": 35,
+     "raw_date": "2026-04-08",
+     "text": "小区的垃圾分类改到晚上七点以后了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    58,
+    59
+   ]
+  },
+  {
+   "sid": 20,
+   "cls": "J",
+   "cls_name": "无日期对照",
+   "question": "我现在住在哪个城市?",
+   "answer_points": {
+    "content": [
+     "深圳租好房子",
+     "深圳",
+     "成都房子还留",
+     "两地都有牵扯",
+     "两地都"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 60,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。"
+    },
+    {
+     "doc": 61,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。"
+    },
+    {
+     "doc": 62,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "成都的房子还留着，没退租。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     61,
+     62
+    ],
+    "match_reasons": {
+     "61": {
+      "content": [
+       "深圳租好房子",
+       "深圳"
+      ],
+      "date": []
+     },
+     "62": {
+      "content": [
+       "成都房子还留"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     61
+    ],
+    "votes": [
+     {
+      "sid": 20,
+      "doc_text": "我在成都住了好几年了，习惯了这边的气候。",
+      "raw_date": "日期不详",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 993,
+       "completion_tokens": 1964,
+       "total_tokens": 2957
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说在成都住了好几年且无日期，不能确定当前是否仍住成都，也无法支撑答案所需的深圳倾向。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 20,
+      "doc_text": "公司把我调去深圳，已经在深圳租好房子了。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 999,
+       "completion_tokens": 889,
+       "total_tokens": 1888
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接说明公司调往深圳且已在深圳租好房子，能支撑回答傾向深圳，同时记录日期不详，无法确定是否为最新状态。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 20,
+      "doc_text": "成都的房子还留着，没退租。",
+      "raw_date": "日期不详",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 987,
+       "completion_tokens": 1062,
+       "total_tokens": 2049
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"仅说明成都房子还留着，不能推出当前住在哪个城市，需与其他记录结合。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    61,
+    62
+   ],
+   "unanswerable": false,
+   "top4": [
+    60,
+    61,
+    67,
+    62
+   ],
+   "top4_detail": [
+    {
+     "doc": 60,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 61,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 67,
+     "scenario": 23,
+     "raw_date": "2025-11",
+     "text": "搬到杭州了，租在西湖区。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 62,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "成都的房子还留着，没退租。",
+     "strict_evidence": true,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    61,
+    62
+   ]
+  },
+  {
+   "sid": 21,
+   "cls": "B",
+   "cls_name": "补录旧事实",
+   "question": "我现在还喝酒吗?",
+   "answer_points": {
+    "content": [
+     "每周都喝",
+     "2026 年 6 月起戒",
+     "不喝",
+     "的是 2024 年",
+     "10-25 那条里"
+    ],
+    "dates": [
+     [
+      2026,
+      6,
+      null
+     ],
+     [
+      2026,
+      10,
+      25
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 63,
+     "scenario": 21,
+     "raw_date": "2026-06",
+     "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。"
+    },
+    {
+     "doc": 64,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     63,
+     64
+    ],
+    "match_reasons": {
+     "63": {
+      "content": [
+       "不喝"
+      ],
+      "date": [
+       [
+        2026,
+        6,
+        null
+       ]
+      ]
+     },
+     "64": {
+      "content": [
+       "每周都喝",
+       "不喝"
+      ],
+      "date": [
+       [
+        2026,
+        10,
+        25
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     63,
+     64
+    ],
+    "votes": [
+     {
+      "sid": 21,
+      "doc_text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。",
+      "raw_date": "2026-06",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1023,
+       "completion_tokens": 481,
+       "total_tokens": 1504
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明2026年6月起遵医嘱戒酒且未再喝，足以回答现在不喝了。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 21,
+      "doc_text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+      "raw_date": "2026-10-25",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 1035,
+       "completion_tokens": 359,
+       "total_tokens": 1394
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接说明2024年几乎每周都喝，但现在基本不碰了，可支撑“现在基本不喝/戒了”的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    63,
+    64
+   ],
+   "unanswerable": false,
+   "top4": [
+    64,
+    63,
+    94,
+    115
+   ],
+   "top4_detail": [
+    {
+     "doc": 64,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 63,
+     "scenario": 21,
+     "raw_date": "2026-06",
+     "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 94,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 115,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    63,
+    64
+   ]
+  },
+  {
+   "sid": 22,
+   "cls": "G",
+   "cls_name": "同日期冲突",
+   "question": "我现在还开车上班吗?",
+   "answer_points": {
+    "content": [
+     "车卖",
+     "车没卖",
+     "同日"
+    ],
+    "dates": [
+     [
+      2026,
+      7,
+      20
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 65,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "把车卖了，以后都坐地铁，省心。"
+    },
+    {
+     "doc": 66,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "车没卖，最后还是留着继续开，通勤没车太麻烦。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     65,
+     66
+    ],
+    "match_reasons": {
+     "65": {
+      "content": [
+       "车卖"
+      ],
+      "date": [
+       [
+        2026,
+        7,
+        20
+       ]
+      ]
+     },
+     "66": {
+      "content": [
+       "车没卖"
+      ],
+      "date": [
+       [
+        2026,
+        7,
+        20
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     65,
+     66
+    ],
+    "votes": [
+     {
+      "sid": 22,
+      "doc_text": "把车卖了，以后都坐地铁，省心。",
+      "raw_date": "2026-07-20",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 942,
+       "completion_tokens": 948,
+       "total_tokens": 1890
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录是同日“把车卖了”与“车没卖”矛盾冲突的必需一方，支撑无法确定。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 22,
+      "doc_text": "车没卖，最后还是留着继续开，通勤没车太麻烦。",
+      "raw_date": "2026-07-20",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 954,
+       "completion_tokens": 902,
+       "total_tokens": 1856
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录是“车没卖、继续开”的冲突一方，构成同日相反记忆，因此是判断无法确定所必需的一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    65,
+    66
+   ],
+   "unanswerable": false,
+   "top4": [
+    66,
+    118,
+    116,
+    65
+   ],
+   "top4_detail": [
+    {
+     "doc": 66,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "车没卖，最后还是留着继续开，通勤没车太麻烦。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 118,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "地铁早高峰太挤，有时候还是开车。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 116,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "我开车上班，走滨江路，四十分钟。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 65,
+     "scenario": 22,
+     "raw_date": "2026-07-20",
+     "text": "把车卖了，以后都坐地铁，省心。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    }
+   ],
+   "evidence_in_top4": [
+    65,
+    66
+   ]
+  },
+  {
+   "sid": 23,
+   "cls": "H",
+   "cls_name": "粗粒度日期",
+   "question": "2026 年上半年我住在哪个城市?",
+   "answer_points": {
+    "content": [
+     "2025 年 11 月搬",
+     "明 1",
+     "6 月中"
+    ],
+    "dates": [
+     [
+      2025,
+      11,
+      null
+     ],
+     [
+      2026,
+      6,
+      null
+     ],
+     [
+      2026,
+      6,
+      20
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": [
+     "杭州",
+     "杭州"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 67,
+     "scenario": 23,
+     "raw_date": "2025-11",
+     "text": "搬到杭州了，租在西湖区。"
+    },
+    {
+     "doc": 68,
+     "scenario": 23,
+     "raw_date": "2026-06-20",
+     "text": "从杭州搬到上海，新公司在徐汇。"
+    },
+    {
+     "doc": 69,
+     "scenario": 23,
+     "raw_date": "2026-10-05",
+     "text": "上海这边房租又涨了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     67,
+     68
+    ],
+    "match_reasons": {
+     "67": {
+      "content": [],
+      "date": [
+       [
+        2025,
+        11,
+        null
+       ]
+      ]
+     },
+     "68": {
+      "content": [],
+      "date": [
+       [
+        2026,
+        6,
+        null
+       ],
+       [
+        2026,
+        6,
+        20
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     68
+    ],
+    "votes": [
+     {
+      "sid": 23,
+      "doc_text": "搬到杭州了，租在西湖区。",
+      "raw_date": "2025-11",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 903,
+       "completion_tokens": 1279,
+       "total_tokens": 2182
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明2025年11月搬到杭州，无法仅凭它确定2026年上半年仍住在杭州，还需另一条记录说明2026年6月才搬去上海。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 23,
+      "doc_text": "从杭州搬到上海，新公司在徐汇。",
+      "raw_date": "2026-06-20",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 912,
+       "completion_tokens": 1279,
+       "total_tokens": 2191
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录显示2026年6月20日才从杭州搬到上海，可支撑上半年主要住在杭州。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 23,
+      "doc_text": "上海这边房租又涨了。",
+      "raw_date": "2026-10-05",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 903,
+       "completion_tokens": 482,
+       "total_tokens": 1385
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明2026年10月在上海房租上涨，无法推出2026年上半年的居住城市。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    67,
+    68
+   ],
+   "unanswerable": false,
+   "top4": [
+    67,
+    68,
+    61,
+    60
+   ],
+   "top4_detail": [
+    {
+     "doc": 67,
+     "scenario": 23,
+     "raw_date": "2025-11",
+     "text": "搬到杭州了，租在西湖区。",
+     "strict_evidence": true,
+     "judge_evidence": false
+    },
+    {
+     "doc": 68,
+     "scenario": 23,
+     "raw_date": "2026-06-20",
+     "text": "从杭州搬到上海，新公司在徐汇。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 61,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "公司把我调去深圳，已经在深圳租好房子了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 60,
+     "scenario": 20,
+     "raw_date": "日期不详",
+     "text": "我在成都住了好几年了，习惯了这边的气候。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    67,
+    68
+   ]
+  },
+  {
+   "sid": 24,
+   "cls": "C",
+   "cls_name": "晚但记错",
+   "question": "我现在每天吃多少降压药?",
+   "answer_points": {
+    "content": [
+     "5mg",
+     "10mg",
+     "查处方",
+     "问医生"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 70,
+     "scenario": 24,
+     "raw_date": "2026-04-02",
+     "text": "医生给我开了降压药，每天 5mg，早上吃。"
+    },
+    {
+     "doc": 71,
+     "scenario": 24,
+     "raw_date": "2026-10-19",
+     "text": "降压药是 10mg 的，每天早上吃一片。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     70,
+     71
+    ],
+    "match_reasons": {
+     "70": {
+      "content": [
+       "5mg"
+      ],
+      "date": []
+     },
+     "71": {
+      "content": [
+       "10mg"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     70,
+     71
+    ],
+    "votes": [
+     {
+      "sid": 24,
+      "doc_text": "医生给我开了降压药，每天 5mg，早上吃。",
+      "raw_date": "2026-04-02",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 918,
+       "completion_tokens": 1305,
+       "total_tokens": 2223
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接给出每天5mg的剂量，是构成5mg与10mg记忆冲突的必需一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 24,
+      "doc_text": "降压药是 10mg 的，每天早上吃一片。",
+      "raw_date": "2026-10-19",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 915,
+       "completion_tokens": 1698,
+       "total_tokens": 2613
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录给出了冲突一方的剂量（10mg/天），是判定与5mg记录矛盾的必要证据。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    70,
+    71
+   ],
+   "unanswerable": false,
+   "top4": [
+    70,
+    71,
+    114,
+    115
+   ],
+   "top4_detail": [
+    {
+     "doc": 70,
+     "scenario": 24,
+     "raw_date": "2026-04-02",
+     "text": "医生给我开了降压药，每天 5mg，早上吃。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 71,
+     "scenario": 24,
+     "raw_date": "2026-10-19",
+     "text": "降压药是 10mg 的，每天早上吃一片。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 114,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 115,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    70,
+    71
+   ]
+  },
+  {
+   "sid": 25,
+   "cls": "I",
+   "cls_name": "无关干扰",
+   "question": "我家路由器放在哪儿?",
+   "answer_points": {
+    "content": [
+     "电视柜第二层",
+     "二层",
+     "客厅电视柜第二层"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 72,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。"
+    },
+    {
+     "doc": 73,
+     "scenario": 25,
+     "raw_date": "2026-04-22",
+     "text": "楼下超市的鸡蛋涨价了。"
+    },
+    {
+     "doc": 74,
+     "scenario": 25,
+     "raw_date": "2026-08-14",
+     "text": "换了新的床垫，腰不疼了。"
+    },
+    {
+     "doc": 75,
+     "scenario": 25,
+     "raw_date": "2025-10-09",
+     "text": "阳台的窗户漏风，找人来打了胶。"
+    },
+    {
+     "doc": 76,
+     "scenario": 25,
+     "raw_date": "2026-06-30",
+     "text": "公司的团建定在下个月。"
+    },
+    {
+     "doc": 77,
+     "scenario": 25,
+     "raw_date": "2026-03-17",
+     "text": "把备用钥匙放到了门口的密码盒里。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     72
+    ],
+    "match_reasons": {
+     "72": {
+      "content": [
+       "电视柜第二层",
+       "二层"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     72
+    ],
+    "votes": [
+     {
+      "sid": 25,
+      "doc_text": "路由器挪到电视柜第二层了，信号比原来好。",
+      "raw_date": "2026-01-06",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 852,
+       "completion_tokens": 211,
+       "total_tokens": 1063
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接说明路由器挪到了电视柜第二层，正好给出问题所需的位置答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 25,
+      "doc_text": "楼下超市的鸡蛋涨价了。",
+      "raw_date": "2026-04-22",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 831,
+       "completion_tokens": 237,
+       "total_tokens": 1068
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说超市鸡蛋涨价，与路由器位置无关。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 25,
+      "doc_text": "换了新的床垫，腰不疼了。",
+      "raw_date": "2026-08-14",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 840,
+       "completion_tokens": 218,
+       "total_tokens": 1058
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只提到换床垫和腰不疼，与路由器放在哪儿无关。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 25,
+      "doc_text": "阳台的窗户漏风，找人来打了胶。",
+      "raw_date": "2025-10-09",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 843,
+       "completion_tokens": 284,
+       "total_tokens": 1127
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"该记录只涉及阳台窗户漏风打胶，未提及路由器或其位置。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 25,
+      "doc_text": "公司的团建定在下个月。",
+      "raw_date": "2026-06-30",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 831,
+       "completion_tokens": 273,
+       "total_tokens": 1104
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只提到公司团建时间，与路由器位置无关。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 25,
+      "doc_text": "把备用钥匙放到了门口的密码盒里。",
+      "raw_date": "2026-03-17",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 840,
+       "completion_tokens": 230,
+       "total_tokens": 1070
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"该记录只提到备用钥匙存放位置，与路由器放在哪儿无关。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    72
+   ],
+   "unanswerable": false,
+   "top4": [
+    72,
+    16,
+    17,
+    18
+   ],
+   "top4_detail": [
+    {
+     "doc": 72,
+     "scenario": 25,
+     "raw_date": "2026-01-06",
+     "text": "路由器挪到电视柜第二层了，信号比原来好。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 16,
+     "scenario": 6,
+     "raw_date": "2026-05-09",
+     "text": "家里网一直断，我一开始认定是路由器老化，当天就下单买了个新的。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 17,
+     "scenario": 6,
+     "raw_date": "2026-05-12",
+     "text": "换了新路由器还是断，最后发现是运营商光猫的问题，师傅上门换了一个才好。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 18,
+     "scenario": 6,
+     "raw_date": "2026-11-02",
+     "text": "现在家里网络很稳，光猫换了之后没再出过问题。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    72
+   ]
+  },
+  {
+   "sid": 26,
+   "cls": "D",
+   "cls_name": "历史信念",
+   "question": "年初的时候我以为季度奖能发多少?",
+   "answer_points": {
+    "content": [
+     "三个月工资",
+     "工资",
+     "实际只发",
+     "三个月",
+     "3 个月工资"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "实际只发了 1.5 个月",
+     "1.5 个月",
+     "个月"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 78,
+     "scenario": 26,
+     "raw_date": "2026-01-15",
+     "text": "我一直以为季度奖是三个月工资，还跟老婆算了半天怎么花。"
+    },
+    {
+     "doc": 79,
+     "scenario": 26,
+     "raw_date": "2026-04-10",
+     "text": "结果只发了 1.5 个月，差得有点远。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     78
+    ],
+    "match_reasons": {
+     "78": {
+      "content": [
+       "三个月工资",
+       "工资"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     78
+    ],
+    "votes": [
+     {
+      "sid": 26,
+      "doc_text": "我一直以为季度奖是三个月工资，还跟老婆算了半天怎么花。",
+      "raw_date": "2026-01-15",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 858,
+       "completion_tokens": 478,
+       "total_tokens": 1336
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明年初时我以为季度奖是三个月工资，正好回答当时以为的数额。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 26,
+      "doc_text": "结果只发了 1.5 个月，差得有点远。",
+      "raw_date": "2026-04-10",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 855,
+       "completion_tokens": 595,
+       "total_tokens": 1450
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说明实际只发了1.5个月，属于后来事实，没有给出年初“以为”能发多少，按历史信念规则不能作为答案证据。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    78
+   ],
+   "unanswerable": false,
+   "top4": [
+    78,
+    79,
+    32,
+    5
+   ],
+   "top4_detail": [
+    {
+     "doc": 78,
+     "scenario": 26,
+     "raw_date": "2026-01-15",
+     "text": "我一直以为季度奖是三个月工资，还跟老婆算了半天怎么花。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 79,
+     "scenario": 26,
+     "raw_date": "2026-04-10",
+     "text": "结果只发了 1.5 个月，差得有点远。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 32,
+     "scenario": 11,
+     "raw_date": "2026-05-12",
+     "text": "跳槽了，现在在一家做推荐算法的公司，团队不大。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 5,
+     "scenario": 3,
+     "raw_date": "2025",
+     "text": "入职了现在这家做 SaaS 的公司，做后端。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    78
+   ]
+  },
+  {
+   "sid": 27,
+   "cls": "E",
+   "cls_name": "配额截断",
+   "question": "我的车险哪天到期?",
+   "answer_points": {
+    "content": [
+     "保费上涨",
+     "推销电话",
+     "查保单"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "续保"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 80,
+     "scenario": 27,
+     "raw_date": "2026-02-18",
+     "text": "续了车险，还是原来那家公司，三者险买到 300 万。"
+    },
+    {
+     "doc": 81,
+     "scenario": 27,
+     "raw_date": "2026-03-05",
+     "text": "去年出过一次小险，今年保费涨了几百。"
+    },
+    {
+     "doc": 82,
+     "scenario": 27,
+     "raw_date": "2026-09-12",
+     "text": "保险公司打电话来推销驾乘险，没要。"
+    }
+   ],
+   "strict": {
+    "docs": [],
+    "match_reasons": {}
+   },
+   "judge": {
+    "docs": [],
+    "votes": [
+     {
+      "sid": 27,
+      "doc_text": "续了车险，还是原来那家公司，三者险买到 300 万。",
+      "raw_date": "2026-02-18",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 960,
+       "completion_tokens": 762,
+       "total_tokens": 1722
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录只说续保，未提供车险到期日。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 27,
+      "doc_text": "去年出过一次小险，今年保费涨了几百。",
+      "raw_date": "2026-03-05",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 942,
+       "completion_tokens": 485,
+       "total_tokens": 1427
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到出险后保费上涨，没有提供车险到期日，也无法支撑‘记忆里没有到期日’这一结论。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 27,
+      "doc_text": "保险公司打电话来推销驾乘险，没要。",
+      "raw_date": "2026-09-12",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 939,
+       "completion_tokens": 594,
+       "total_tokens": 1533
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到保险公司推销驾乘险，并未提供车险到期日信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [],
+   "unanswerable": true,
+   "top4": [
+    80,
+    82,
+    81,
+    8
+   ],
+   "top4_detail": [
+    {
+     "doc": 80,
+     "scenario": 27,
+     "raw_date": "2026-02-18",
+     "text": "续了车险，还是原来那家公司，三者险买到 300 万。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 82,
+     "scenario": 27,
+     "raw_date": "2026-09-12",
+     "text": "保险公司打电话来推销驾乘险，没要。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 81,
+     "scenario": 27,
+     "raw_date": "2026-03-05",
+     "text": "去年出过一次小险，今年保费涨了几百。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 8,
+     "scenario": 4,
+     "raw_date": "2026-03-10",
+     "text": "我的车是白色的 Model 3，提车那天还下了小雨。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": []
+  },
+  {
+   "sid": 28,
+   "cls": "F",
+   "cls_name": "近似重复",
+   "question": "我一周去几次健身房?",
+   "answer_points": {
+    "content": [
+     "每周三次",
+     "三次",
+     "一周三练",
+     "三练",
+     "周一三五",
+     "三五"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 83,
+     "scenario": 28,
+     "raw_date": "2026-03-02",
+     "text": "现在每周去三次健身房，周一、三、五。"
+    },
+    {
+     "doc": 84,
+     "scenario": 28,
+     "raw_date": "2026-06-18",
+     "text": "一周三练已经固定下来了。"
+    },
+    {
+     "doc": 85,
+     "scenario": 28,
+     "raw_date": "2026-09",
+     "text": "最近还是保持每周去三次，练完拉伸十分钟。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     83,
+     84,
+     85
+    ],
+    "match_reasons": {
+     "83": {
+      "content": [
+       "三次"
+      ],
+      "date": []
+     },
+     "84": {
+      "content": [
+       "一周三练",
+       "三练"
+      ],
+      "date": []
+     },
+     "85": {
+      "content": [
+       "三次"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     83,
+     84,
+     85
+    ],
+    "votes": [
+     {
+      "sid": 28,
+      "doc_text": "现在每周去三次健身房，周一、三、五。",
+      "raw_date": "2026-03-02",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 840,
+       "completion_tokens": 261,
+       "total_tokens": 1101
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接说明每周去三次健身房，并给出周一、三、五，完整支撑标准答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 28,
+      "doc_text": "一周三练已经固定下来了。",
+      "raw_date": "2026-06-18",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 825,
+       "completion_tokens": 291,
+       "total_tokens": 1116
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明“一周三练已经固定下来了”，对应每周三次。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 28,
+      "doc_text": "最近还是保持每周去三次，练完拉伸十分钟。",
+      "raw_date": "2026-09",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 834,
+       "completion_tokens": 275,
+       "total_tokens": 1109
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接说明每周去三次健身房，正是问题所需的标准答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    83,
+    84,
+    85
+   ],
+   "unanswerable": false,
+   "top4": [
+    83,
+    85,
+    84,
+    114
+   ],
+   "top4_detail": [
+    {
+     "doc": 83,
+     "scenario": 28,
+     "raw_date": "2026-03-02",
+     "text": "现在每周去三次健身房，周一、三、五。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 85,
+     "scenario": 28,
+     "raw_date": "2026-09",
+     "text": "最近还是保持每周去三次，练完拉伸十分钟。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 84,
+     "scenario": 28,
+     "raw_date": "2026-06-18",
+     "text": "一周三练已经固定下来了。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 114,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    83,
+    84,
+    85
+   ]
+  },
+  {
+   "sid": 29,
+   "cls": "A",
+   "cls_name": "正常更正",
+   "question": "我现在键盘用什么轴?",
+   "answer_points": {
+    "content": [
+     "2026 年 9 月换",
+     "静音茶轴",
+     "茶轴"
+    ],
+    "dates": [
+     [
+      2026,
+      9,
+      null
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 86,
+     "scenario": 29,
+     "raw_date": "2026-02-07",
+     "text": "我一直用红轴，打字轻快。"
+    },
+    {
+     "doc": 87,
+     "scenario": 29,
+     "raw_date": "2026-09-19",
+     "text": "红轴太吵了，办公室同事有意见，换成了静音茶轴。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     87
+    ],
+    "match_reasons": {
+     "87": {
+      "content": [
+       "静音茶轴",
+       "茶轴"
+      ],
+      "date": [
+       [
+        2026,
+        9,
+        null
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     87
+    ],
+    "votes": [
+     {
+      "sid": 29,
+      "doc_text": "我一直用红轴，打字轻快。",
+      "raw_date": "2026-02-07",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 762,
+       "total_tokens": 1635
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说明2026年2月时用红轴，无法支撑“现在”已换为静音茶轴的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 29,
+      "doc_text": "红轴太吵了，办公室同事有意见，换成了静音茶轴。",
+      "raw_date": "2026-09-19",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 900,
+       "completion_tokens": 358,
+       "total_tokens": 1258
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明在 2026-09-19 换成了静音茶轴，能支撑当前使用静音茶轴这一答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    87
+   ],
+   "unanswerable": false,
+   "top4": [
+    86,
+    87,
+    37,
+    89
+   ],
+   "top4_detail": [
+    {
+     "doc": 86,
+     "scenario": 29,
+     "raw_date": "2026-02-07",
+     "text": "我一直用红轴，打字轻快。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 87,
+     "scenario": 29,
+     "raw_date": "2026-09-19",
+     "text": "红轴太吵了，办公室同事有意见，换成了静音茶轴。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 37,
+     "scenario": 13,
+     "raw_date": "2025-12-20",
+     "text": "买了台索尼 A7C，配了个 35mm 定焦。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 89,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    87
+   ]
+  },
+  {
+   "sid": 30,
+   "cls": "J",
+   "cls_name": "无日期对照",
+   "question": "我现在用的是什么笔记本电脑?",
+   "answer_points": {
+    "content": [
+     "出门基本只带它",
+     "ThinkPad"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 88,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "我一直用 MacBook Air，轻便。"
+    },
+    {
+     "doc": 89,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。"
+    },
+    {
+     "doc": 90,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "家里那台 MacBook 电池不太行了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     89
+    ],
+    "match_reasons": {
+     "89": {
+      "content": [
+       "出门基本只带它",
+       "ThinkPad"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     88,
+     89
+    ],
+    "votes": [
+     {
+      "sid": 30,
+      "doc_text": "我一直用 MacBook Air，轻便。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 957,
+       "completion_tokens": 2875,
+       "total_tokens": 3832
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明一直用 MacBook Air 且日期不详，是判断当前设备记忆冲突及无法确认先后所必需的一方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 30,
+      "doc_text": "公司给换了 ThinkPad，现在出门基本只带它。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 969,
+       "completion_tokens": 1483,
+       "total_tokens": 2452
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接给出公司换了 ThinkPad 且现在出门基本只带它，能支撑当前倾向使用 ThinkPad 的答案要点，同时日期不详提示无法确认先后。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 30,
+      "doc_text": "家里那台 MacBook 电池不太行了。",
+      "raw_date": "日期不详",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 960,
+       "completion_tokens": 708,
+       "total_tokens": 1668
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只说家里 MacBook 电池不行，未说明当前使用哪台笔记本，也无法支撑 ThinkPad 倾向或无日期判断。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    88,
+    89
+   ],
+   "unanswerable": false,
+   "top4": [
+    89,
+    88,
+    90,
+    86
+   ],
+   "top4_detail": [
+    {
+     "doc": 89,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 88,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "我一直用 MacBook Air，轻便。",
+     "strict_evidence": false,
+     "judge_evidence": true
+    },
+    {
+     "doc": 90,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "家里那台 MacBook 电池不太行了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 86,
+     "scenario": 29,
+     "raw_date": "2026-02-07",
+     "text": "我一直用红轴，打字轻快。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    88,
+    89
+   ]
+  },
+  {
+   "sid": 31,
+   "cls": "B",
+   "cls_name": "补录旧事实",
+   "question": "我现在养的狗叫什么?",
+   "answer_points": {
+    "content": [
+     "柯基",
+     "豆豆",
+     "2023 年走丢",
+     "柴犬",
+     "柯基豆豆"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "球球",
+     "球球是以前",
+     "球球"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 91,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。"
+    },
+    {
+     "doc": 92,
+     "scenario": 31,
+     "raw_date": "2026-11-01",
+     "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     91,
+     92
+    ],
+    "match_reasons": {
+     "91": {
+      "content": [
+       "柯基",
+       "豆豆"
+      ],
+      "date": []
+     },
+     "92": {
+      "content": [
+       "豆豆",
+       "2023 年走丢",
+       "柴犬"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     91,
+     92
+    ],
+    "votes": [
+     {
+      "sid": 31,
+      "doc_text": "抱回来一只柯基，取名叫「豆豆」。",
+      "raw_date": "2026-07-15",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 909,
+       "completion_tokens": 442,
+       "total_tokens": 1351
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明抱回一只柯基并取名豆豆，能回答现在养的狗叫豆豆。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 31,
+      "doc_text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
+      "raw_date": "2026-11-01",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 951,
+       "completion_tokens": 678,
+       "total_tokens": 1629
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录明确说以前的柴犬球球走丢后才养的豆豆，能支撑现在养的狗叫豆豆。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    91,
+    92
+   ],
+   "unanswerable": false,
+   "top4": [
+    91,
+    92,
+    10,
+    98
+   ],
+   "top4_detail": [
+    {
+     "doc": 91,
+     "scenario": 31,
+     "raw_date": "2026-07-15",
+     "text": "抱回来一只柯基，取名叫「豆豆」。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 92,
+     "scenario": 31,
+     "raw_date": "2026-11-01",
+     "text": "想起以前那只叫「球球」的柴犬，2023 年走丢了，那之后我才养的豆豆。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 10,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 98,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    91,
+    92
+   ]
+  },
+  {
+   "sid": 32,
+   "cls": "G",
+   "cls_name": "同日期冲突",
+   "question": "我现在还喝咖啡吗?",
+   "answer_points": {
+    "content": [
+     "戒咖啡",
+     "照常两杯美式",
+     "同日"
+    ],
+    "dates": [
+     [
+      2026,
+      9,
+      14
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 93,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "今天开始戒咖啡，改喝白开水，心跳快得受不了。"
+    },
+    {
+     "doc": 94,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     93,
+     94
+    ],
+    "match_reasons": {
+     "93": {
+      "content": [
+       "戒咖啡"
+      ],
+      "date": [
+       [
+        2026,
+        9,
+        14
+       ]
+      ]
+     },
+     "94": {
+      "content": [
+       "戒咖啡",
+       "照常两杯美式"
+      ],
+      "date": [
+       [
+        2026,
+        9,
+        14
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     93,
+     94
+    ],
+    "votes": [
+     {
+      "sid": 32,
+      "doc_text": "今天开始戒咖啡，改喝白开水，心跳快得受不了。",
+      "raw_date": "2026-09-14",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 951,
+       "completion_tokens": 1118,
+       "total_tokens": 2069
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录是同一天“开始戒咖啡”的冲突记录之一，是推出无法确定所必需的证据方。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 32,
+      "doc_text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+      "raw_date": "2026-09-14",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 960,
+       "completion_tokens": 1608,
+       "total_tokens": 2568
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录是同日“照常喝咖啡”与“开始戒咖啡”矛盾冲突中的必需一方，用于支撑无法确定答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    93,
+    94
+   ],
+   "unanswerable": false,
+   "top4": [
+    94,
+    93,
+    115,
+    64
+   ],
+   "top4_detail": [
+    {
+     "doc": 94,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 93,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "今天开始戒咖啡，改喝白开水，心跳快得受不了。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 115,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 64,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    93,
+    94
+   ]
+  },
+  {
+   "sid": 33,
+   "cls": "H",
+   "cls_name": "粗粒度日期",
+   "question": "我 2025 年体检查出了什么问题?",
+   "answer_points": {
+    "content": [
+     "高血脂",
+     "血脂"
+    ],
+    "dates": [
+     [
+      2026,
+      3,
+      null
+     ]
+    ],
+    "source": "deterministic",
+    "negative_filtered": [
+     "血脂偏高",
+     "偏高",
+     "尿酸偏高是 2026 年",
+     "尿酸偏高",
+     "血脂偏高",
+     "偏高"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 95,
+     "scenario": 33,
+     "raw_date": "2025",
+     "text": "体检查出血脂偏高，医生让我少吃油腻。"
+    },
+    {
+     "doc": 96,
+     "scenario": 33,
+     "raw_date": "2026-03-20",
+     "text": "复查了，血脂已经正常。"
+    },
+    {
+     "doc": 97,
+     "scenario": 33,
+     "raw_date": "2026-11-05",
+     "text": "今年体检尿酸偏高，又开始忌口。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     95,
+     96
+    ],
+    "match_reasons": {
+     "95": {
+      "content": [
+       "血脂"
+      ],
+      "date": []
+     },
+     "96": {
+      "content": [
+       "血脂"
+      ],
+      "date": [
+       [
+        2026,
+        3,
+        null
+       ]
+      ]
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     95
+    ],
+    "votes": [
+     {
+      "sid": 33,
+      "doc_text": "体检查出血脂偏高，医生让我少吃油腻。",
+      "raw_date": "2025",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 289,
+       "total_tokens": 1162
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录明确给出2025年体检查出血脂偏高，直接支撑答案要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 33,
+      "doc_text": "复查了，血脂已经正常。",
+      "raw_date": "2026-03-20",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 671,
+       "total_tokens": 1544
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说2026年复查血脂已正常，未直接给出2025年体检发现血脂偏高，需与其他记录合起来才能推出。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 33,
+      "doc_text": "今年体检尿酸偏高，又开始忌口。",
+      "raw_date": "2026-11-05",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 879,
+       "completion_tokens": 495,
+       "total_tokens": 1374
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录是2026年尿酸偏高，不能支撑2025年体检出的血脂偏高。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    95,
+    96
+   ],
+   "unanswerable": false,
+   "top4": [
+    21,
+    63,
+    20,
+    19
+   ],
+   "top4_detail": [
+    {
+     "doc": 21,
+     "scenario": 7,
+     "raw_date": "2026-10-09",
+     "text": "报告出来了，医生让我少熬夜、少吃海鲜。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 63,
+     "scenario": 21,
+     "raw_date": "2026-06",
+     "text": "体检查出轻度脂肪肝，医生让戒酒，我从那天起就没再喝过。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 20,
+     "scenario": 7,
+     "raw_date": "2026-09-28",
+     "text": "体检做完了，医生说血压 118/76，其他等报告。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 19,
+     "scenario": 7,
+     "raw_date": "2026-09-18",
+     "text": "体检预约在 9 月 28 日上午，空腹去。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": []
+  },
+  {
+   "sid": 34,
+   "cls": "C",
+   "cls_name": "晚但记错",
+   "question": "我家猫几岁了?",
+   "answer_points": {
+    "content": [
+     "三岁",
+     "五岁"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 98,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。"
+    },
+    {
+     "doc": 99,
+     "scenario": 34,
+     "raw_date": "2026-10-22",
+     "text": "我家猫已经五岁了，精力还是很旺。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     98,
+     99
+    ],
+    "match_reasons": {
+     "98": {
+      "content": [
+       "三岁"
+      ],
+      "date": []
+     },
+     "99": {
+      "content": [
+       "五岁"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     98,
+     99
+    ],
+    "votes": [
+     {
+      "sid": 34,
+      "doc_text": "我家猫今年三岁，是只狸花。",
+      "raw_date": "2026-06-01",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 858,
+       "completion_tokens": 752,
+       "total_tokens": 1610
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接给出“猫三岁”，是构成三岁与五岁记忆冲突的必需一方，但不能单独确定最终年龄。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 34,
+      "doc_text": "我家猫已经五岁了，精力还是很旺。",
+      "raw_date": "2026-10-22",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 855,
+       "completion_tokens": 1063,
+       "total_tokens": 1918
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接提供“猫五岁”这一冲突方信息，是判定年龄记录矛盾所必需的证据之一。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    98,
+    99
+   ],
+   "unanswerable": false,
+   "top4": [
+    98,
+    99,
+    110,
+    10
+   ],
+   "top4_detail": [
+    {
+     "doc": 98,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 99,
+     "scenario": 34,
+     "raw_date": "2026-10-22",
+     "text": "我家猫已经五岁了，精力还是很旺。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 110,
+     "scenario": 37,
+     "raw_date": "2026-05-30",
+     "text": "猫体重 4.2 公斤，医生说保持得不错。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 10,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    98,
+    99
+   ]
+  },
+  {
+   "sid": 35,
+   "cls": "I",
+   "cls_name": "无关干扰",
+   "question": "我平时用哪个牌子的洗衣液?",
+   "answer_points": {
+    "content": [
+     "蓝月亮",
+     "月亮",
+     "蓝月亮洗衣液",
+     "衣液"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 100,
+     "scenario": 35,
+     "raw_date": "2026-05-17",
+     "text": "洗衣液一直买蓝月亮的，别的用不惯。"
+    },
+    {
+     "doc": 101,
+     "scenario": 35,
+     "raw_date": "2026-02-09",
+     "text": "新买的拖把杆有点短。"
+    },
+    {
+     "doc": 102,
+     "scenario": 35,
+     "raw_date": "2026-08-21",
+     "text": "冰箱里的酸奶过期了，扔了两盒。"
+    },
+    {
+     "doc": 103,
+     "scenario": 35,
+     "raw_date": "2025-12-30",
+     "text": "楼下快递柜换成刷脸的，方便不少。"
+    },
+    {
+     "doc": 104,
+     "scenario": 35,
+     "raw_date": "2026-07-04",
+     "text": "空调遥控器的电池该换了。"
+    },
+    {
+     "doc": 105,
+     "scenario": 35,
+     "raw_date": "2026-04-08",
+     "text": "小区的垃圾分类改到晚上七点以后了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     100
+    ],
+    "match_reasons": {
+     "100": {
+      "content": [
+       "蓝月亮",
+       "月亮",
+       "衣液"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     100
+    ],
+    "votes": [
+     {
+      "sid": 35,
+      "doc_text": "洗衣液一直买蓝月亮的，别的用不惯。",
+      "raw_date": "2026-05-17",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 846,
+       "completion_tokens": 226,
+       "total_tokens": 1072
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录直接说明洗衣液一直买蓝月亮，给出了问题所问的品牌。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 35,
+      "doc_text": "新买的拖把杆有点短。",
+      "raw_date": "2026-02-09",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 831,
+       "completion_tokens": 304,
+       "total_tokens": 1135
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到新买的拖把杆有点短，与洗衣液品牌无关，无法支撑答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 35,
+      "doc_text": "冰箱里的酸奶过期了，扔了两盒。",
+      "raw_date": "2026-08-21",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 837,
+       "completion_tokens": 254,
+       "total_tokens": 1091
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到酸奶过期，与洗衣液牌子无关，无法推出答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 35,
+      "doc_text": "楼下快递柜换成刷脸的，方便不少。",
+      "raw_date": "2025-12-30",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 837,
+       "completion_tokens": 233,
+       "total_tokens": 1070
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"这条记录只提到快递柜换刷脸，与洗衣液品牌无关，无法推出答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 35,
+      "doc_text": "空调遥控器的电池该换了。",
+      "raw_date": "2026-07-04",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 828,
+       "completion_tokens": 279,
+       "total_tokens": 1107
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到空调遥控器电池，和洗衣液品牌无关，无法推出答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 35,
+      "doc_text": "小区的垃圾分类改到晚上七点以后了。",
+      "raw_date": "2026-04-08",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 837,
+       "completion_tokens": 255,
+       "total_tokens": 1092
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录只提到垃圾分类时间，与洗衣液品牌无关。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    100
+   ],
+   "unanswerable": false,
+   "top4": [
+    100,
+    29,
+    113,
+    89
+   ],
+   "top4_detail": [
+    {
+     "doc": 100,
+     "scenario": 35,
+     "raw_date": "2026-05-17",
+     "text": "洗衣液一直买蓝月亮的，别的用不惯。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 29,
+     "scenario": 10,
+     "raw_date": "日期不详",
+     "text": "我一直用 iPhone，习惯了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 113,
+     "scenario": 38,
+     "raw_date": "2026-10-11",
+     "text": "家里常备的茶就一种，绿茶。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 89,
+     "scenario": 30,
+     "raw_date": "日期不详",
+     "text": "公司给换了 ThinkPad，现在出门基本只带它。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    100
+   ]
+  },
+  {
+   "sid": 36,
+   "cls": "D",
+   "cls_name": "历史信念",
+   "question": "猫软便那阵子,我当时怀疑是什么原因?",
+   "answer_points": {
+    "content": [
+     "猫粮",
+     "的怀疑",
+     "猫粮问题"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "猫砂粉尘",
+     "粉尘"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 106,
+     "scenario": 36,
+     "raw_date": "2026-06-08",
+     "text": "猫一直软便，我怀疑是猫粮的问题，换了两三种粮。"
+    },
+    {
+     "doc": 107,
+     "scenario": 36,
+     "raw_date": "2026-06-25",
+     "text": "换粮没用，最后发现是猫砂粉尘太大，换了猫砂就好了。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     106
+    ],
+    "match_reasons": {
+     "106": {
+      "content": [
+       "猫粮",
+       "的怀疑",
+       "猫粮问题"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     106
+    ],
+    "votes": [
+     {
+      "sid": 36,
+      "doc_text": "猫一直软便，我怀疑是猫粮的问题，换了两三种粮。",
+      "raw_date": "2026-06-08",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 379,
+       "total_tokens": 1252
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明当时怀疑是猫粮的问题，正好回答问题所问的“当时怀疑”的原因。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 36,
+      "doc_text": "换粮没用，最后发现是猫砂粉尘太大，换了猫砂就好了。",
+      "raw_date": "2026-06-25",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 873,
+       "completion_tokens": 956,
+       "total_tokens": 1829
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明真正原因是猫砂粉尘、换粮没用，并未提到当时怀疑是猫粮，无法直接支撑问题所需的“当时怀疑”要点。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    106
+   ],
+   "unanswerable": false,
+   "top4": [
+    106,
+    107,
+    10,
+    98
+   ],
+   "top4_detail": [
+    {
+     "doc": 106,
+     "scenario": 36,
+     "raw_date": "2026-06-08",
+     "text": "猫一直软便，我怀疑是猫粮的问题，换了两三种粮。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 107,
+     "scenario": 36,
+     "raw_date": "2026-06-25",
+     "text": "换粮没用，最后发现是猫砂粉尘太大，换了猫砂就好了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 10,
+     "scenario": 5,
+     "raw_date": "2026-06-11",
+     "text": "我家那只橘猫叫「布丁」，特别能吃。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 98,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    106
+   ]
+  },
+  {
+   "sid": 37,
+   "cls": "E",
+   "cls_name": "配额截断",
+   "question": "我给猫打疫苗的那家宠物医院叫什么名字?",
+   "answer_points": {
+    "content": [
+     "宠物医院",
+     "三联 + 狂犬",
+     "疫苗种类",
+     "花费 380",
+     "猫的体重",
+     "猫"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "医院名",
+     "院名"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 108,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "带猫去打了疫苗，是三联，加一针狂犬。"
+    },
+    {
+     "doc": 109,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "疫苗一共花了 380，猫在诊室里一直叫。"
+    },
+    {
+     "doc": 110,
+     "scenario": 37,
+     "raw_date": "2026-05-30",
+     "text": "猫体重 4.2 公斤，医生说保持得不错。"
+    }
+   ],
+   "strict": {
+    "docs": [],
+    "match_reasons": {
+     "108": {
+      "content": [
+       "猫"
+      ],
+      "date": []
+     },
+     "109": {
+      "content": [
+       "猫"
+      ],
+      "date": []
+     },
+     "110": {
+      "content": [
+       "猫的体重",
+       "猫"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [],
+    "votes": [
+     {
+      "sid": 37,
+      "doc_text": "带猫去打了疫苗，是三联，加一针狂犬。",
+      "raw_date": "2026-04-12",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 951,
+       "completion_tokens": 777,
+       "total_tokens": 1728
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录只提到疫苗种类，没有给出宠物医院名称，也未明确说明记忆中没有医院信息。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 37,
+      "doc_text": "疫苗一共花了 380，猫在诊室里一直叫。",
+      "raw_date": "2026-04-12",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 945,
+       "completion_tokens": 856,
+       "total_tokens": 1801
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"记录只提到疫苗花费和猫叫，未提供宠物医院名称，无法支撑答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 37,
+      "doc_text": "猫体重 4.2 公斤，医生说保持得不错。",
+      "raw_date": "2026-05-30",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 948,
+       "completion_tokens": 457,
+       "total_tokens": 1405
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"这条记录只提到猫的体重和医生评价，没有宠物医院名称，也无法支撑问题答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [],
+   "unanswerable": true,
+   "top4": [
+    109,
+    108,
+    98,
+    110
+   ],
+   "top4_detail": [
+    {
+     "doc": 109,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "疫苗一共花了 380，猫在诊室里一直叫。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 108,
+     "scenario": 37,
+     "raw_date": "2026-04-12",
+     "text": "带猫去打了疫苗，是三联，加一针狂犬。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 98,
+     "scenario": 34,
+     "raw_date": "2026-06-01",
+     "text": "我家猫今年三岁，是只狸花。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 110,
+     "scenario": 37,
+     "raw_date": "2026-05-30",
+     "text": "猫体重 4.2 公斤，医生说保持得不错。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": []
+  },
+  {
+   "sid": 38,
+   "cls": "F",
+   "cls_name": "近似重复",
+   "question": "我平时喝什么茶?",
+   "answer_points": {
+    "content": [
+     "喝绿茶",
+     "绿茶"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "不喝红茶",
+     "红茶"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 111,
+     "scenario": 38,
+     "raw_date": "2026-01-09",
+     "text": "我只喝绿茶，红茶喝着太涩。"
+    },
+    {
+     "doc": 112,
+     "scenario": 38,
+     "raw_date": "2026-05-23",
+     "text": "别给我泡红茶，我喝不惯，绿茶就行。"
+    },
+    {
+     "doc": 113,
+     "scenario": 38,
+     "raw_date": "2026-10-11",
+     "text": "家里常备的茶就一种，绿茶。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     111,
+     112,
+     113
+    ],
+    "match_reasons": {
+     "111": {
+      "content": [
+       "喝绿茶",
+       "绿茶"
+      ],
+      "date": []
+     },
+     "112": {
+      "content": [
+       "绿茶"
+      ],
+      "date": []
+     },
+     "113": {
+      "content": [
+       "绿茶"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     111,
+     112,
+     113
+    ],
+    "votes": [
+     {
+      "sid": 38,
+      "doc_text": "我只喝绿茶，红茶喝着太涩。",
+      "raw_date": "2026-01-09",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 840,
+       "completion_tokens": 298,
+       "total_tokens": 1138
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录直接说明只喝绿茶且红茶太涩，支撑“只喝绿茶，不喝红茶”的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 38,
+      "doc_text": "别给我泡红茶，我喝不惯，绿茶就行。",
+      "raw_date": "2026-05-23",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 852,
+       "completion_tokens": 332,
+       "total_tokens": 1184
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"记录直接说明不喝红茶、绿茶就行，支撑“只喝绿茶，不喝红茶”的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 38,
+      "doc_text": "家里常备的茶就一种，绿茶。",
+      "raw_date": "2026-10-11",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 843,
+       "completion_tokens": 593,
+       "total_tokens": 1436
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"记录明确说家里常备的茶只有绿茶，可支撑“只喝绿茶”的答案。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    111,
+    112,
+    113
+   ],
+   "unanswerable": false,
+   "top4": [
+    113,
+    112,
+    111,
+    115
+   ],
+   "top4_detail": [
+    {
+     "doc": 113,
+     "scenario": 38,
+     "raw_date": "2026-10-11",
+     "text": "家里常备的茶就一种，绿茶。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 112,
+     "scenario": 38,
+     "raw_date": "2026-05-23",
+     "text": "别给我泡红茶，我喝不惯，绿茶就行。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 111,
+     "scenario": 38,
+     "raw_date": "2026-01-09",
+     "text": "我只喝绿茶，红茶喝着太涩。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 115,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    111,
+    112,
+    113
+   ]
+  },
+  {
+   "sid": 39,
+   "cls": "A",
+   "cls_name": "正常更正",
+   "question": "我现在每天喝几杯咖啡?",
+   "answer_points": {
+    "content": [
+     "每天一杯低因",
+     "低因",
+     "一杯",
+     "一杯低因"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": [
+     "三杯减到一杯",
+     "三杯减"
+    ]
+   },
+   "candidate_docs": [
+    {
+     "doc": 114,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。"
+    },
+    {
+     "doc": 115,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     115
+    ],
+    "match_reasons": {
+     "115": {
+      "content": [
+       "低因",
+       "一杯低因"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     115
+    ],
+    "votes": [
+     {
+      "sid": 39,
+      "doc_text": "每天三杯美式，早中晚各一杯。",
+      "raw_date": "2026-01-12",
+      "votes": [
+       "no",
+       "no",
+       "no"
+      ],
+      "yes": 0,
+      "no": 3,
+      "majority": "no",
+      "confidence": 0.0,
+      "usage": {
+       "prompt_tokens": 870,
+       "completion_tokens": 2431,
+       "total_tokens": 3301
+      },
+      "raw": "{\"evidence\": \"no\", \"reason\": \"该记录只说明2026-01-12每天三杯美式，不能推出“现在每天一杯低因”，反而与标准答案不符。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 39,
+      "doc_text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+      "raw_date": "2026-11-03",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 882,
+       "completion_tokens": 259,
+       "total_tokens": 1141
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录直接说明现在每天只喝一杯低因咖啡，正好回答了问题。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    115
+   ],
+   "unanswerable": false,
+   "top4": [
+    114,
+    115,
+    94,
+    64
+   ],
+   "top4_detail": [
+    {
+     "doc": 114,
+     "scenario": 39,
+     "raw_date": "2026-01-12",
+     "text": "每天三杯美式，早中晚各一杯。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 115,
+     "scenario": 39,
+     "raw_date": "2026-11-03",
+     "text": "胃不好，医生让少喝，现在每天只喝一杯低因。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 94,
+     "scenario": 32,
+     "raw_date": "2026-09-14",
+     "text": "还是照常两杯美式，戒咖啡的事等忙完这阵再说。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 64,
+     "scenario": 21,
+     "raw_date": "2026-10-25",
+     "text": "补充一句，2024 年那阵子我几乎每周都喝，现在基本不碰了。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    }
+   ],
+   "evidence_in_top4": [
+    115
+   ]
+  },
+  {
+   "sid": 40,
+   "cls": "J",
+   "cls_name": "无日期对照",
+   "question": "我现在上班怎么去?",
+   "answer_points": {
+    "content": [
+     "开车",
+     "改地铁",
+     "地铁",
+     "时开车",
+     "请用户说明当前通勤方式"
+    ],
+    "dates": [],
+    "source": "deterministic",
+    "negative_filtered": []
+   },
+   "candidate_docs": [
+    {
+     "doc": 116,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "我开车上班，走滨江路，四十分钟。"
+    },
+    {
+     "doc": 117,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "改成坐地铁了，路上还能看会儿书。"
+    },
+    {
+     "doc": 118,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "地铁早高峰太挤，有时候还是开车。"
+    }
+   ],
+   "strict": {
+    "docs": [
+     116,
+     117,
+     118
+    ],
+    "match_reasons": {
+     "116": {
+      "content": [
+       "开车"
+      ],
+      "date": []
+     },
+     "117": {
+      "content": [
+       "改地铁",
+       "地铁"
+      ],
+      "date": []
+     },
+     "118": {
+      "content": [
+       "开车",
+       "改地铁",
+       "地铁"
+      ],
+      "date": []
+     }
+    }
+   },
+   "judge": {
+    "docs": [
+     116,
+     117,
+     118
+    ],
+    "votes": [
+     {
+      "sid": 40,
+      "doc_text": "我开车上班，走滨江路，四十分钟。",
+      "raw_date": "日期不详",
+      "votes": [
+       "no",
+       "yes",
+       "yes"
+      ],
+      "yes": 2,
+      "no": 1,
+      "majority": "yes",
+      "confidence": 0.667,
+      "usage": {
+       "prompt_tokens": 966,
+       "completion_tokens": 2165,
+       "total_tokens": 3131
+      },
+      "raw": "{\"evidence\":\"no\",\"reason\":\"记录只说‘我开车上班’且日期不详，无法单独确定当前通勤方式或支撑‘无法确定’的结论。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 40,
+      "doc_text": "改成坐地铁了，路上还能看会儿书。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "yes"
+      ],
+      "yes": 3,
+      "no": 0,
+      "majority": "yes",
+      "confidence": 1.0,
+      "usage": {
+       "prompt_tokens": 963,
+       "completion_tokens": 1379,
+       "total_tokens": 2342
+      },
+      "raw": "{\"evidence\": \"yes\", \"reason\": \"该记录是构成通勤方式记忆冲突的一方，说明改成坐地铁且无日期，需与其他记录合看才能判断当前方式。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     },
+     {
+      "sid": 40,
+      "doc_text": "地铁早高峰太挤，有时候还是开车。",
+      "raw_date": "日期不详",
+      "votes": [
+       "yes",
+       "yes",
+       "no"
+      ],
+      "yes": 2,
+      "no": 1,
+      "majority": "yes",
+      "confidence": 0.667,
+      "usage": {
+       "prompt_tokens": 960,
+       "completion_tokens": 1879,
+       "total_tokens": 2839
+      },
+      "raw": "{\"evidence\":\"yes\",\"reason\":\"该记录称“有时候还是开车”且日期不详，是导致通勤方式无法确定/构成记忆冲突的一方证据。\"}",
+      "model": "deepseek-flash",
+      "prompt_version": "judge-v1"
+     }
+    ]
+   },
+   "union_docs": [
+    116,
+    117,
+    118
+   ],
+   "unanswerable": false,
+   "top4": [
+    116,
+    117,
+    27,
+    118
+   ],
+   "top4_detail": [
+    {
+     "doc": 116,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "我开车上班，走滨江路，四十分钟。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 117,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "改成坐地铁了，路上还能看会儿书。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    },
+    {
+     "doc": 27,
+     "scenario": 9,
+     "raw_date": "2026-03-02",
+     "text": "公司在 B2 区给我划了个固定车位，走楼梯上去还挺远。",
+     "strict_evidence": false,
+     "judge_evidence": false
+    },
+    {
+     "doc": 118,
+     "scenario": 40,
+     "raw_date": "日期不详",
+     "text": "地铁早高峰太挤，有时候还是开车。",
+     "strict_evidence": true,
+     "judge_evidence": true
+    }
+   ],
+   "evidence_in_top4": [
+    116,
+    117,
+    118
+   ]
+  }
+ ]
+}
