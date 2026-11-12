@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-12T19:27:22+0800",
+ "generated_at": "2026-11-12T19:35:13+0800",
  "partial": false,
  "n_questions_selected": 40,
  "data": {
@@ -51,6 +51,7 @@
    "grader_prompt_version": "reader-grade-v1",
    "records_format": "[raw_date] text",
    "contract_injected": false,
+   "contract_version": null,
    "this_run": {
     "calls": {
      "reader": 0,
@@ -94,6 +95,7 @@
    "grader_prompt_version": "reader-grade-contract-v2",
    "records_format": "[raw_date] text",
    "contract_injected": true,
+   "contract_version": "v2",
    "this_run": {
     "calls": {
      "reader": 0,
@@ -137,6 +139,7 @@
    "grader_prompt_version": "reader-grade-contract-v2-date",
    "records_format": "[记录于 raw_date] text",
    "contract_injected": true,
+   "contract_version": "v2",
    "this_run": {
     "calls": {
      "reader": 0,
@@ -173,14 +176,66 @@
      }
     }
    }
+  },
+  "D": {
+   "label": "契约 v3",
+   "reader_prompt_version": "reader-contract-v3",
+   "grader_prompt_version": "reader-grade-contract-v3",
+   "records_format": "[raw_date] text",
+   "contract_injected": true,
+   "contract_version": "v3",
+   "this_run": {
+    "calls": {
+     "reader": 0,
+     "judge": 0
+    },
+    "usage": {
+     "reader": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+     },
+     "judge": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+     }
+    }
+   },
+   "cache_total": {
+    "reader": {
+     "entries": 40,
+     "usage": {
+      "prompt_tokens": 17600,
+      "completion_tokens": 15688,
+      "total_tokens": 33288
+     }
+    },
+    "judge": {
+     "entries": 40,
+     "usage": {
+      "prompt_tokens": 23857,
+      "completion_tokens": 12724,
+      "total_tokens": 36581
+     }
+    }
+   }
   }
  },
  "contract": {
-  "version": "v2",
+  "version": "v2/v3",
   "text": "回答这些关于我本人记忆的问题时，请遵守：\n1. 直接给出答案；如果答案来自记忆，说明依据的是哪一天记的那条。\n2. 如果多条记录对同一件事给了不同的说法，把每一种说法和它对应的日期都列出来，\n   并说明无法确定哪一条反映我当前的真实情况，然后问我哪一个是对的。\n   但有一种例外：如果其中某条记录是「已确认」「已作废」这种由我本人裁决过的结论，\n   说明这件事我已经拍板了，以那条为准直接回答，不要再把旧说法摆出来问我。\n3. 如果记忆里根本没有答案，直接说没有，不要编。\n4. 如果所有记录说法一致，直接回答，不要把同一件事换个说法重复一遍。\n",
+  "text_v2": "回答这些关于我本人记忆的问题时，请遵守：\n1. 直接给出答案；如果答案来自记忆，说明依据的是哪一天记的那条。\n2. 如果多条记录对同一件事给了不同的说法，把每一种说法和它对应的日期都列出来，\n   并说明无法确定哪一条反映我当前的真实情况，然后问我哪一个是对的。\n   但有一种例外：如果其中某条记录是「已确认」「已作废」这种由我本人裁决过的结论，\n   说明这件事我已经拍板了，以那条为准直接回答，不要再把旧说法摆出来问我。\n3. 如果记忆里根本没有答案，直接说没有，不要编。\n4. 如果所有记录说法一致，直接回答，不要把同一件事换个说法重复一遍。\n",
+  "text_v3": "回答这些关于我本人记忆的问题时，请遵守：\n1. 直接给出答案；如果答案来自记忆，说明依据的是哪一天记的那条。\n2. 如果多条记录对同一件事给了不同的说法，先分清这件事的性质：\n   a. 会随时间变化的属性（住址、车位、工作、作息、体重、设备、习惯）——\n      以日期最新的那条为准，直接回答，并说明\"按 X 年 X 月 X 日的记录\"；\n      旧说法只有在能帮助理解时才用一句话带过。\n   b. 不会随时间变化的稳定事实（血型、过敏、出生年份、药量、宠物的年龄）——\n      把每一种说法和它对应的日期都列出来，说明无法确定哪条是对的，然后问我。\n   例外：如果其中某条是「已确认」「已作废」这种由我本人裁决过的结论，以那条为准直接回答。\n3. 如果记忆里根本没有答案，直接说没有，不要编。\n4. 如果所有记录说法一致，直接回答，不要把同一件事换个说法重复一遍。\n5. 如果有关记录没有日期，说明\"这条没记时间\"，但仍要给出更可能的那一条作为倾向，不要只说不知道。\n",
   "preamble": "你是一个助手。下面是用户提问，附若干条从记忆库里检索出来的记录。每条记忆前面的方括号里是这条记录的记录时间。\n请根据这些记忆回答用户的问题。直接给出答案，不要调用工具。",
   "placement": "PREAMBLE + 契约全文 + 【用户问】 + 【检索到的记忆】",
-  "note": "A 组不注入；B/C 注入同一段逐字文本，C 只把记录前缀从 [date] 改成 [记录于 date]"
+  "by_group": {
+   "A": null,
+   "B": "v2",
+   "C": "v2",
+   "D": "v3"
+  },
+  "note": "A 组不注入；B/C 注入 v2，D/E 注入 v3（逐字）；C/E 只把记录前缀从 [date] 改成 [记录于 date]"
  },
  "summary": {
   "A": {
@@ -386,7 +441,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 4,
@@ -399,7 +456,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 10,
@@ -412,7 +471,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 12,
@@ -425,7 +486,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 14,
@@ -438,7 +501,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 20,
@@ -451,7 +516,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 22,
@@ -464,7 +531,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 24,
@@ -477,7 +546,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 30,
@@ -490,7 +561,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": true
      },
      {
       "sid": 32,
@@ -503,7 +576,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 34,
@@ -516,7 +591,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 40,
@@ -529,7 +606,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": true
      }
     ]
    }
@@ -732,7 +811,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 4,
@@ -745,7 +826,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 10,
@@ -758,7 +841,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 12,
@@ -771,7 +856,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 14,
@@ -784,7 +871,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 20,
@@ -797,7 +886,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 22,
@@ -810,7 +901,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 24,
@@ -823,7 +916,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 30,
@@ -836,7 +931,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 32,
@@ -849,7 +946,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 34,
@@ -862,7 +961,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 40,
@@ -875,7 +976,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      }
     ]
    }
@@ -1078,7 +1181,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 4,
@@ -1091,7 +1196,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 10,
@@ -1104,7 +1211,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 12,
@@ -1117,7 +1226,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 14,
@@ -1130,7 +1241,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 20,
@@ -1143,7 +1256,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 22,
@@ -1156,7 +1271,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 24,
@@ -1169,7 +1286,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 30,
@@ -1182,7 +1301,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      {
       "sid": 32,
@@ -1195,7 +1316,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 34,
@@ -1208,7 +1331,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      {
       "sid": 40,
@@ -1221,7 +1346,379 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     }
+    ]
+   }
+  },
+  "D": {
+   "overall": {
+    "n": 40,
+    "errors": 0,
+    "error_sids": [],
+    "✅": 28,
+    "⚠️": 5,
+    "❌": 7,
+    "correct_rate": 0.7,
+    "pass_rate": 0.825
+   },
+   "answerable": {
+    "n": 36,
+    "errors": 0,
+    "error_sids": [],
+    "✅": 24,
+    "⚠️": 5,
+    "❌": 7,
+    "correct_rate": 0.6666666666666666,
+    "pass_rate": 0.8055555555555556
+   },
+   "ambiguous_CGJ": {
+    "n": 12,
+    "errors": 0,
+    "error_sids": [],
+    "✅": 3,
+    "⚠️": 4,
+    "❌": 5,
+    "correct_rate": 0.25,
+    "pass_rate": 0.5833333333333334
+   },
+   "fact_ABDFHI": {
+    "n": 24,
+    "errors": 0,
+    "error_sids": [],
+    "✅": 21,
+    "⚠️": 1,
+    "❌": 2,
+    "correct_rate": 0.875,
+    "pass_rate": 0.9166666666666666
+   },
+   "unanswerable_E": {
+    "n": 4,
+    "errors": 0,
+    "error_sids": [],
+    "✅": 4,
+    "⚠️": 0,
+    "❌": 0,
+    "correct_rate": 1.0,
+    "pass_rate": 1.0
+   },
+   "by_class": {
+    "A": {
+     "n": 4,
+     "✅": 4,
+     "⚠️": 0,
+     "❌": 0
+    },
+    "B": {
+     "n": 4,
+     "✅": 3,
+     "⚠️": 0,
+     "❌": 1
+    },
+    "C": {
+     "n": 4,
+     "✅": 0,
+     "⚠️": 3,
+     "❌": 1
+    },
+    "D": {
+     "n": 4,
+     "✅": 4,
+     "⚠️": 0,
+     "❌": 0
+    },
+    "E": {
+     "n": 4,
+     "✅": 4,
+     "⚠️": 0,
+     "❌": 0
+    },
+    "F": {
+     "n": 4,
+     "✅": 4,
+     "⚠️": 0,
+     "❌": 0
+    },
+    "G": {
+     "n": 4,
+     "✅": 0,
+     "⚠️": 1,
+     "❌": 3
+    },
+    "H": {
+     "n": 4,
+     "✅": 2,
+     "⚠️": 1,
+     "❌": 1
+    },
+    "I": {
+     "n": 4,
+     "✅": 4,
+     "⚠️": 0,
+     "❌": 0
+    },
+    "J": {
+     "n": 4,
+     "✅": 3,
+     "⚠️": 0,
+     "❌": 1
+    }
+   },
+   "e_class": {
+    "n": 4,
+    "sids": [
+     7,
+     17,
+     27,
+     37
+    ],
+    "abstained": 4,
+    "abstained_rate": 1.0,
+    "mechanical_said_no": 4,
+    "mechanical_said_no_sids": [
+     7,
+     17,
+     27,
+     37
+    ],
+    "fabricated": 0,
+    "fabricated_sids": [],
+    "answered_without_abstain": [],
+    "novel_numbers": {},
+    "detail": [
+     {
+      "sid": 7,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "said_no": true,
+      "novel_numbers": [],
+      "answer": "记忆里没有具体尿酸数值。  \n[2026-11-05] 只记录“今年体检尿酸偏高，又开始忌口”；[2026-10-09] 只记录医生说“少熬夜、少吃海鲜”，都没有提到具体数值。"
+     },
+     {
+      "sid": 17,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "said_no": true,
+      "novel_numbers": [],
+      "answer": "记忆里没有你住过的酒店名称。只有 2026 年 5 月 12 日“到大阪、心斋桥人太多”的记录，没有提到酒店。"
+     },
+     {
+      "sid": 27,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "said_no": true,
+      "novel_numbers": [],
+      "answer": "没有相关记忆能确定车险到期日。2026-02-18 只记了“续了车险，还是原来那家公司，三者险买到 300 万”，没提到具体到期日期。"
+     },
+     {
+      "sid": 37,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "said_no": true,
+      "novel_numbers": [],
+      "answer": "记忆里没有提到那家宠物医院的名字。  \n只有 [2026-04-12] 的记录显示你带猫打了三联和狂犬疫苗、共花 380 元，但没有记医院名称。"
+     }
+    ]
+   },
+   "compliance": {
+    "ambiguous_CGJ": {
+     "n": 12,
+     "flags_conflict": 7,
+     "lists_both_sides": 7,
+     "cites_date": 11,
+     "asks_back": 2,
+     "says_absent": 2
+    },
+    "fact_ABDFHI": {
+     "n": 24,
+     "flags_conflict": 0,
+     "lists_both_sides": 0,
+     "cites_date": 24,
+     "asks_back": 0,
+     "says_absent": 2
+    },
+    "detail_CGJ": [
+     {
+      "sid": 2,
+      "cls": "G",
+      "verdict": "❌",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 4,
+      "cls": "C",
+      "verdict": "❌",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 5,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 10,
+      "cls": "J",
+      "verdict": "✅",
+      "answer_state": "answered",
+      "cites_date": false,
+      "n_date_mentions": 0,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": true,
+      "gives_lean": true
+     },
+     {
+      "sid": 12,
+      "cls": "G",
+      "verdict": "❌",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 14,
+      "cls": "C",
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": true,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 20,
+      "cls": "J",
+      "verdict": "❌",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 1,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     {
+      "sid": 22,
+      "cls": "G",
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
+     },
+     {
+      "sid": 24,
+      "cls": "C",
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": true,
+      "asks_back": true,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 30,
+      "cls": "J",
+      "verdict": "✅",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
+     },
+     {
+      "sid": 32,
+      "cls": "G",
+      "verdict": "❌",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 34,
+      "cls": "C",
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "cites_date": true,
+      "n_date_mentions": 4,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     {
+      "sid": 40,
+      "cls": "J",
+      "verdict": "✅",
+      "answer_state": "answered",
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
      }
     ]
    }
@@ -1732,6 +2229,75 @@
    "improved_n": 11,
    "worsened_n": 6
   },
+  "A_vs_D": {
+   "pair": "A→D",
+   "n": 40,
+   "improved": [
+    {
+     "sid": 10,
+     "cls": "J",
+     "A": "❌",
+     "B": "✅",
+     "delta": 2
+    },
+    {
+     "sid": 14,
+     "cls": "C",
+     "A": "❌",
+     "B": "⚠️",
+     "delta": 1
+    },
+    {
+     "sid": 24,
+     "cls": "C",
+     "A": "❌",
+     "B": "⚠️",
+     "delta": 1
+    },
+    {
+     "sid": 40,
+     "cls": "J",
+     "A": "❌",
+     "B": "✅",
+     "delta": 2
+    }
+   ],
+   "worsened": [],
+   "verdict_changed": [
+    {
+     "sid": 10,
+     "cls": "J",
+     "A": "❌",
+     "B": "✅",
+     "delta": 2
+    },
+    {
+     "sid": 14,
+     "cls": "C",
+     "A": "❌",
+     "B": "⚠️",
+     "delta": 1
+    },
+    {
+     "sid": 24,
+     "cls": "C",
+     "A": "❌",
+     "B": "⚠️",
+     "delta": 1
+    },
+    {
+     "sid": 40,
+     "cls": "J",
+     "A": "❌",
+     "B": "✅",
+     "delta": 2
+    }
+   ],
+   "same_n": 36,
+   "net_verdict_score": 6,
+   "improved_n": 4,
+   "worsened_n": 0
+  },
   "B_vs_C": {
    "pair": "B→C",
    "n": 40,
@@ -1772,7 +2338,640 @@
    "net_verdict_score": 2,
    "improved_n": 2,
    "worsened_n": 0
+  },
+  "B_vs_D": {
+   "pair": "B→D",
+   "n": 40,
+   "improved": [
+    {
+     "sid": 1,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 9,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 10,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 19,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 29,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 30,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 38,
+     "cls": "F",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 39,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 40,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    }
+   ],
+   "worsened": [
+    {
+     "sid": 2,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 4,
+     "cls": "C",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 11,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 12,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 20,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 32,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    }
+   ],
+   "verdict_changed": [
+    {
+     "sid": 1,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 2,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 4,
+     "cls": "C",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 9,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 10,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 11,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 12,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 19,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 20,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 29,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 30,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 32,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 38,
+     "cls": "F",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 39,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 40,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    }
+   ],
+   "same_n": 25,
+   "net_verdict_score": 3,
+   "improved_n": 9,
+   "worsened_n": 6
+  },
+  "C_vs_D": {
+   "pair": "C→D",
+   "n": 40,
+   "improved": [
+    {
+     "sid": 1,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 9,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 10,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 19,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 29,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 30,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 39,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 40,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    }
+   ],
+   "worsened": [
+    {
+     "sid": 2,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 3,
+     "cls": "H",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 4,
+     "cls": "C",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 11,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 12,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 20,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 32,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    }
+   ],
+   "verdict_changed": [
+    {
+     "sid": 1,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 2,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 3,
+     "cls": "H",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 4,
+     "cls": "C",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 9,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 10,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 11,
+     "cls": "B",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 12,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 19,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 20,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 29,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 30,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 32,
+     "cls": "G",
+     "A": "⚠️",
+     "B": "❌",
+     "delta": -1
+    },
+    {
+     "sid": 39,
+     "cls": "A",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    },
+    {
+     "sid": 40,
+     "cls": "J",
+     "A": "⚠️",
+     "B": "✅",
+     "delta": 1
+    }
+   ],
+   "same_n": 25,
+   "net_verdict_score": 1,
+   "improved_n": 8,
+   "worsened_n": 7
   }
+ },
+ "focus_7": {
+  "sids": [
+   1,
+   9,
+   19,
+   29,
+   30,
+   38,
+   39
+  ],
+  "note": "B 相对 A 由 ✅ 掉到 ⚠️ 的 7 题（1/9/19/29/30/38/39）；看 v3 是否把它们拉回 ✅",
+  "recovered": [
+   1,
+   9,
+   19,
+   29,
+   30,
+   38,
+   39
+  ],
+  "still_warned": [],
+  "rows": [
+   {
+    "sid": 1,
+    "cls": "B",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "⚠️",
+     "D": "✅"
+    },
+    "answer_D": "你现在开的是**比亚迪海豹**。依据是 **2026-10-07** 的记录：海豹是今年四月换的。  \n（2026-07-20 虽有“把车卖了”的说法，但同一天也有“车没卖、继续开”的记录；按更晚的 2026-10-07 记录判断为海豹。）",
+    "reason_D": "回答正确给出当前是比亚迪海豹，并依据较晚记录区分了旧车与同日冲突信息。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 2,
+     "flags_conflict": false,
+     "asks_back": false,
+     "says_absent": false,
+     "lists_both_sides": false,
+     "compliant_cg": false,
+     "states_no_date": false,
+     "gives_lean": false
+    }
+   },
+   {
+    "sid": 9,
+    "cls": "A",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "⚠️",
+     "D": "✅"
+    },
+    "answer_D": "按 **2026 年 8 月 14 日**的记录，你公司月租车位在 **B1 区 A17**，离电梯近。  \n2026 年 9 月 2 日只补充说你的黑色 Model Y 停在地库最里面，没有给出不同的具体车位号。",
+    "reason_D": "回答明确给出最新正确车位 B1 区 A17，与标准答案一致，且未编造记录外事实。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 3,
+     "flags_conflict": false,
+     "asks_back": false,
+     "says_absent": false,
+     "lists_both_sides": false,
+     "compliant_cg": false,
+     "states_no_date": false,
+     "gives_lean": false
+    }
+   },
+   {
+    "sid": 19,
+    "cls": "A",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "⚠️",
+     "D": "✅"
+    },
+    "answer_D": "按 2026 年 10 月 2 日的记录，你现在调整作息了，一般 23 点前必须上床，手机放客厅。  \n（2025 年 12 月说过凌晨一点才睡，但那是旧说法。）",
+    "reason_D": "回答依据较新的2026-10-02记录给出“23点前上床”，与标准答案一致，并正确说明凌晨一点是旧说法。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 3,
+     "flags_conflict": false,
+     "asks_back": false,
+     "says_absent": false,
+     "lists_both_sides": false,
+     "compliant_cg": false,
+     "states_no_date": false,
+     "gives_lean": false
+    }
+   },
+   {
+    "sid": 29,
+    "cls": "A",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "⚠️",
+     "D": "✅"
+    },
+    "answer_D": "按 **2026 年 9 月 19 日**的记录，你现在键盘用的是 **静音茶轴**。  \n依据是那天记录说红轴太吵，办公室同事有意见，所以换成了静音茶轴。",
+    "reason_D": "回答依据2026年9月19日记录明确给出静音茶轴，符合标准答案。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 2,
+     "flags_conflict": false,
+     "asks_back": false,
+     "says_absent": false,
+     "lists_both_sides": false,
+     "compliant_cg": false,
+     "states_no_date": false,
+     "gives_lean": false
+    }
+   },
+   {
+    "sid": 30,
+    "cls": "J",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "⚠️",
+     "D": "✅"
+    },
+    "answer_D": "记忆里没有能确定当前笔记本型号的有日期记录。两条没记时间的记录互相矛盾：一条说公司给换了 ThinkPad，现在出门基本只带它；另一条说一直用 MacBook Air。按“现在出门基本只带它”这一表述，更可能是 **ThinkPad**。  \n另外，2026 年 2 月 7 日那条只提到红轴键盘，和笔记本型号无关。",
+    "reason_D": "答案给出倾向 ThinkPad，并指出记录无日期、互相矛盾无法确认先后，符合 J 类正确标准。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 2,
+     "flags_conflict": true,
+     "asks_back": false,
+     "says_absent": true,
+     "lists_both_sides": true,
+     "compliant_cg": true,
+     "states_no_date": true,
+     "gives_lean": true
+    }
+   },
+   {
+    "sid": 38,
+    "cls": "F",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "✅",
+     "D": "✅"
+    },
+    "answer_D": "你平时喝绿茶，不喝红茶。按 **2026年11月3日** 的记录，因为胃不好，现在每天只喝一杯低因茶；茶种依据 **2026年10月11日** 的记录是“家里常备的茶就一种，绿茶”，**2026年1月9日/5月23日** 也都说只喝或能喝绿茶。",
+    "reason_D": "回答明确答出只喝绿茶、不喝红茶，与标准答案一致，且引用记忆信息无误。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 5,
+     "flags_conflict": false,
+     "asks_back": false,
+     "says_absent": false,
+     "lists_both_sides": false,
+     "compliant_cg": false,
+     "states_no_date": false,
+     "gives_lean": false
+    }
+   },
+   {
+    "sid": 39,
+    "cls": "A",
+    "verdicts": {
+     "A": "✅",
+     "B": "⚠️",
+     "C": "⚠️",
+     "D": "✅"
+    },
+    "answer_D": "按 2026 年 11 月 3 日的记录，你现在每天只喝 **一杯低因咖啡**（因胃不好，医生建议少喝）。",
+    "reason_D": "回答明确给出每天一杯低因咖啡，与标准答案一致。",
+    "contract_D": {
+     "cites_date": true,
+     "n_date_mentions": 2,
+     "flags_conflict": false,
+     "asks_back": false,
+     "says_absent": false,
+     "lists_both_sides": false,
+     "compliant_cg": false,
+     "states_no_date": false,
+     "gives_lean": false
+    }
+   }
+  ]
  },
  "replication_A": {
   "reference": "E:\\dsh-mnemon-provider-graphiti\\research\\recall\\reader_eval.json",
@@ -1794,7 +2993,9 @@
  "prompt_self_check": {
   "A_equals_reader_eval": true,
   "B_equals_reader_eval": true,
+  "D_equals_reader_eval": true,
   "C_differs_only_in_record_block": true,
+  "E_differs_only_in_record_block": true,
   "A_reader_prompt_equals_reader_eval": true
  },
  "per_question": [
@@ -1880,7 +3081,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -1935,7 +3138,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -1990,7 +3195,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 1,
+     "cls": "B",
+     "cls_name": "补录旧事实",
+     "question": "我现在开的是什么车?",
+     "reader_answer": "你现在开的是**比亚迪海豹**。依据是 **2026-10-07** 的记录：海豹是今年四月换的。  \n（2026-07-20 虽有“把车卖了”的说法，但同一天也有“车没卖、继续开”的记录；按更晚的 2026-10-07 记录判断为海豹。）",
+     "grade": {
+      "group": "D",
+      "sid": 1,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答正确给出当前是比亚迪海豹，并依据较晚记录区分了旧车与同日冲突信息。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答正确给出当前是比亚迪海豹，并依据较晚记录区分了旧车与同日冲突信息。\"}",
+      "usage": {
+       "prompt_tokens": 640,
+       "completion_tokens": 375,
+       "total_tokens": 1015,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 331
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 384
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:01+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -2078,7 +3342,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2133,7 +3399,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2188,7 +3456,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 2,
+     "cls": "G",
+     "cls_name": "同日期冲突",
+     "question": "我客厅空调一般开多少度?",
+     "reader_answer": "按 2026 年 8 月 12 日的记录，你客厅空调后来调成了 **28 度**，因为 26 度觉得有点冷、冻脚。",
+     "grade": {
+      "group": "D",
+      "sid": 2,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": true,
+      "reason": "G类同日26度与28度冲突应判无法确定；回答自信给出28度并虚构“后来调成”的顺序，未标注不确定性。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":true,\"reason\":\"G类同日26度与28度冲突应判无法确定；回答自信给出28度并虚构“后来调成”的顺序，未标注不确定性。\"}",
+      "usage": {
+       "prompt_tokens": 601,
+       "completion_tokens": 559,
+       "total_tokens": 1160,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 505
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 345
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:00+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -2276,7 +3603,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2331,7 +3660,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2386,7 +3717,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 3,
+     "cls": "H",
+     "cls_name": "粗粒度日期",
+     "question": "我 2026 年一共换了几次工作?",
+     "reader_answer": "按记忆记录，你 2026 年一共换了 **3 次工作**：\n\n- **2026 年 3 月**：从 SaaS 公司离职，去了朋友介绍的创业团队；\n- **2026 年 5 月 12 日**：跳槽到一家做推荐算法的公司；\n- **2026 年 8 月 15 日**：又跳到一家做跨境电商的公司。\n\n依据是 **2026-03、2026-05-12、2026-08-15** 这三条记录。**2026-11-08** 那条是补记去年在美团的事，不计入 2026 年换工作次数。",
+     "grade": {
+      "group": "D",
+      "sid": 3,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "明确回答3次，与标准答案两次不符，且未标注不确定性。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"明确回答3次，与标准答案两次不符，且未标注不确定性。\"}",
+      "usage": {
+       "prompt_tokens": 697,
+       "completion_tokens": 956,
+       "total_tokens": 1653,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 918
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 441
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:31+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 7,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -2474,7 +3864,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2529,7 +3921,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2584,7 +3978,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 4,
+     "cls": "C",
+     "cls_name": "晚但记错",
+     "question": "我的车是什么颜色、什么型号?",
+     "reader_answer": "按 **2026 年 10 月 7 日**的记录，你的车是 **比亚迪海豹**（记录说“海豹是今年四月才换的”，并与 **2026 年 4 月 18 日**提海豹的记录一致）。\n\n但记忆里**没有记录海豹的颜色**，所以颜色无法确定。旧记录里提到过白色 Model 3（2026-03-10）和黑色 Model Y（2026-09-02），但与最新记录不一致，按最新记录不采用。",
+     "grade": {
+      "group": "D",
+      "sid": 4,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "它自信给出“车型是比亚迪海豹”的具体结论，虽提到旧记录不一致，但C类要求答“无法确定”，给出具体答案即判错。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"它自信给出“车型是比亚迪海豹”的具体结论，虽提到旧记录不一致，但C类要求答“无法确定”，给出具体答案即判错。\"}",
+      "usage": {
+       "prompt_tokens": 706,
+       "completion_tokens": 1076,
+       "total_tokens": 1782,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 1019
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 450
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:28+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 5,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -2672,7 +4125,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2727,7 +4182,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2782,7 +4239,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 5,
+     "cls": "I",
+     "cls_name": "无关干扰",
+     "question": "我家猫叫什么名字?",
+     "reader_answer": "你家猫叫「布丁」。依据是 2026 年 6 月 11 日的记录：「我家那只橘猫叫『布丁』」。  \n另外，「豆豆」是 2026 年 7 月 15 日记录里柯基的名字，不是猫。",
+     "grade": {
+      "group": "D",
+      "sid": 5,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "正确答出猫叫「布丁」，并准确区分「豆豆」是柯基的名字。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"正确答出猫叫「布丁」，并准确区分「豆豆」是柯基的名字。\"}",
+      "usage": {
+       "prompt_tokens": 563,
+       "completion_tokens": 95,
+       "total_tokens": 658,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 53
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 307
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:17+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -2870,7 +4386,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2925,7 +4443,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -2980,7 +4500,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 6,
+     "cls": "D",
+     "cls_name": "历史信念",
+     "question": "五月那次家里断网,当时我以为是什么原因?",
+     "reader_answer": "当时你以为是因为**路由器老化**，所以当天就下单买了个新的。依据是 **2026年5月9日** 的记录。后来到 **2026年5月12日** 才发现其实是运营商光猫的问题。",
+     "grade": {
+      "group": "D",
+      "sid": 6,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答指出当时以为路由器老化，符合标准答案，并正确区分后来发现的光猫问题。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答指出当时以为路由器老化，符合标准答案，并正确区分后来发现的光猫问题。\"}",
+      "usage": {
+       "prompt_tokens": 591,
+       "completion_tokens": 147,
+       "total_tokens": 738,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 106
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 335
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:16+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -3068,7 +4647,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3123,7 +4704,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3178,7 +4761,66 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 7,
+     "cls": "E",
+     "cls_name": "配额截断",
+     "question": "我上次体检的尿酸值是多少?",
+     "reader_answer": "记忆里没有具体尿酸数值。  \n[2026-11-05] 只记录“今年体检尿酸偏高，又开始忌口”；[2026-10-09] 只记录医生说“少熬夜、少吃海鲜”，都没有提到具体数值。",
+     "grade": {
+      "group": "D",
+      "sid": 7,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "fabricated": false,
+      "reason": "回答明确说记忆里没有具体尿酸数值，并只引用已有记录，未编造数值，符合标准答案。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"abstained\",\"fabricated\":false,\"reason\":\"回答明确说记忆里没有具体尿酸数值，并只引用已有记录，未编造数值，符合标准答案。\"}",
+      "usage": {
+       "prompt_tokens": 593,
+       "completion_tokens": 110,
+       "total_tokens": 703,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 62
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 337
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:03+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -3266,7 +4908,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3321,7 +4965,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3376,7 +5022,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 8,
+     "cls": "F",
+     "cls_name": "近似重复",
+     "question": "我吃香菜吗?",
+     "reader_answer": "你不吃香菜。依据：2026年1月14日记「闻到味道就难受」；2026年6月3日记点外卖总备注「不要香菜」；2026年9月27日记你讨厌香菜、朋友说可能是基因问题；还有一条没记具体日期、只标了「2025」的记录说火锅蘸料从不放香菜。",
+     "grade": {
+      "group": "D",
+      "sid": 8,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确给出「不吃香菜」，与标准答案一致，且引用记忆内容准确，无编造。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确给出「不吃香菜」，与标准答案一致，且引用记忆内容准确，无编造。\"}",
+      "usage": {
+       "prompt_tokens": 582,
+       "completion_tokens": 161,
+       "total_tokens": 743,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 118
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 326
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:22+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 4,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -3464,7 +5169,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3519,7 +5226,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3574,7 +5283,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 9,
+     "cls": "A",
+     "cls_name": "正常更正",
+     "question": "我现在公司车位在哪儿?",
+     "reader_answer": "按 **2026 年 8 月 14 日**的记录，你公司月租车位在 **B1 区 A17**，离电梯近。  \n2026 年 9 月 2 日只补充说你的黑色 Model Y 停在地库最里面，没有给出不同的具体车位号。",
+     "grade": {
+      "group": "D",
+      "sid": 9,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确给出最新正确车位 B1 区 A17，与标准答案一致，且未编造记录外事实。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确给出最新正确车位 B1 区 A17，与标准答案一致，且未编造记录外事实。\"}",
+      "usage": {
+       "prompt_tokens": 618,
+       "completion_tokens": 175,
+       "total_tokens": 793,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 128
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 362
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:24+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -3662,7 +5430,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3717,7 +5487,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3772,7 +5544,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 10,
+     "cls": "J",
+     "cls_name": "无日期对照",
+     "question": "我现在用什么手机?",
+     "reader_answer": "你现在更可能用的是 **Pixel 9**。依据是那条“换了新手机，是 Pixel 9，主要是想试试原生安卓”的记录，但**这条没记时间**。另有一条也没记时间的“我一直用 iPhone”属于旧说法；由于两条都没日期，无法严格判断哪条最新，只能按“换了新手机”倾向 Pixel 9。",
+     "grade": {
+      "group": "D",
+      "sid": 10,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "答出倾向 Pixel 9，并指出记录无日期、先后不可严格判断，符合 J 类正确标准。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"答出倾向 Pixel 9，并指出记录无日期、先后不可严格判断，符合 J 类正确标准。\"}",
+      "usage": {
+       "prompt_tokens": 638,
+       "completion_tokens": 165,
+       "total_tokens": 803,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 119
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 382
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:06+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": false,
+      "n_date_mentions": 0,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": true,
+      "gives_lean": true
      },
      "novel_numbers": []
     }
@@ -3860,7 +5691,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3915,7 +5748,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -3970,7 +5805,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 11,
+     "cls": "B",
+     "cls_name": "补录旧事实",
+     "question": "我现在在哪家公司上班?",
+     "reader_answer": "按 **2026年8月15日** 的记录，你现在在一家做 **跨境电商** 的公司上班。此前 **2026年5月12日** 的记录显示你曾跳到一家做推荐算法的公司。",
+     "grade": {
+      "group": "D",
+      "sid": 11,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确断言当前在跨境电商公司，与标准答案（现在做推荐算法的公司）不符，且未标注任何不确定性或记忆冲突，故属自信答错。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确断言当前在跨境电商公司，与标准答案（现在做推荐算法的公司）不符，且未标注任何不确定性或记忆冲突，故属自信答错。\"}",
+      "usage": {
+       "prompt_tokens": 569,
+       "completion_tokens": 1232,
+       "total_tokens": 1801,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 1175
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 313
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:32+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -4058,7 +5952,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4113,7 +6009,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4168,7 +6066,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 12,
+     "cls": "G",
+     "cls_name": "同日期冲突",
+     "question": "我家阳台那盆绿萝现在放在哪边?",
+     "reader_answer": "根据 **2026年10月5日** 的记录：绿萝先被搬到南边，后来因为南边晒得太狠、叶子蔫了，又搬回了北阳台。所以现在应放在 **北阳台**。",
+     "grade": {
+      "group": "D",
+      "sid": 12,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "同一天有“搬到南边”和“又搬回北边”两条相反记录，最终位置无法确定；回答却自信断言在北阳台，属于G类自信答错。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"同一天有“搬到南边”和“又搬回北边”两条相反记录，最终位置无法确定；回答却自信断言在北阳台，属于G类自信答错。\"}",
+      "usage": {
+       "prompt_tokens": 604,
+       "completion_tokens": 293,
+       "total_tokens": 897,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 232
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 348
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:29+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -4256,7 +6213,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4311,7 +6270,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4366,7 +6327,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 13,
+     "cls": "H",
+     "cls_name": "粗粒度日期",
+     "question": "我 2026 年买的那台相机是什么型号?",
+     "reader_answer": "你在 2026 年买的那台相机是**富士 X-T5**。依据的是记录里标为 **[2026]** 的那条（这条没记具体月日）。",
+     "grade": {
+      "group": "D",
+      "sid": 13,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答准确指出 2026 年入手的是富士 X-T5，与标准答案一致。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答准确指出 2026 年入手的是富士 X-T5，与标准答案一致。\"}",
+      "usage": {
+       "prompt_tokens": 577,
+       "completion_tokens": 100,
+       "total_tokens": 677,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 59
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 321
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:33+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 1,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -4454,7 +6474,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4509,7 +6531,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4564,7 +6588,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 14,
+     "cls": "C",
+     "cls_name": "晚但记错",
+     "question": "我是什么血型?",
+     "reader_answer": "你的血型记录有冲突，无法确定哪条正确：\n\n- 按 **2026 年 1 月 20 日**的记录：体检报告写你是 **O 型血**。\n- 按 **2026 年 8 月**的记录：献血时护士说你是 **A 型血**。\n\n这两条说法不同，且没有“已确认/已作废”的记录。你希望以哪一条为准，或者是否需要再核实一下？",
+     "grade": {
+      "group": "D",
+      "sid": 14,
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "fabricated": false,
+      "reason": "回答指出O型与A型记录冲突并说明无法确定，符合C类中合格但非正确的冲突标注标准。",
+      "raw": "{\"verdict\":\"⚠️\",\"answer_state\":\"conflict_flagged\",\"fabricated\":false,\"reason\":\"回答指出O型与A型记录冲突并说明无法确定，符合C类中合格但非正确的冲突标注标准。\"}",
+      "usage": {
+       "prompt_tokens": 638,
+       "completion_tokens": 131,
+       "total_tokens": 769,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 80
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 382
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:36+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": true,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -4652,7 +6735,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4707,7 +6792,9 @@
       "asks_back": true,
       "says_absent": true,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4762,7 +6849,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 15,
+     "cls": "I",
+     "cls_name": "无关干扰",
+     "question": "我对什么食物过敏?",
+     "reader_answer": "根据记忆，你对**虾过敏**：2026-03-08 的记录说吃虾会起疹子，且比较严重。\n\n另外，2026-07-21 的过敏原检查显示**芒果根本没事**，尘螨重度过敏（尘螨不是食物）；2026-01-14 记录的是你受不了香菜味道，不等同于过敏。",
+     "grade": {
+      "group": "D",
+      "sid": 15,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确给出标准答案“对虾过敏”，并正确区分芒果、尘螨和香菜，无编造。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确给出标准答案“对虾过敏”，并正确区分芒果、尘螨和香菜，无编造。\"}",
+      "usage": {
+       "prompt_tokens": 587,
+       "completion_tokens": 109,
+       "total_tokens": 696,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 64
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 331
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:38+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -4850,7 +6996,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4905,7 +7053,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -4960,7 +7110,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 16,
+     "cls": "D",
+     "cls_name": "历史信念",
+     "question": "我以前一直以为自己对什么过敏?",
+     "reader_answer": "你以前一直以为自己**芒果过敏**，依据是 **2026 年 3 月 15 日**的记录。后来 **2026 年 7 月 21 日**的过敏原检查显示：芒果根本没事，实际是尘螨重度过敏。",
+     "grade": {
+      "group": "D",
+      "sid": 16,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答正确指出当时以为芒果过敏，并说明后来查明实际是尘螨过敏，符合标准答案。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答正确指出当时以为芒果过敏，并说明后来查明实际是尘螨过敏，符合标准答案。\"}",
+      "usage": {
+       "prompt_tokens": 571,
+       "completion_tokens": 447,
+       "total_tokens": 1018,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 404
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 315
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:37+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -5048,7 +7257,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5103,7 +7314,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5158,7 +7371,66 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 17,
+     "cls": "E",
+     "cls_name": "配额截断",
+     "question": "我上次去日本住的那家酒店叫什么名字?",
+     "reader_answer": "记忆里没有你住过的酒店名称。只有 2026 年 5 月 12 日“到大阪、心斋桥人太多”的记录，没有提到酒店。",
+     "grade": {
+      "group": "D",
+      "sid": 17,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "fabricated": false,
+      "reason": "回答明确说明记忆里没有酒店名称，并未编造具体酒店信息，符合 E 类正确答案。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"abstained\",\"fabricated\":false,\"reason\":\"回答明确说明记忆里没有酒店名称，并未编造具体酒店信息，符合 E 类正确答案。\"}",
+      "usage": {
+       "prompt_tokens": 597,
+       "completion_tokens": 106,
+       "total_tokens": 703,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 61
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 341
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:38+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -5246,7 +7518,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5301,7 +7575,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5356,7 +7632,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 18,
+     "cls": "F",
+     "cls_name": "近似重复",
+     "question": "我早上一般几点起?",
+     "reader_answer": "早上一般六点半起。依据是 2026 年 8 月 19 日的记录；更早的记录也都提到 6:30 起床。",
+     "grade": {
+      "group": "D",
+      "sid": 18,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答给出六点半，与标准答案及记录一致，且引用日期存在、无编造。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答给出六点半，与标准答案及记录一致，且引用日期存在、无编造。\"}",
+      "usage": {
+       "prompt_tokens": 540,
+       "completion_tokens": 269,
+       "total_tokens": 809,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 227
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 284
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:40+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -5444,7 +7779,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5499,7 +7836,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5554,7 +7893,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 19,
+     "cls": "A",
+     "cls_name": "正常更正",
+     "question": "我现在一般几点睡?",
+     "reader_answer": "按 2026 年 10 月 2 日的记录，你现在调整作息了，一般 23 点前必须上床，手机放客厅。  \n（2025 年 12 月说过凌晨一点才睡，但那是旧说法。）",
+     "grade": {
+      "group": "D",
+      "sid": 19,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答依据较新的2026-10-02记录给出“23点前上床”，与标准答案一致，并正确说明凌晨一点是旧说法。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答依据较新的2026-10-02记录给出“23点前上床”，与标准答案一致，并正确说明凌晨一点是旧说法。\"}",
+      "usage": {
+       "prompt_tokens": 566,
+       "completion_tokens": 194,
+       "total_tokens": 760,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 141
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 310
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:41+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -5642,7 +8040,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5697,7 +8097,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5752,7 +8154,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 20,
+     "cls": "J",
+     "cls_name": "无日期对照",
+     "question": "我现在住在哪个城市?",
+     "reader_answer": "按 **2025 年 11 月**的记录，你现在住在 **杭州**，租在西湖区。  \n没记时间的记录里提到过成都和深圳，但以日期最新的记录为准。",
+     "grade": {
+      "group": "D",
+      "sid": 20,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答自信给出“杭州”结论，未指出深圳记录无日期、先后不可考，与标准答案倾向深圳且不能确定最新状态不符。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答自信给出“杭州”结论，未指出深圳记录无日期、先后不可考，与标准答案倾向深圳且不能确定最新状态不符。\"}",
+      "usage": {
+       "prompt_tokens": 588,
+       "completion_tokens": 1022,
+       "total_tokens": 1610,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 969
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 332
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:47+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 1,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -5840,7 +8301,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5895,7 +8358,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -5950,7 +8415,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 21,
+     "cls": "B",
+     "cls_name": "补录旧事实",
+     "question": "我现在还喝酒吗?",
+     "reader_answer": "按 **2026 年 10 月 25 日**那条记录，你现在**基本不碰酒了**；**2026 年 6 月**的记录也提到，因轻度脂肪肝医生让戒酒，你从那天起就没再喝过。",
+     "grade": {
+      "group": "D",
+      "sid": 21,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答正确答出现在基本不喝酒，并引用2026年6月起戒酒，符合标准答案。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答正确答出现在基本不喝酒，并引用2026年6月起戒酒，符合标准答案。\"}",
+      "usage": {
+       "prompt_tokens": 630,
+       "completion_tokens": 447,
+       "total_tokens": 1077,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 404
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 374
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:46+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -6038,7 +8562,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6093,7 +8619,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6148,7 +8676,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 22,
+     "cls": "G",
+     "cls_name": "同日期冲突",
+     "question": "我现在还开车上班吗?",
+     "reader_answer": "无法确定。依据 **2026年7月20日** 的两条记录互相矛盾：一条说“车没卖，继续开”，另一条说“把车卖了，以后都坐地铁”。同一天出现相反说法，不能判断你现在是否还开车上班。\n\n另有两条**没记时间**的记录提到“有时候还是开车”“我开车上班”，只能算倾向，但无法覆盖 2026年7月20日的同日冲突。",
+     "grade": {
+      "group": "D",
+      "sid": 22,
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "fabricated": false,
+      "reason": "G类同日期冲突应判无法确定；回答正确指出2026-07-20两条相反记录并说明无法判断。",
+      "raw": "{\"verdict\":\"⚠️\",\"answer_state\":\"conflict_flagged\",\"fabricated\":false,\"reason\":\"G类同日期冲突应判无法确定；回答正确指出2026-07-20两条相反记录并说明无法判断。\"}",
+      "usage": {
+       "prompt_tokens": 624,
+       "completion_tokens": 142,
+       "total_tokens": 766,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 90
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 368
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:48+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
      },
      "novel_numbers": []
     }
@@ -6236,7 +8823,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6291,7 +8880,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6346,7 +8937,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 23,
+     "cls": "H",
+     "cls_name": "粗粒度日期",
+     "question": "2026 年上半年我住在哪个城市?",
+     "reader_answer": "按 **2026 年 6 月 20 日**的记录：你从杭州搬到上海，新公司在徐汇。结合 **2025 年 11 月**“搬到杭州、租在西湖区”的记录，**2026 年上半年你主要住在杭州，6 月 20 日起搬到上海**。  \n（“调去深圳”“在成都住了好几年”两条没记时间，不能用来判断 2026 年上半年的住址。）",
+     "grade": {
+      "group": "D",
+      "sid": 23,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "正确答出2026年上半年主要住在杭州，并依据2025年11月搬到杭州、2026年6月20日搬去上海，时间判断无误。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"正确答出2026年上半年主要住在杭州，并依据2025年11月搬到杭州、2026年6月20日搬去上海，时间判断无误。\"}",
+      "usage": {
+       "prompt_tokens": 607,
+       "completion_tokens": 147,
+       "total_tokens": 754,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 91
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 351
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:47+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -6434,7 +9084,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6489,7 +9141,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6544,7 +9198,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 24,
+     "cls": "C",
+     "cls_name": "晚但记错",
+     "question": "我现在每天吃多少降压药?",
+     "reader_answer": "记忆里有两条关于降压药剂量的不同说法：\n\n- 按 **2026 年 4 月 2 日**的记录：每天 **5mg**，早上吃。\n- 按 **2026 年 10 月 19 日**的记录：降压药是 **10mg**，每天早上吃一片。\n\n这两条没有“已确认”或“已作废”的标记，所以无法确定哪条是你现在的实际用量。请问你现在每天吃的是 **5mg 还是 10mg**？",
+     "grade": {
+      "group": "D",
+      "sid": 24,
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "fabricated": false,
+      "reason": "回答指出两条剂量记录冲突并明确无法确定，符合C类中指出冲突/无法确定的标准。",
+      "raw": "{\"verdict\":\"⚠️\",\"answer_state\":\"conflict_flagged\",\"fabricated\":false,\"reason\":\"回答指出两条剂量记录冲突并明确无法确定，符合C类中指出冲突/无法确定的标准。\"}",
+      "usage": {
+       "prompt_tokens": 652,
+       "completion_tokens": 134,
+       "total_tokens": 786,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 88
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 396
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:52+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": true,
+      "asks_back": true,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -6632,7 +9345,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6687,7 +9402,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6742,7 +9459,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 25,
+     "cls": "I",
+     "cls_name": "无关干扰",
+     "question": "我家路由器放在哪儿?",
+     "reader_answer": "根据 2026 年 1 月 6 日的记录，路由器放在**电视柜第二层**。之后换过新路由器，但记忆里没有记录位置是否变化。",
+     "grade": {
+      "group": "D",
+      "sid": 25,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确给出标准答案“电视柜第二层”，并仅补充后续位置是否变化未被记录，不影响该答案正确。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确给出标准答案“电视柜第二层”，并仅补充后续位置是否变化未被记录，不影响该答案正确。\"}",
+      "usage": {
+       "prompt_tokens": 558,
+       "completion_tokens": 279,
+       "total_tokens": 837,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 232
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 302
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:52+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -6830,7 +9606,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6885,7 +9663,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -6940,7 +9720,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 26,
+     "cls": "D",
+     "cls_name": "历史信念",
+     "question": "年初的时候我以为季度奖能发多少?",
+     "reader_answer": "年初你以为季度奖能发 **三个月工资**。依据的是 **2026 年 1 月 15 日**那条记录。",
+     "grade": {
+      "group": "D",
+      "sid": 26,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确答出“三个月工资”，与标准答案一致，且依据的日期在记忆中存在。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确答出“三个月工资”，与标准答案一致，且依据的日期在记忆中存在。\"}",
+      "usage": {
+       "prompt_tokens": 533,
+       "completion_tokens": 119,
+       "total_tokens": 652,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 77
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 277
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:51+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -7028,7 +9867,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": [
       "2027"
@@ -7085,7 +9926,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7140,7 +9983,66 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 27,
+     "cls": "E",
+     "cls_name": "配额截断",
+     "question": "我的车险哪天到期?",
+     "reader_answer": "没有相关记忆能确定车险到期日。2026-02-18 只记了“续了车险，还是原来那家公司，三者险买到 300 万”，没提到具体到期日期。",
+     "grade": {
+      "group": "D",
+      "sid": 27,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "fabricated": false,
+      "reason": "回答明确说没有相关记忆能确定车险到期日，并正确说明续保记录未提到到期日期。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"abstained\",\"fabricated\":false,\"reason\":\"回答明确说没有相关记忆能确定车险到期日，并正确说明续保记录未提到到期日期。\"}",
+      "usage": {
+       "prompt_tokens": 589,
+       "completion_tokens": 133,
+       "total_tokens": 722,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 86
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 333
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:53+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 1,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -7228,7 +10130,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7283,7 +10187,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7338,7 +10244,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 28,
+     "cls": "F",
+     "cls_name": "近似重复",
+     "question": "我一周去几次健身房?",
+     "reader_answer": "你每周去三次健身房。依据是 2026 年 9 月的记录（2026-03-02、2026-06-18 的记录也一致）。",
+     "grade": {
+      "group": "D",
+      "sid": 28,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "正确答出每周三次，且依据与记忆记录一致，无冲突或编造。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"正确答出每周三次，且依据与记忆记录一致，无冲突或编造。\"}",
+      "usage": {
+       "prompt_tokens": 523,
+       "completion_tokens": 157,
+       "total_tokens": 680,
+       "prompt_tokens_details": {
+        "cached_tokens": 128
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 117
+       },
+       "prompt_cache_hit_tokens": 128,
+       "prompt_cache_miss_tokens": 395
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:55+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -7426,7 +10391,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7481,7 +10448,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7536,7 +10505,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 29,
+     "cls": "A",
+     "cls_name": "正常更正",
+     "question": "我现在键盘用什么轴?",
+     "reader_answer": "按 **2026 年 9 月 19 日**的记录，你现在键盘用的是 **静音茶轴**。  \n依据是那天记录说红轴太吵，办公室同事有意见，所以换成了静音茶轴。",
+     "grade": {
+      "group": "D",
+      "sid": 29,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答依据2026年9月19日记录明确给出静音茶轴，符合标准答案。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答依据2026年9月19日记录明确给出静音茶轴，符合标准答案。\"}",
+      "usage": {
+       "prompt_tokens": 561,
+       "completion_tokens": 91,
+       "total_tokens": 652,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 49
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 305
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:57+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -7624,7 +10652,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": true
      },
      "novel_numbers": []
     },
@@ -7679,7 +10709,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7734,7 +10766,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 30,
+     "cls": "J",
+     "cls_name": "无日期对照",
+     "question": "我现在用的是什么笔记本电脑?",
+     "reader_answer": "记忆里没有能确定当前笔记本型号的有日期记录。两条没记时间的记录互相矛盾：一条说公司给换了 ThinkPad，现在出门基本只带它；另一条说一直用 MacBook Air。按“现在出门基本只带它”这一表述，更可能是 **ThinkPad**。  \n另外，2026 年 2 月 7 日那条只提到红轴键盘，和笔记本型号无关。",
+     "grade": {
+      "group": "D",
+      "sid": 30,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "答案给出倾向 ThinkPad，并指出记录无日期、互相矛盾无法确认先后，符合 J 类正确标准。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"答案给出倾向 ThinkPad，并指出记录无日期、互相矛盾无法确认先后，符合 J 类正确标准。\"}",
+      "usage": {
+       "prompt_tokens": 626,
+       "completion_tokens": 197,
+       "total_tokens": 823,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 151
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 370
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:59+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
      },
      "novel_numbers": []
     }
@@ -7822,7 +10913,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7877,7 +10970,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -7932,7 +11027,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 31,
+     "cls": "B",
+     "cls_name": "补录旧事实",
+     "question": "我现在养的狗叫什么?",
+     "reader_answer": "你现在养的狗叫「豆豆」。依据是 2026-07-15 的记录：抱回来一只柯基，取名「豆豆」；2026-11-01 的记录也提到，之前那只柴犬「球球」走丢后，你才养的豆豆。",
+     "grade": {
+      "group": "D",
+      "sid": 31,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答正确指出现在养的狗是豆豆，并正确区分球球是以前走丢的柴犬。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答正确指出现在养的狗是豆豆，并正确区分球球是以前走丢的柴犬。\"}",
+      "usage": {
+       "prompt_tokens": 588,
+       "completion_tokens": 101,
+       "total_tokens": 689,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 57
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 332
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:58+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -8020,7 +11174,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8075,7 +11231,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8130,7 +11288,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 32,
+     "cls": "G",
+     "cls_name": "同日期冲突",
+     "question": "我现在还喝咖啡吗?",
+     "reader_answer": "按 **2026年11月3日** 的记录，你现在还喝咖啡，但已经改成**每天只喝一杯低因咖啡**。  \n（2026年10月25日曾记录“现在基本不碰了”，但按日期更新的习惯记录，以11月3日为准。）",
+     "grade": {
+      "group": "D",
+      "sid": 32,
+      "verdict": "❌",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "G类同日期冲突题，回答未指出2026-09-14两条相反记录，反而自信给出“每天一杯低因”的具体结论，按规则判错。",
+      "raw": "{\"verdict\":\"❌\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"G类同日期冲突题，回答未指出2026-09-14两条相反记录，反而自信给出“每天一杯低因”的具体结论，按规则判错。\"}",
+      "usage": {
+       "prompt_tokens": 623,
+       "completion_tokens": 353,
+       "total_tokens": 976,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 294
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 367
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:00+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -8218,7 +11435,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8273,7 +11492,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8328,7 +11549,66 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 33,
+     "cls": "H",
+     "cls_name": "粗粒度日期",
+     "question": "我 2025 年体检查出了什么问题?",
+     "reader_answer": "记忆里没有你 2025 年体检出什么问题的记录。检索到的体检相关记录都是 2026 年的（2026-06 提到轻度脂肪肝、2026-09-28 体检血压 118/76、2026-10-09 报告出来医生建议少熬夜少吃海鲜），没有 2025 年的信息。",
+     "grade": {
+      "group": "D",
+      "sid": 33,
+      "verdict": "⚠️",
+      "answer_state": "abstained",
+      "fabricated": false,
+      "reason": "回答明确说记忆里没有2025年体检记录，未给出标准答案，属于说明无法确定而非自信答错。",
+      "raw": "{\"verdict\":\"⚠️\",\"answer_state\":\"abstained\",\"fabricated\":false,\"reason\":\"回答明确说记忆里没有2025年体检记录，未给出标准答案，属于说明无法确定而非自信答错。\"}",
+      "usage": {
+       "prompt_tokens": 596,
+       "completion_tokens": 348,
+       "total_tokens": 944,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 298
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 340
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:32:06+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 5,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -8416,7 +11696,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8471,7 +11753,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8526,7 +11810,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 34,
+     "cls": "C",
+     "cls_name": "晚但记错",
+     "question": "我家猫几岁了?",
+     "reader_answer": "关于你家猫的年龄，记忆里有两种说法：\n\n- 按 **2026 年 6 月 1 日** 的记录：猫今年 **三岁**，是只狸花。\n- 按 **2026 年 10 月 22 日** 的记录：猫已经 **五岁**，精力还是很旺。\n\n另外，**2026 年 6 月 11 日**还记了“我家那只橘猫叫『布丁』”，这可能指另一只猫。由于宠物年龄按规则属于需要核对的说法，而这两条记录不一致，我无法确定哪条是对的。你问的是狸花猫，还是橘猫「布丁」？",
+     "grade": {
+      "group": "D",
+      "sid": 34,
+      "verdict": "⚠️",
+      "answer_state": "conflict_flagged",
+      "fabricated": false,
+      "reason": "回答指出三岁与五岁记录冲突并明确无法确定，符合C类指出冲突/无法确定的要求。",
+      "raw": "{\"verdict\":\"⚠️\",\"answer_state\":\"conflict_flagged\",\"fabricated\":false,\"reason\":\"回答指出三岁与五岁记录冲突并明确无法确定，符合C类指出冲突/无法确定的要求。\"}",
+      "usage": {
+       "prompt_tokens": 665,
+       "completion_tokens": 248,
+       "total_tokens": 913,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 199
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 409
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:03+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 4,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -8614,7 +11957,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8669,7 +12014,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8724,7 +12071,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 35,
+     "cls": "I",
+     "cls_name": "无关干扰",
+     "question": "我平时用哪个牌子的洗衣液?",
+     "reader_answer": "你平时用**蓝月亮**洗衣液，依据的是 **2026年5月17日** 那条记录。",
+     "grade": {
+      "group": "D",
+      "sid": 35,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答正确给出蓝月亮洗衣液，且引用日期与记忆记录一致。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答正确给出蓝月亮洗衣液，且引用日期与记忆记录一致。\"}",
+      "usage": {
+       "prompt_tokens": 507,
+       "completion_tokens": 104,
+       "total_tokens": 611,
+       "prompt_tokens_details": {
+        "cached_tokens": 128
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 67
+       },
+       "prompt_cache_hit_tokens": 128,
+       "prompt_cache_miss_tokens": 379
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:00+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -8812,7 +12218,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8867,7 +12275,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -8922,7 +12332,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 36,
+     "cls": "D",
+     "cls_name": "历史信念",
+     "question": "猫软便那阵子,我当时怀疑是什么原因?",
+     "reader_answer": "你当时怀疑是**猫粮的问题**，为此还换了两三种粮。依据是 2026 年 6 月 8 日的记录。后来 6 月 25 日的记录显示换粮没用，最后发现是猫砂粉尘太大，换了猫砂才好。",
+     "grade": {
+      "group": "D",
+      "sid": 36,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确指出当时怀疑是猫粮问题，符合D类历史信念标准答案。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确指出当时怀疑是猫粮问题，符合D类历史信念标准答案。\"}",
+      "usage": {
+       "prompt_tokens": 572,
+       "completion_tokens": 136,
+       "total_tokens": 708,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 98
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 316
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:02+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 3,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -9010,7 +12479,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9065,7 +12536,9 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9120,7 +12593,66 @@
       "asks_back": false,
       "says_absent": true,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 37,
+     "cls": "E",
+     "cls_name": "配额截断",
+     "question": "我给猫打疫苗的那家宠物医院叫什么名字?",
+     "reader_answer": "记忆里没有提到那家宠物医院的名字。  \n只有 [2026-04-12] 的记录显示你带猫打了三联和狂犬疫苗、共花 380 元，但没有记医院名称。",
+     "grade": {
+      "group": "D",
+      "sid": 37,
+      "verdict": "✅",
+      "answer_state": "abstained",
+      "fabricated": false,
+      "reason": "回答明确说明记忆里没有宠物医院名称，并仅复述了已有的疫苗和花费信息，符合E类标准。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"abstained\",\"fabricated\":false,\"reason\":\"回答明确说明记忆里没有宠物医院名称，并仅复述了已有的疫苗和花费信息，符合E类标准。\"}",
+      "usage": {
+       "prompt_tokens": 586,
+       "completion_tokens": 114,
+       "total_tokens": 700,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 65
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 330
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:07+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 1,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": true,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -9208,7 +12740,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9263,7 +12797,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9318,7 +12854,66 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 38,
+     "cls": "F",
+     "cls_name": "近似重复",
+     "question": "我平时喝什么茶?",
+     "reader_answer": "你平时喝绿茶，不喝红茶。按 **2026年11月3日** 的记录，因为胃不好，现在每天只喝一杯低因茶；茶种依据 **2026年10月11日** 的记录是“家里常备的茶就一种，绿茶”，**2026年1月9日/5月23日** 也都说只喝或能喝绿茶。",
+     "grade": {
+      "group": "D",
+      "sid": 38,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确答出只喝绿茶、不喝红茶，与标准答案一致，且引用记忆信息无误。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确答出只喝绿茶、不喝红茶，与标准答案一致，且引用记忆信息无误。\"}",
+      "usage": {
+       "prompt_tokens": 581,
+       "completion_tokens": 311,
+       "total_tokens": 892,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 267
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 325
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:08+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 5,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -9406,7 +13001,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9461,7 +13058,9 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9516,7 +13115,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": true,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": false,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 39,
+     "cls": "A",
+     "cls_name": "正常更正",
+     "question": "我现在每天喝几杯咖啡?",
+     "reader_answer": "按 2026 年 11 月 3 日的记录，你现在每天只喝 **一杯低因咖啡**（因胃不好，医生建议少喝）。",
+     "grade": {
+      "group": "D",
+      "sid": 39,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答明确给出每天一杯低因咖啡，与标准答案一致。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答明确给出每天一杯低因咖啡，与标准答案一致。\"}",
+      "usage": {
+       "prompt_tokens": 558,
+       "completion_tokens": 208,
+       "total_tokens": 766,
+       "prompt_tokens_details": {
+        "cached_tokens": 256
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 173
+       },
+       "prompt_cache_hit_tokens": 256,
+       "prompt_cache_miss_tokens": 302
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:07+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": false,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": false,
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": false
      },
      "novel_numbers": []
     }
@@ -9604,7 +13262,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": false
+      "compliant_cg": false,
+      "states_no_date": false,
+      "gives_lean": true
      },
      "novel_numbers": []
     },
@@ -9659,7 +13319,9 @@
       "asks_back": false,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
      },
      "novel_numbers": []
     },
@@ -9714,7 +13376,66 @@
       "asks_back": true,
       "says_absent": false,
       "lists_both_sides": false,
-      "compliant_cg": true
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": false
+     },
+     "novel_numbers": []
+    },
+    "D": {
+     "sid": 40,
+     "cls": "J",
+     "cls_name": "无日期对照",
+     "question": "我现在上班怎么去?",
+     "reader_answer": "按 2026 年 3 月 2 日的记录，公司在 B2 区给我划了固定车位，所以我更倾向认为现在还是开车上班。另有没记时间的记录提到曾改成坐地铁、早高峰太挤时有时仍开车，但无法确定现在日常是否完全以开车为主。",
+     "grade": {
+      "group": "D",
+      "sid": 40,
+      "verdict": "✅",
+      "answer_state": "answered",
+      "fabricated": false,
+      "reason": "回答给出了“更倾向开车”的倾向，并指出另有没记时间的冲突记录、无法确定当前日常是否完全开车，符合J类“有倾向且指出无日期不可考”的判分标准。",
+      "raw": "{\"verdict\":\"✅\",\"answer_state\":\"answered\",\"fabricated\":false,\"reason\":\"回答给出了“更倾向开车”的倾向，并指出另有没记时间的冲突记录、无法确定当前日常是否完全开车，符合J类“有倾向且指出无日期不可考”的判分标准。\"}",
+      "usage": {
+       "prompt_tokens": 612,
+       "completion_tokens": 1233,
+       "total_tokens": 1845,
+       "prompt_tokens_details": {
+        "cached_tokens": 384
+       },
+       "completion_tokens_details": {
+        "reasoning_tokens": 1167
+       },
+       "prompt_cache_hit_tokens": 384,
+       "prompt_cache_miss_tokens": 228
+      },
+      "model": "deepseek-flash",
+      "prompt_version": "reader-grade-contract-v3",
+      "origin": "fresh",
+      "created_at": "2026-11-12T19:33:44+0800"
+     },
+     "reader_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "grade_meta": {
+      "cached": true,
+      "origin": "fresh",
+      "usage": {},
+      "api_calls": 0
+     },
+     "contract": {
+      "cites_date": true,
+      "n_date_mentions": 2,
+      "flags_conflict": true,
+      "asks_back": false,
+      "says_absent": false,
+      "lists_both_sides": true,
+      "compliant_cg": true,
+      "states_no_date": true,
+      "gives_lean": true
      },
      "novel_numbers": []
     }
