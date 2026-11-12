@@ -87,16 +87,18 @@ PRICE_NOTE = "价格未知（阿里云 MaaS 未确认单价），仅统计实际
 
 
 # ------------------------------------------------------------------ 端点调用
-_ORIGINAL_POST = httpx.post
+# 产品 provider 走 ``httpx.Client.post``（不是模块级 ``httpx.post``）；只包
+# 模块级函数会静默漏掉 usage（旧缓存 4372 tokens 是历史版本的捕获结果）。
+_ORIGINAL_CLIENT_POST = httpx.Client.post
 _USAGE_LOG: list[dict] = []
 
 
 def _install_usage_capture() -> None:
-    """产品 provider 只回向量，不看 usage；这里包一层 ``httpx.post`` 记录单价所需
-    token（不改产品代码，仍走 ``OpenAICompatProvider.embed`` 的真实调用路径）。"""
+    """产品 provider 只回向量，不看 usage；这里包一层 ``httpx.Client.post`` 记录
+    单价所需 token（不改产品代码，仍走 ``OpenAICompatProvider.embed`` 的真实调用路径）。"""
 
-    def tracked_post(*args, **kwargs):
-        response = _ORIGINAL_POST(*args, **kwargs)
+    def tracked_client_post(self, *args, **kwargs):
+        response = _ORIGINAL_CLIENT_POST(self, *args, **kwargs)
         try:
             body = response.json()
         except Exception:  # noqa: BLE001 - 非 JSON 错误页也要记录状态
@@ -110,7 +112,7 @@ def _install_usage_capture() -> None:
         )
         return response
 
-    httpx.post = tracked_post
+    httpx.Client.post = tracked_client_post
 
 
 def _cache_key(model: str, text: str) -> str:

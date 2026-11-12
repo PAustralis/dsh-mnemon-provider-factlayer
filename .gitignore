@@ -41,6 +41,9 @@ node_modules/
 # 真实 embedding 评测缓存（花钱产物，本地保留，不入库）
 research/recall/.embedding_cache.json
 research/recall/.embedding_cache.tmp
+# 索引文本 v2 配对评测的独立缓存（不污染旧缓存）
+research/recall/.embedding_cache_indexv2.json
+research/recall/.embedding_cache_indexv2.tmp
 
 # 编辑器 / 系统
 .idea/

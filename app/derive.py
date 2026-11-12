@@ -23,6 +23,7 @@ from typing import Callable
 
 from . import textnorm
 from .db import Database
+from .index_text import INDEX_TEXT_VERSION, INDEX_TEXT_VERSION_KEY, index_text_for
 from .embeddings import (
     CircuitBreaker,
     EmbeddingProvider,
@@ -59,9 +60,10 @@ def make_fts_processor(db: Database) -> Processor:
     """stage=fts：写单混合列 ngrams + 两张 FTS5 虚表（重复执行幂等，可安全重建）。"""
 
     def process(memory: dict) -> None:
-        content = memory["content"]
-        ngrams = textnorm.ngram_text(content)
-        trigram_text = textnorm.normalize(content)
+        # 索引文本 = 日期前缀 + content（docs/02 v9）；content 本身不入派生表。
+        indexed = index_text_for(memory)
+        ngrams = textnorm.ngram_text(indexed)
+        trigram_text = textnorm.normalize(indexed)
         with db.write_txn() as conn:
             row = conn.execute(
                 "SELECT gseq FROM memories WHERE id=?", (memory["id"],)
@@ -98,7 +100,8 @@ def make_embedding_processor(
     """stage=embedding：调 provider 算向量并入库（写库前 L2 归一化）。"""
 
     def process(memory: dict) -> None:
-        vectors = provider.embed([memory["content"]])
+        # embedding 文本同样带日期前缀：年份只存在于日期字段时，语义路也能命中。
+        vectors = provider.embed([index_text_for(memory)])
         if not vectors:
             raise RuntimeError("embedding provider 返回空结果")
         store_embedding(
@@ -364,11 +367,17 @@ class DerivePipeline:
                 "SELECT * FROM memories ORDER BY gseq"
             ).fetchall()
         ]
+        # skip_embedding 时旧向量不会被重算；若库内已有向量，就不能宣称索引文本版本
+        # 已升级（否则旧 content-only 向量会以 v2 名义继续被向量路使用，静默错配）。
+        has_embeddings = bool(
+            self.db.read_conn.execute("SELECT 1 FROM embeddings LIMIT 1").fetchone()
+        )
+        claim_index_version = (not skip_embedding) or (not has_embeddings)
         vectors: dict[str, list[float]] = {}
         if not skip_embedding and self.embedding_provider is not None:
             try:
                 for memory in rows:
-                    result = self.embedding_provider.embed([memory["content"]])
+                    result = self.embedding_provider.embed([index_text_for(memory)])
                     if not result:
                         raise RuntimeError("embedding provider 返回空结果")
                     vectors[memory["id"]] = result[0]
@@ -395,10 +404,10 @@ class DerivePipeline:
         derive_rows_by_memory: list[list[tuple[str, str, int]]] = []
         for memory in rows:
             memory_id = memory["id"]
-            content = memory["content"]
             rowid = int(memory["gseq"])
-            ngrams = textnorm.ngram_text(content)
-            trigram_text = textnorm.normalize(content)
+            indexed = index_text_for(memory)
+            ngrams = textnorm.ngram_text(indexed)
+            trigram_text = textnorm.normalize(indexed)
             ngram_rows.append((memory_id, ngrams))
             bigram_rows.append((rowid, ngrams))
             trigram_rows.append((rowid, trigram_text))
@@ -466,6 +475,21 @@ class DerivePipeline:
                     "INSERT OR REPLACE INTO derive_state(memory_id, stage, done_at) "
                     "VALUES (?,?,?)",
                     derive_batch,
+                )
+            # 版本号与派生结果同一事务落库：重建成功才宣称索引文本已升级；
+            # 中途失败回滚 → 版本保持旧值，下次启动会重试。
+            # skip_embedding 且库内已有旧向量时**不写版本**：ngram 是新版、向量还是
+            # 旧版，此时宣称 v2 会让旧向量冒充新索引（静默错配）。
+            if claim_index_version:
+                conn.executemany(
+                    "INSERT INTO meta(key, value) VALUES(?, ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                    [(INDEX_TEXT_VERSION_KEY, str(INDEX_TEXT_VERSION))],
+                )
+            else:
+                logger.warning(
+                    "rebuild 跳过 embedding 且库内已有旧向量：不写 index_text_version"
+                    "（版本保持旧值，待有 provider 时重新重建向量）"
                 )
         logger.info(
             "rebuild 批量写入：rows=%d batch_size=%d batches=%d "

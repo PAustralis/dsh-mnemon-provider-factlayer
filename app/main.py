@@ -30,9 +30,11 @@ tag / NO_MATCH hint 里标明（docs/04）。
 
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 import threading
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -52,6 +54,7 @@ from .embeddings import (
 )
 from .health import health_report
 from .health_cache import HealthCache
+from .index_text import INDEX_TEXT_REBUILD_KEY, INDEX_TEXT_VERSION
 from .maintenance import Maintenance, optimize_fts
 from .rebuild_gate import (
     REBUILDING_ERROR,
@@ -60,7 +63,12 @@ from .rebuild_gate import (
     RebuildingInProgress,
 )
 from .retrieval import RetrievalService
-from .schema import init_db
+from .schema import (
+    get_index_text_version,
+    index_text_rebuild_needed,
+    init_db,
+    set_meta,
+)
 from .write_path import create_memory, record_supersede
 from . import read_path
 
@@ -129,6 +137,104 @@ def validate_config(cfg: Config, embedding_provider: EmbeddingProvider | None) -
             )
 
 
+def _run_index_text_rebuild(
+    db: Database,
+    pipeline: DerivePipeline,
+    retrieval: RetrievalService,
+    rebuild_gate: RebuildGate,
+    stored_version: int | None,
+) -> None:
+    """索引文本版本升级：**后台**跑一次完整派生重建（不阻塞启动）。
+
+    - 走已有 ``pipeline.rebuild_all()``（单写事务；事实层不动）；
+    - 成功才在事务内把 meta 版本写成当前值（由 ``rebuild_all`` 负责）；
+    - 失败：ERROR 日志 + ``index_text_rebuild.status=failed``，旧索引原样保留，
+      由 ``/health.alerts`` 暴露，绝不静默。
+    - 重建期间置 rebuilding 闸门：`/search`、写入与 `/admin/search` 明确 503，
+      不返回半张索引。
+    """
+    started = int(time.time() * 1000)
+    try:
+        set_meta(
+            db,
+            INDEX_TEXT_REBUILD_KEY,
+            json.dumps(
+                {
+                    "status": "running",
+                    "at": started,
+                    "from": stored_version,
+                    "to": INDEX_TEXT_VERSION,
+                },
+                ensure_ascii=False,
+            ),
+        )
+        logger.warning(
+            "索引文本版本 %s < %s，触发一次后台派生重建（不阻塞启动）",
+            stored_version,
+            INDEX_TEXT_VERSION,
+        )
+        with rebuild_gate.rebuilding():
+            counts = pipeline.rebuild_all()
+            retrieval.invalidate_caches()
+            try:
+                optimize_fts(db, reason="index_text_version")
+            except Exception:
+                # optimize 只是合并 FTS5 段；失败不能让重建整体失败，但必须留日志。
+                logger.exception(
+                    "索引文本版本重建后的 FTS5 optimize 失败（状态见 /health）"
+                )
+            detail = {
+                "status": "ok",
+                "at": started,
+                "finished_at": int(time.time() * 1000),
+                "from": stored_version,
+                "to": INDEX_TEXT_VERSION,
+                "counts": counts,
+            }
+            set_meta(
+                db,
+                INDEX_TEXT_REBUILD_KEY,
+                json.dumps(detail, ensure_ascii=False),
+            )
+        logger.info(
+            "索引文本版本重建完成：%s -> %s counts=%s",
+            stored_version,
+            INDEX_TEXT_VERSION,
+            counts,
+        )
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        logger.error(
+            "索引文本版本重建失败（旧索引保留，/health.index_text_version 可见）：%s",
+            error,
+            exc_info=True,
+        )
+        try:
+            set_meta(
+                db,
+                INDEX_TEXT_REBUILD_KEY,
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "at": started,
+                        "finished_at": int(time.time() * 1000),
+                        "from": stored_version,
+                        "to": INDEX_TEXT_VERSION,
+                        "error": error,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        except Exception:
+            logger.exception("写 index_text_rebuild failed 状态也失败了")
+    finally:
+        # 后台线程的 SQLite 读连接是 thread-local：必须在自己线程里关闭。
+        try:
+            db.close_thread_read_conn()
+        except Exception:
+            logger.exception("index-text-rebuild 线程读连接关闭失败")
+
+
 def create_app(
     db_path: str | None = None,
     *,
@@ -174,6 +280,17 @@ def create_app(
                 "migration rebuild FAILED（/health.migration_needs_rebuild=true）: %s",
                 init_report.rebuild_error,
             )
+    # 索引文本版本（docs/02 v9）：init_db 的迁移重建若已跑过，版本已由 rebuild_all
+    # 写成当前值；否则在 lifespan 里起一个后台线程补一次，启动本身不等待。
+    index_text_stored_version = get_index_text_version(db)
+    index_text_needs_rebuild = index_text_rebuild_needed(db)
+    if index_text_needs_rebuild:
+        logger.warning(
+            "检测到索引文本版本 %s < %s（已有记录）：将在后台触发一次派生重建"
+            "（事实层不动；成功前 /health.index_text_version.up_to_date=false）",
+            index_text_stored_version,
+            INDEX_TEXT_VERSION,
+        )
     # retrieval 必须在 init_db 之后构造（resolve_routes 要读 meta）
     retrieval = RetrievalService(db, cfg, provider, index=vector_index)
     backup_scheduler = BackupScheduler(
@@ -231,6 +348,7 @@ def create_app(
 
     stop_event = threading.Event()
     loop_thread: threading.Thread | None = None
+    index_text_thread: threading.Thread | None = None
 
     def _loop() -> None:
         try:
@@ -263,9 +381,25 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
-        nonlocal loop_thread
+        nonlocal loop_thread, index_text_thread
         # 先 prime 一份快照（启动即可回答 /health），再起周期刷新线程。
         health_cache.start()
+        # 索引文本升级：后台重建，不阻塞启动（重建期闸门让读写明确 503，不返回半张索引）。
+        if index_text_needs_rebuild:
+            index_text_thread = threading.Thread(
+                target=_run_index_text_rebuild,
+                args=(
+                    db,
+                    pipeline,
+                    retrieval,
+                    rebuild_gate,
+                    index_text_stored_version,
+                ),
+                name="index-text-rebuild",
+                daemon=True,
+            )
+            index_text_thread.start()
+            app.state.index_text_rebuild_thread = index_text_thread
         if loop_needed:
             loop_thread = threading.Thread(
                 target=_loop, name="derive-backup-loop", daemon=True
@@ -302,6 +436,9 @@ def create_app(
         stop_event.set()
         if loop_thread is not None:
             loop_thread.join(timeout=30)
+        if index_text_thread is not None:
+            # 重建写事务完成/失败后线程才退出；先等它结束再关库，避免半途断连接。
+            index_text_thread.join(timeout=60)
         db.close()
 
     app = FastAPI(title="factlayer", lifespan=lifespan)
@@ -315,6 +452,9 @@ def create_app(
     app.state.health_cache = health_cache
     app.state.derive_loop_enabled = derive_loop_enabled
     app.state.derive_loop_thread = None
+    app.state.index_text_needs_rebuild = index_text_needs_rebuild
+    app.state.index_text_stored_version = index_text_stored_version
+    app.state.index_text_rebuild_thread = None
 
     def _admin_allowed(request: Request) -> bool:
         """ADMIN_TOKEN 非空 → 校验 token；为空 → 只接受回环（含 TestClient）。"""

@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from app import textnorm
-from tests.retrieval_helpers import build_derived, make_service
+from tests.retrieval_helpers import make_service
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "recall_baseline.json"
 
@@ -64,21 +64,42 @@ def test_query_builder_is_byte_identical_to_baseline():
         assert textnorm.fts_match_expr(tokens) == record["expr"], record["sid"]
 
 
-def test_index_and_r6_reproduce_baseline_exactly(db):
+def test_content_only_index_reproduces_baseline_exactly(db):
+    """v9 说明：生产索引文本已改为「日期前缀 + content」（docs/02 v9），基线 fixture
+    是 v1 口径（只有 content），因此这里**显式构造 v1 派生列**来冻结分词/名次，不再
+    经过 ``create_memory`` 的 v2 索引路径。v2 生产路径由 ``tests/test_index_text.py``
+    与 ``research/recall/index_text_eval.py`` 覆盖；本测试只防「分词/tie-break 回归」。
+    """
     data = _load_fixture()
-    from app.write_path import create_memory
+    from app import textnorm
+    from tests.retrieval_helpers import insert_memory
 
     fixture_index: dict[str, int] = {}
     for index, text in enumerate(data["corpus"]):
-        receipt = create_memory(
+        memory_id = insert_memory(
             db,
-            client_write_id=f"baseline-{index}",
-            content=text,
+            f"baseline-{index}",
+            text,
             session_id=f"baseline-{index}",
-            source_client="baseline",
+            seq=index,
+            recorded_at=1_700_000_000_000,
         )
-        fixture_index[receipt["id"]] = index
-    build_derived(db)
+        fixture_index[memory_id] = index
+        rowid = db.read_conn.execute(
+            "SELECT gseq FROM memories WHERE id=?", (memory_id,)
+        ).fetchone()[0]
+        ngrams = textnorm.ngram_text(text)  # v1：只有 content，无日期前缀
+        with db.write_txn() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO memories_ngrams(memory_id, ngram_text) "
+                "VALUES (?, ?)",
+                (memory_id, ngrams),
+            )
+            conn.execute("DELETE FROM memories_fts_bigram WHERE rowid=?", (rowid,))
+            conn.execute(
+                "INSERT INTO memories_fts_bigram(rowid, ngram_text) VALUES (?, ?)",
+                (rowid, ngrams),
+            )
     service = make_service(db, routes=("bigram",), route_top_k=50)
 
     hits = []

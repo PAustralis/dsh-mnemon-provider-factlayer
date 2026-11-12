@@ -8,11 +8,14 @@ from . import voided as voided_mod
 from .contract import PROVIDER_MANIFEST
 from .db import Database
 from .derive import STAGES, DerivePipeline
+from .index_text import INDEX_TEXT_REBUILD_KEY, INDEX_TEXT_VERSION
 from .maintenance import fts_optimize_state
 from .schema import (
     MIGRATION_NEEDS_REBUILD_KEY,
     MIGRATION_REBUILD_KEY,
+    get_index_text_version,
     get_meta,
+    index_text_rebuild_needed,
 )
 
 LAST_BACKUP_AT_KEY = "last_backup_at"
@@ -58,6 +61,30 @@ def migration_state(db: Database) -> dict:
     return {"needs_rebuild": needs, "last": last}
 
 
+def index_text_state(db: Database) -> dict:
+    """索引文本版本与最近一次版本重建状态（docs/02 v9）。
+
+    ``stored < current`` 且有记录 = 启动时会触发一次后台派生重建；重建失败必须
+    在 ``/health.alerts`` 可见（不静默保留旧索引）。
+    """
+    stored = get_index_text_version(db)
+    last: dict | None = None
+    raw = get_meta(db, INDEX_TEXT_REBUILD_KEY)
+    if raw:
+        try:
+            parsed = json.loads(raw)
+        except (TypeError, ValueError):
+            parsed = {"status": "unknown", "raw": raw}
+        last = parsed if isinstance(parsed, dict) else {"status": "unknown"}
+    return {
+        "current": INDEX_TEXT_VERSION,
+        "stored": stored,
+        "up_to_date": stored == INDEX_TEXT_VERSION,
+        "rebuild_needed": index_text_rebuild_needed(db),
+        "last_rebuild": last,
+    }
+
+
 def index_row_counts(db: Database) -> dict:
     """事实行数 vs 派生索引行数：三者不等 = 有记忆搜不到。"""
     conn = db.read_conn
@@ -98,6 +125,7 @@ def health_report(
     embedding = pipeline.embedding_state()
     migration = migration_state(db)
     index = index_row_counts(db)
+    index_text = index_text_state(db)
     alerts: list[str] = []
     if migration["needs_rebuild"]:
         # 需求口径：迁移后重建失败时 /health 必须暴露「pending fts > 0」告警
@@ -112,6 +140,14 @@ def health_report(
         alerts.append("embedding_failures>0")
     if embedding["circuit"]["circuit_open"]:
         alerts.append("embedding_circuit_open")
+    if index_text["rebuild_needed"]:
+        alerts.append(
+            f"index_text_version_stale: {index_text['stored']} < "
+            f"{index_text['current']}"
+        )
+    last_rebuild = index_text["last_rebuild"] or {}
+    if last_rebuild.get("status") == "failed":
+        alerts.append("index_text_rebuild_failed")
     report = {
         "pending": pending,
         "failures": {stage: pipeline.failures[stage] for stage in STAGES},
@@ -122,6 +158,7 @@ def health_report(
         "migration_needs_rebuild": migration["needs_rebuild"],
         "migration": migration["last"],
         "index": index,
+        "index_text_version": index_text,
         "sqlite": sqlite_state(db),
         "fts_optimize": fts_optimize_state(db),
         "alerts": alerts,

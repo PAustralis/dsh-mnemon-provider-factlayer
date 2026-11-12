@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .db import Database
+from .index_text import INDEX_TEXT_VERSION, INDEX_TEXT_VERSION_KEY
 
 if TYPE_CHECKING:  # pragma: no cover - 仅类型提示，避免 schema ↔ derive 循环导入
     from .derive import DerivePipeline
@@ -566,6 +567,10 @@ def init_db(
     migrate_embeddings_columns(db)
     db.execute_script(SCHEMA_SQL)
     memories, ngrams, bigram = _index_row_counts(db)
+    if memories == 0:
+        # 空库没有可重建的记录：直接声明当前索引文本版本，避免每次启动都判「过期」。
+        if get_index_text_version(db) != INDEX_TEXT_VERSION:
+            set_meta(db, INDEX_TEXT_VERSION_KEY, str(INDEX_TEXT_VERSION))
     return _rebuild_after_migration(
         db,
         pipeline,
@@ -588,3 +593,29 @@ def set_meta(db: Database, key: str, value: str) -> None:
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             (key, value),
         )
+
+
+def get_index_text_version(db: Database) -> int | None:
+    """库内索引文本版本；缺失/非法返回 ``None``（视为比任何当前版本都旧）。"""
+    raw = get_meta(db, INDEX_TEXT_VERSION_KEY)
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def index_text_rebuild_needed(db: Database) -> bool:
+    """库中版本低于当前且有记录 → 需要一次派生重建（检索层升级）。
+
+    - 空库不需要重建（``init_db`` 会直接写当前版本）；
+    - 版本高于当前（旧代码打开新库）不降级、不重建，只由 ``/health`` 暴露差异。
+    """
+    memories = int(
+        db.read_conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
+    )
+    if memories == 0:
+        return False
+    stored = get_index_text_version(db)
+    return stored is None or stored < INDEX_TEXT_VERSION

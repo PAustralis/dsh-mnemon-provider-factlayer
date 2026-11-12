@@ -13,6 +13,7 @@ from fastapi import HTTPException
 from . import textnorm
 from . import voided as voided_mod
 from .db import Database
+from .index_text import index_text_for
 
 logger = logging.getLogger("factlayer.write_path")
 
@@ -151,10 +152,19 @@ def create_memory(
         )
         # 写入即索引（v8 §3.1）：ngram 派生与事实写入同一事务，不允许「写进去了搜不到」。
         # 仍保留 fts 派生水位（重复执行幂等），派生层可整体清空重跑。
+        # 索引文本 = 日期前缀 + content（docs/02 v9）；事实层 content 不变。
+        indexed = index_text_for(
+            {
+                "content": content,
+                "event_time": event_time,
+                "event_time_precision": event_time_precision,
+                "recorded_at": recorded_at,
+            }
+        )
         rowid = conn.execute(
             "SELECT gseq FROM memories WHERE id=?", (memory_id,)
         ).fetchone()[0]
-        ngrams = textnorm.ngram_text(content)
+        ngrams = textnorm.ngram_text(indexed)
         conn.execute(
             "INSERT OR REPLACE INTO memories_ngrams(memory_id, ngram_text) "
             "VALUES (?, ?)",
@@ -168,7 +178,7 @@ def create_memory(
         conn.execute("DELETE FROM memories_fts_trigram WHERE rowid=?", (rowid,))
         conn.execute(
             "INSERT INTO memories_fts_trigram(rowid, content) VALUES (?, ?)",
-            (rowid, textnorm.normalize(content)),
+            (rowid, textnorm.normalize(indexed)),
         )
 
     return {
