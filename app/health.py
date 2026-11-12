@@ -148,6 +148,9 @@ def health_report(
     last_rebuild = index_text["last_rebuild"] or {}
     if last_rebuild.get("status") == "failed":
         alerts.append("index_text_rebuild_failed")
+    elif last_rebuild.get("status") == "retrying":
+        # 自动重试期间旧索引仍在使用：必须可观测，否则「稍后自己会好」等于静默。
+        alerts.append("index_text_rebuild_retrying")
     report = {
         "pending": pending,
         "failures": {stage: pipeline.failures[stage] for stage in STAGES},

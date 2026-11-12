@@ -367,12 +367,6 @@ class DerivePipeline:
                 "SELECT * FROM memories ORDER BY gseq"
             ).fetchall()
         ]
-        # skip_embedding 时旧向量不会被重算；若库内已有向量，就不能宣称索引文本版本
-        # 已升级（否则旧 content-only 向量会以 v2 名义继续被向量路使用，静默错配）。
-        has_embeddings = bool(
-            self.db.read_conn.execute("SELECT 1 FROM embeddings LIMIT 1").fetchone()
-        )
-        claim_index_version = (not skip_embedding) or (not has_embeddings)
         vectors: dict[str, list[float]] = {}
         if not skip_embedding and self.embedding_provider is not None:
             try:
@@ -392,6 +386,20 @@ class DerivePipeline:
                     "（旧向量数据保留，待后续 tick / rebuild 补算）：%s",
                     self.last_embedding_error,
                 )
+
+        # **版本宣称必须在 embedding 尝试之后、用最终的 skip_embedding 重算**：
+        # provider 失败降级时 skip_embedding 在这里才从 False 翻成 True；若沿用
+        # 失败前的判断，就会把保留下来的旧 content-only 向量以 v2 名义继续交给
+        # 向量路（静默错配）。保留旧向量时绝不写当前版本。
+        if skip_embedding:
+            has_embeddings = bool(
+                self.db.read_conn.execute(
+                    "SELECT 1 FROM embeddings LIMIT 1"
+                ).fetchone()
+            )
+            claim_index_version = not has_embeddings
+        else:
+            claim_index_version = True
 
         counts = {stage: 0 for stage in STAGES}
         # 先在事务外把三类派生行的参数算好，再在写事务里按 batch_size 用

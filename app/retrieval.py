@@ -52,6 +52,8 @@ from .embeddings import (
     check_fingerprint,
     normalize_vector,
 )
+from .index_text import INDEX_TEXT_VERSION
+from .schema import get_index_text_version
 
 logger = logging.getLogger("factlayer.retrieval")
 
@@ -247,6 +249,20 @@ class RetrievalService:
     def invalidate_caches(self) -> None:
         self.index.invalidate()
 
+    def index_text_stale(self) -> bool:
+        """库内索引文本版本是否落后（旧 content-only 派生索引仍在被读）。
+
+        ``/health.alerts`` 已有 ``index_text_version_stale``；但客户端只看得到
+        ``/search`` 响应，所以检索结果也要带同一个可观测标记：空结果进 hint，
+        非空结果进首条 tags（``index_version_stale``）。版本读取失败不影响检索。
+        """
+        try:
+            stored = get_index_text_version(self.db)
+        except Exception:  # pragma: no cover - meta 读取失败不该让检索 500
+            logger.exception("读取 index_text_version 失败，跳过 stale 标记")
+            return False
+        return stored is None or int(stored) < INDEX_TEXT_VERSION
+
     # ------------------------------------------------------------------ 单路
     def _fts_rank(
         self, table: str, expr: str | None, limit: int, *, gseq_desc: bool = True
@@ -387,6 +403,7 @@ class RetrievalService:
             final_k = max(1, min(final_k, int(limit)))
         route_limit = int(self.cfg.route_top_k)
         degrade = dict(self.degrade)
+        index_text_stale = self.index_text_stale()
 
         tokens, token_truncated = textnorm.query_tokens(norm_query)
         snapshot = voided_mod.hidden_snapshot(self.db.read_conn)
@@ -403,6 +420,7 @@ class RetrievalService:
                 token_truncated=0,
                 hidden_size=len(snapshot.hidden),
                 reason="tokens=0（查询只含标点/空白等不产 token 的字符）",
+                index_text_stale=index_text_stale,
             )
 
         outcomes: list[RouteOutcome] = []
@@ -605,6 +623,7 @@ class RetrievalService:
                 o.name == "vector" and (o.error or o.unavailable or o.skipped)
                 for o in outcomes
             ),
+            index_text_stale=index_text_stale,
         )
 
         if truncated_items:
@@ -617,7 +636,12 @@ class RetrievalService:
 
         if not items:
             hint = self._route_hint(
-                outcomes, tokens, hidden_count, token_truncated, degrade=degrade
+                outcomes,
+                tokens,
+                hidden_count,
+                token_truncated,
+                degrade=degrade,
+                index_text_stale=index_text_stale,
             )
             self.stats.record_no_match()
             response = self._base_response(
@@ -749,6 +773,7 @@ class RetrievalService:
         *,
         hidden_visible: bool,
         vector_unavailable: bool,
+        index_text_stale: bool = False,
     ) -> tuple[list[dict], int, int]:
         final_k = int(self.cfg.final_k)
         item_max = int(self.cfg.item_max_chars)
@@ -793,6 +818,9 @@ class RetrievalService:
                     tags.append(f"hidden:{hidden_count}")
                 if vector_unavailable:
                     tags.append("vector-unavailable")
+                if index_text_stale:
+                    # 版本落后 + 旧索引仍在服务：客户端必须能看出来。
+                    tags.append("index_version_stale")
             tags = _normalize_tags(tags)
             if position == 0 and hidden_notice and not hidden_visible:
                 content = _ensure_tail(content, hidden_notice, item_max)
@@ -884,6 +912,7 @@ class RetrievalService:
         hidden_size: int,
         reason: str,
         degrade: dict | None = None,
+        index_text_stale: bool = False,
     ) -> dict:
         self.stats.record_no_match()
         hint = self._route_hint(
@@ -893,6 +922,7 @@ class RetrievalService:
             token_truncated,
             reason=reason,
             degrade=degrade,
+            index_text_stale=index_text_stale,
         )
         response = self._base_response(
             query,
@@ -928,6 +958,7 @@ class RetrievalService:
         *,
         reason: str | None = None,
         degrade: dict | None = None,
+        index_text_stale: bool = False,
     ) -> str:
         """空结果 hint：必须以 NO_MATCH 开头 + 参与/降级路 + token 数。"""
         statuses: list[str] = []
@@ -950,6 +981,9 @@ class RetrievalService:
         active_degrade = self.degrade if degrade is None else degrade
         if active_degrade.get("degraded"):
             parts.append(f"degraded={active_degrade.get('reason')}")
+        if index_text_stale:
+            # 结果为空时 hint 是唯一能透给模型的通道（docs/02 §5.1）。
+            parts.append("index_version_stale")
         if reason:
             parts.append(f"reason={reason}")
         return "｜".join(parts)

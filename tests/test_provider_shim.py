@@ -287,6 +287,37 @@ def test_admin_rebuild_clears_flag_after_failure(client, monkeypatch):
     assert client.post("/search", json={"query": "x"}).status_code == 200
 
 
+def test_rebuilding_blocks_derive_tick_and_admin_rebuild(client, monkeypatch):
+    """后台重建期间 /derive/tick 与 /admin/rebuild 也明确 503，不白跑一次重建。"""
+    gate = client.app.state.rebuild_gate
+    called = {"tick": 0, "rebuild": 0}
+
+    def fake_tick():
+        called["tick"] += 1
+        return {"fts": 0, "embedding": 0, "entity": 0, "graph": 0}
+
+    def fake_rebuild_all(**kwargs):
+        called["rebuild"] += 1
+        return {"fts": 0, "embedding": 0, "entity": 0, "graph": 0}
+
+    monkeypatch.setattr(client.app.state.pipeline, "tick", fake_tick)
+    monkeypatch.setattr(client.app.state.pipeline, "rebuild_all", fake_rebuild_all)
+
+    gate.begin()
+    try:
+        _assert_rebuilding_503(client.post("/derive/tick"))
+        _assert_rebuilding_503(client.post("/admin/rebuild"))
+    finally:
+        gate.end()
+
+    # 被 503 拦下的请求没有执行任何重建/派生工作
+    assert called == {"tick": 0, "rebuild": 0}
+    # 闸门解除后两个入口恢复
+    assert client.post("/derive/tick").status_code == 200
+    assert client.post("/admin/rebuild").status_code == 200
+    assert called == {"tick": 1, "rebuild": 1}
+
+
 # ---------------------------------------------------------------- session_id
 
 

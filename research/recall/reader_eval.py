@@ -196,17 +196,23 @@ def norm_verdict(text: str) -> str:
 
 
 def norm_state(text: str, verdict: str, cls: str, fabricated: bool) -> str:
+    """判官没给出合法 answer_state 时的确定性回退。
+
+    E 类的 ✅ 含义是「明确说记忆里没有」，不是给出了答案；回退必须记
+    ``abstained``，否则 E 类会被算进「answered_unanswerable」（编造）统计。
+    """
     state = (text or "").strip().lower()
     if state in {"answered", "abstained", "conflict_flagged", "fabricated"}:
         return state
     if fabricated:
         return "fabricated"
+    if cls == "E":
+        # E 类的正确回答本身就是弃权：✅ -> abstained，⚠️/❌ 也按弃权处理。
+        return "abstained"
     if verdict == "✅":
         return "answered"
     if cls in "CGJ":
         return "conflict_flagged"
-    if cls == "E":
-        return "abstained"
     return "abstained"
 
 

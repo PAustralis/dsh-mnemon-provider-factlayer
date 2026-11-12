@@ -436,6 +436,54 @@ def test_partial_rebuild_does_not_claim_version_with_stale_vectors(db):
     assert index_text_rebuild_needed(db) is False
 
 
+def test_embedding_failure_downgrade_does_not_claim_current_version(db):
+    """provider 抛错 + allow_embedding_failure：降级路径保留旧向量，版本必须保持旧值。
+
+    回归：``claim_index_version`` 曾经在 embedding 尝试**之前**算好，降级时
+    skip_embedding 才翻 True，结果事务后仍写 v2，旧 content-only 向量被当成
+    v2 索引继续使用（静默错配）。
+    """
+    memory_id = add_memory(db, "保留旧向量的降级记录", recorded_at=1_700_000_000_000)
+    provider = HashingEmbeddingProvider(dim=8)
+    DerivePipeline(db, embedding_provider=provider).rebuild_all()
+    old_vectors = db.read_conn.execute(
+        "SELECT memory_id, hex(vector) FROM embeddings ORDER BY memory_id"
+    ).fetchall()
+    assert len(old_vectors) == 1
+    # 模拟旧版本库：派生列 + 向量都是升级前状态
+    set_meta(db, INDEX_TEXT_VERSION_KEY, "1")
+
+    class Boom:
+        model_id = "boom-provider"
+
+        def embed(self, texts):
+            raise RuntimeError("embedding provider down")
+
+    bad = DerivePipeline(db, embedding_provider=Boom())
+    counts = bad.rebuild_all(allow_embedding_failure=True)
+
+    assert counts["fts"] == 1  # ngram/FTS 已按 v2 重建
+    # 旧向量原样保留（未清空、未改写）
+    assert (
+        db.read_conn.execute(
+            "SELECT memory_id, hex(vector) FROM embeddings ORDER BY memory_id"
+        ).fetchall()
+        == old_vectors
+    )
+    # 关键断言：版本仍是旧值，绝不写 v2
+    assert get_index_text_version(db) == 1
+    assert index_text_rebuild_needed(db) is True
+    # 降级后的派生状态可观测：stale 告警 + embedding 失败告警
+    health = health_report(db, bad)
+    assert "index_text_version_stale: 1 < 2" in health["alerts"]
+    assert "embedding_failures>0" in health["alerts"]
+    # 事实层与派生层的「新 ngram / 旧向量」并存：版本没被冒充
+    ngrams = db.read_conn.execute(
+        "SELECT ngram_text FROM memories_ngrams WHERE memory_id=?", (memory_id,)
+    ).fetchone()[0]
+    assert ngrams.startswith("2023-11-14 2023")  # recorded_at UTC 日期前缀已进新 ngram
+
+
 def test_rebuild_failure_is_explicit_and_exposed_in_health(db, caplog):
     memory_id = add_memory(db, "失败测试记录", recorded_at=1_700_000_000_000)
     assert memory_id
@@ -449,11 +497,15 @@ def test_rebuild_failure_is_explicit_and_exposed_in_health(db, caplog):
 
     pipeline.rebuild_all = boom  # type: ignore[method-assign]
     caplog.set_level(logging.ERROR, logger="factlayer.main")
-    _run_index_text_rebuild(db, pipeline, retrieval, gate, 1)
+    # 关掉自动重试（retry_delays=()）：本用例只验证「失败显式暴露」。
+    _run_index_text_rebuild(
+        db, pipeline, retrieval, gate, 1, retry_delays=()
+    )
 
     assert gate.is_rebuilding is False
     detail = json.loads(get_meta(db, INDEX_TEXT_REBUILD_KEY))
     assert detail["status"] == "failed"
+    assert detail["attempt"] == 1 and detail["max_attempts"] == 1
     assert "simulated index text rebuild failure" in detail["error"]
     assert any(
         rec.levelno == logging.ERROR and "索引文本版本重建失败" in rec.getMessage()
@@ -465,3 +517,127 @@ def test_rebuild_failure_is_explicit_and_exposed_in_health(db, caplog):
     assert any(
         alert.startswith("index_text_version_stale") for alert in health["alerts"]
     )
+
+
+def test_rebuild_retries_with_backoff_then_recovers(db):
+    """后台重建失败自动重试：指数退避（注入的 sleep 记录间隔），成功后清告警。"""
+    add_memory(db, "重试后成功的记录", recorded_at=1_700_000_000_000)
+    set_meta(db, INDEX_TEXT_VERSION_KEY, "1")
+    pipeline = DerivePipeline(db, stub_success=True)
+    retrieval = RetrievalService(db, load_config())
+    gate = RebuildGate()
+
+    calls = {"n": 0}
+    real_rebuild = pipeline.rebuild_all
+
+    def flaky(**kwargs):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise RuntimeError(f"transient rebuild failure #{calls['n']}")
+        return real_rebuild()
+
+    pipeline.rebuild_all = flaky  # type: ignore[method-assign]
+
+    sleeps: list[float] = []
+    detail = _run_index_text_rebuild(
+        db,
+        pipeline,
+        retrieval,
+        gate,
+        1,
+        retry_delays=(2.0, 5.0, 9.0),
+        sleep=sleeps.append,
+    )
+
+    assert calls["n"] == 3
+    assert sleeps == [2.0, 5.0]  # 第 3 次成功，不再睡 9s
+    assert gate.is_rebuilding is False
+    assert detail["status"] == "ok"
+    assert detail["attempt"] == 3 and detail["max_attempts"] == 4
+    assert get_index_text_version(db) == INDEX_TEXT_VERSION
+    assert index_text_rebuild_needed(db) is False
+    health = health_report(db, pipeline)
+    assert "index_text_rebuild_failed" not in health["alerts"]
+    assert not any(
+        alert.startswith("index_text_version_stale") for alert in health["alerts"]
+    )
+
+
+def test_rebuild_all_retries_fail_keeps_failed_meta_and_alerts(db):
+    """重试全部失败：meta 保留 failed（含尝试次数），期间 retrying 也可观测。"""
+    add_memory(db, "永远失败的记录", recorded_at=1_700_000_000_000)
+    set_meta(db, INDEX_TEXT_VERSION_KEY, "1")
+    pipeline = DerivePipeline(db, stub_success=True)
+    retrieval = RetrievalService(db, load_config())
+    gate = RebuildGate()
+
+    calls = {"n": 0}
+
+    def boom(**kwargs):
+        calls["n"] += 1
+        raise RuntimeError(f"rebuild down #{calls['n']}")
+
+    pipeline.rebuild_all = boom  # type: ignore[method-assign]
+
+    observed: list[tuple[str, list[str]]] = []
+
+    def fake_sleep(_delay):
+        # 每次重试等待时查一次 meta + /health：必须能看到 retrying 与告警。
+        status = json.loads(get_meta(db, INDEX_TEXT_REBUILD_KEY))["status"]
+        observed.append((status, health_report(db, pipeline)["alerts"]))
+
+    detail = _run_index_text_rebuild(
+        db,
+        pipeline,
+        retrieval,
+        gate,
+        1,
+        retry_delays=(30.0, 120.0, 600.0),
+        sleep=fake_sleep,
+    )
+
+    assert calls["n"] == 4  # 初始 1 次 + 3 次重试
+    assert [item[0] for item in observed] == ["retrying", "retrying", "retrying"]
+    for _status, alerts in observed:
+        assert "index_text_rebuild_retrying" in alerts
+        assert any(alert.startswith("index_text_version_stale") for alert in alerts)
+    assert gate.is_rebuilding is False
+    assert detail["status"] == "failed"
+    assert detail["attempt"] == 4 and detail["max_attempts"] == 4
+    assert "rebuild down #4" in detail["error"]
+    health = health_report(db, pipeline)
+    assert "index_text_rebuild_failed" in health["alerts"]
+    assert "index_text_rebuild_retrying" not in health["alerts"]
+    assert any(
+        alert.startswith("index_text_version_stale") for alert in health["alerts"]
+    )
+
+
+def test_search_marks_stale_index_version_in_tags_or_hint(db):
+    """/search 必须让客户端看见「旧索引仍在服务」：非空进首条 tags、空结果进 hint。"""
+    # 走写入路径：ngram/FTS 派生与事实写入同一事务完成，检索才可命中。
+    memory_id = add_memory(db, "索引版本过期标记测试")
+    service = make_service(db, routes=("bigram",))
+
+    # 版本一致时：不带 stale 标记
+    fresh = service.search("过期标记")
+    assert fresh["count"] >= 1
+    fresh_hit = next(item for item in fresh["items"] if item["id"] == memory_id)
+    assert "index_version_stale" not in fresh_hit["tags"]
+
+    # 版本落后（旧 content-only 派生索引还在被读）：非空结果首条 tags 必须带
+    set_meta(db, INDEX_TEXT_VERSION_KEY, "1")
+    stale = service.search("过期标记")
+    assert stale["count"] >= 1
+    assert stale["items"][0]["id"] == memory_id
+    assert "index_version_stale" in stale["items"][0]["tags"]
+    # 只有首条带状态 tag（与 hidden:N / vector-unavailable 同一通道）
+    assert all(
+        "index_version_stale" not in item["tags"] for item in stale["items"][1:]
+    )
+
+    # 空结果：hint 必须带同一个标记，且仍以 NO_MATCH 开头
+    empty = service.search("绝无此词的组合xyz")
+    assert empty["count"] == 0
+    assert empty["hint"].startswith("NO_MATCH")
+    assert "index_version_stale" in empty["hint"]

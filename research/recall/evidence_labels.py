@@ -169,10 +169,14 @@ def audit_supervision(
         key: (key in bank_text)
         for key in ("supporting_facts", "supporting facts", "答案", "评分", "标准答案")
     }
-    grades_path = Path(
-        r"E:\Tools\projects\dsh-mnemon-provider-graphiti\research\phase2\grades.py"
+    # 旧仓库的 grades.py 不在本仓库：默认按本仓库相对路径找，可用环境变量覆盖。
+    # 找不到时**显式记录「未校验」**，而不是静默 None 让报告读者以为已校验。
+    grades_env = os.environ.get("FACTLAYER_GRADES_PATH")
+    grades_path = (
+        Path(grades_env).expanduser()
+        if grades_env
+        else REPO_ROOT / "research" / "phase2" / "grades.py"
     )
-    crosscheck = None
     if grades_path.exists():
         raw = grades_path.read_text(encoding="utf-8", errors="replace")
         # grades.py 的 CLASS 用 "A": [9, 19, ...] 形式编码
@@ -190,10 +194,22 @@ def audit_supervision(
         ]
         crosscheck = {
             "path": str(grades_path),
+            "checked": True,
             "parsed": len(found),
             "mismatches": mismatches,
             "match": not mismatches,
             "note": "只做类别交叉校验；grades.py 的 ✅/⚠️/❌ 是回答判分表，不是逐记录标签",
+        }
+    else:
+        crosscheck = {
+            "path": str(grades_path),
+            "checked": False,
+            "status": "未校验",
+            "parsed": 0,
+            "mismatches": [],
+            "match": None,
+            "note": "grades.py 不存在（旧仓库文件不在本仓库），类别交叉校验未执行；"
+                    "设置 FACTLAYER_GRADES_PATH 指向该文件后可校验。",
         }
     return {
         "answer_key": str(answer_path),
