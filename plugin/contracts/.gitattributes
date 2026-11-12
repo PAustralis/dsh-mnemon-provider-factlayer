@@ -1,0 +1,4 @@
+# 契约正文必须逐字稳定：强制检出为 LF。
+# Windows 上常见 core.autocrlf=true，会把文本文件检出成 CRLF；
+# tests/contract-text.test.ts 断言正文无 CR，且三方一致比较逐字（含换行）。
+*.txt text eol=lf

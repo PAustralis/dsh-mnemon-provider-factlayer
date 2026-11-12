@@ -146,6 +146,69 @@ provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + fa
 能力位：`search`/`remember` 为 true，其余 6 个 false；`writeMode:'exact'`、
 `deletionMode:'unsupported'`、`scoreSemantics:'provider-native'`（manifest 与 adapter 两处一致）。
 
+## 随包契约（读者契约 v4）
+
+本包同时是 **provider 与 profile bundle**：同一个包既提供 `factlayer` 适配器（主入口），
+又通过一条 bundle patch 注册**读者契约**的全局提示词段。契约正文随仓库/随 npm 包交付，
+不写进任何 profile 配置。
+
+### 文件位置
+
+| 文件 | 作用 |
+|---|---|
+| `contracts/reader-contract-v4.zh.txt` | **正文唯一来源**，逐字等于 [`../docs/12-读者契约v4.md`](../docs/12-读者契约v4.md) §2 的代码块（585 字、17 行） |
+| `src/contract-text.ts` | 运行时读取上面的 `.txt`，导出 `READER_CONTRACT_V4` / `READER_CONTRACT_VERSION='v4'`；`dist/contract-text.js` 用 `../contracts/...` 定位包根，npm 打包后仍可用（`files` 含 `contracts`） |
+| `src/contract-plugin.ts` | prompt-section 插件：`inject=['systemPrompt']`，`apply` 注册 `name='mnemon:reader-contract'`、`order=10250`、`text=READER_CONTRACT_V4` 的全局段；对外子路径 `./contract` → `dist/contract-plugin.js` |
+| `cordis.patch.yml` | bundle patch：只 `insert` 一行 `name: dsh-mnemon-provider-factlayer/contract`；**不动 persona、不动 preset** |
+
+插件文件叫 `contract-plugin.ts` 而不是 `contract.ts`：`src/contract.ts` 是 provider 契约的
+类型镜像（被 5 个 src 模块引用），占用中的文件名不重命名；对外子路径仍是 `./contract`。
+
+### 装载方式（手改 bundles 数组，不要 `install_bundle`）
+
+前置：本包能被 profile 解析到（现有 junction 或已安装），且已构建（`pnpm -C plugin run build`，
+需要 `dist/contract-plugin.js` 与 `dist/contract-text.js` 存在）。
+
+1. 备份 `<profile>/package.json`（例如 `%USERPROFILE%\.dsh\profiles\web\package.json`）。
+2. 在 `dsh.profile.bundles` 数组**末尾加一行包名**（不要覆盖整个数组，也不要跑 pnpm）：
+
+   ```jsonc
+   {
+     "dsh": {
+       "profile": {
+         "bundles": [
+           // …原有 bundle 顺序不动…
+           "dsh-mnemon-provider-factlayer"
+         ]
+       }
+     }
+   }
+   ```
+
+3. 重启 `dsh web`。段是**全局**的：同一 Host 进程里的每个 agent（含 subagent 会话）每轮
+   系统提示都会多这一段，约 600 字。
+4. 验证：新会话里系统提示应出现 `mnemon:reader-contract` 段；问「我车位在哪」（应按最新日期答），
+   问血型类问题（应列出两种说法并反问）。
+
+**回滚**：从 `dsh.profile.bundles` 删掉那一行并重启。不需要动 mnemon 的 provider 配置，
+也不会影响 provider 挂载（这正是选手改数组、不用 `install_bundle` 的原因：后者会把 junction
+变成 `file:` 依赖并重排 `node_modules`，回滚时可能连带断掉 provider 挂载，见 `docs/12` §4）。
+
+**`minimal` preset 注意**：`minimal` 的 persona 设了 `complete: true`，装配时会把包括本段在内
+的所有其它段**吞掉**，契约在该 preset 下不生效；`standard` / `cordis` / `ptc` 正常
+（依据见 `docs/13` §1.2）。
+
+### 一致性校验
+
+`pnpm test` 里有两组契约测试（共 21 条）：
+
+- `tests/contract-text.test.ts`：三方一致——`contracts/*.txt` == `READER_CONTRACT_V4` ==
+  `docs/12` §2 代码块；提取不到文档/小节/代码块时**抛错而不是跳过**；另外断言 `.txt` 无 BOM、
+  无 CRLF、单个结尾换行，且 `package.json` 的 `files` 含 `contracts`。
+- `tests/contract-plugin.test.ts` / `tests/contract-delivery.test.ts`：`apply` 只注册一段且
+  name/order/text 固定；`package.json` 的 `./contract` 导出指向 `dist/contract-plugin.js`；
+  bundle patch 去掉注释后只剩 `insert` + `id` + `name` 三行，且 `name` 等于 `<包名>/contract`。
+
 ## 与设计的偏差 / 已知限制
 
 1. **`defineMemorySpaceProvider` 的 import 来源**：任务要求动态 `import('dsh-mnemon')`；实测

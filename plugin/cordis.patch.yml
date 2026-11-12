@@ -1,0 +1,19 @@
+# 本包同时是 provider 与 profile bundle：package.json 的 dsh.bundle.patch 指向本文件。
+#
+# 生效方式：手改 <profile>/package.json 的 dsh.profile.bundles 数组，把
+# "dsh-mnemon-provider-factlayer" 加到末尾，然后重启 dsh（不要用 install_bundle；
+# 理由与回滚见 docs/12 §4 与 plugin/README.md「随包契约」）。
+#
+# 本文件只插入一行**全局 prompt-section 插件**，注册读者契约
+# （contracts/reader-contract-v4.zh.txt；段名 mnemon:reader-contract，order 10250）。
+# 刻意不碰 persona、不碰 preset：上游改写 preset 时本层不受影响。
+#
+# 已知限制：minimal preset 的 persona 设了 complete: true，装配时会把本段整体吞掉
+#（docs/13 §1.2）；standard / cordis / ptc 正常。全局段对同一 Host 进程内的每个
+# agent 每轮生效（含 subagent 会话），v4 正文约 600 字。
+#
+# 行名指向包内子路径导出（exports["./contract"] → dist/contract-plugin.js），
+# 不是包主入口（主入口仍是 provider）。
+- insert:
+    - id: mnemon-reader-contract
+      name: dsh-mnemon-provider-factlayer/contract
