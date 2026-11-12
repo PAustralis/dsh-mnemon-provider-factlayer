@@ -1,6 +1,12 @@
-# recall 评测原型（一次性，非产品代码）
+# recall 评测原型（v1 历史框架，非产品代码）
 
-回答一个问题：**四路召回里哪几路真的有用，RRF / MMR 带来多少提升。**
+> **时效说明（2026-11-12）**：本目录记录的是 **v1 时代的四路召回评测框架**（当时主指标 recall@6）。
+> 产品后来已定为 **`RETRIEVAL_ROUTES=vector` 单路 + 生产口径 R@4**，RRF/MMR/最近路均被否决；
+> 当前结论请看 [`docs/04-embedding重测报告.md`](../../docs/04-embedding重测报告.md) 与
+> [`docs/08-生产指标与失败分析.md`](../../docs/08-生产指标与失败分析.md)。本文以下"四路/recall@6"
+> 一律是**当年口径**，不是现在的产品口径。
+
+回答一个问题（当年）：**四路召回里哪几路真的有用，RRF / MMR 带来多少提升。**
 用真实语料 119 条 + 人工题库 40 题，主指标 recall@6。结论在 [`REPORT.md`](REPORT.md)。
 
 > 本目录不属于产品代码，不参与构建，不修改 `app/` 或 `tests/`。
@@ -17,8 +23,8 @@
 | `evidence_labels.json` | 逐题答案要点、strict/judge/union 证据集、R@4/R@20、一致率、E 类、LLM usage |
 | `reader_eval.py` | **读者级端到端**（docs/10）：真实向量 top-4 → deepseek-flash reader → 三档判分；输出 `reader_eval.json` |
 | `reader_eval.json` | 逐题 top-4/回答/判分/证据覆盖 + 汇总 + token |
-| `reader_contract_eval.py` | **契约对照**（docs/11）：A 题库原 preamble / B 契约 v2 / C v2+日期强调 / D 契约 v3（E v3+日期，可选未跑），同一 top-4 与判分口径；A 迁移上一轮缓存（0 调用、逐题复现），B/C/D 各 40 生成 + 40 判分；输出 `reader_contract_eval.json` |
-| `reader_contract_eval.json` | 四组逐题答案/判分/契约执行度 + 分组汇总 + 配对 + 7 题专项 + 成本 + 语料重建审计 |
+| `reader_contract_eval.py` | **契约对照**（docs/11）：五组 A 题库原 preamble / B 契约 v2 / C v2+日期强调 / D 契约 v3 / **E 契约 v4（已跑）**，同一 top-4 与判分口径；A 迁移上一轮缓存（0 调用、逐题复现），B/C/D/E 各 40 生成 + 40 判分；默认 `--groups A,B,C`，E 需显式指定；输出 `reader_contract_eval.json` |
+| `reader_contract_eval.json` | 五组逐题答案/判分/契约执行度 + 分组汇总 + 配对 + 7 题专项 + 成本 + 语料重建审计 |
 | `index_text_eval.py` | **日期前缀配对评测**（docs/09）：同一批 119 语料 + 40 题，`raw_date → event_time` 真实入库，比较 v1 content-only 与 v2 日期前缀的 R@1/R@4/R@6/R@20、逐题名次、sid 33；新缓存 `.embedding_cache_indexv2.json` 与旧缓存隔离 |
 | `recall_eval.py` | 主实验：建临时 SQLite（FTS5 三套索引）→ 五路召回 → 31 种组合消融 → k/λ/T 扫描 → 自己写 `results.json` |
 | `make_report.py` | 把 `results.json` 填进 `REPORT.template.md` 的 `{{G1}}`…`{{G11}}` 占位符，渲染成 `REPORT.md` |
@@ -39,7 +45,7 @@ python run_real_embedding.py   # 真实 embedding 重测（联网、计费；向
 python rank_metrics.py         # 生产口径 R@4/R@20 + 失败归因（只读缓存，0 调用、0 费用）
 python evidence_labels.py --judge --no-llm-extract   # 证据级标注（判官缓存命中后 0 调用）
 python reader_eval.py          # 读者级端到端（top-4 → reader → 判分；结果缓存）
-python reader_contract_eval.py --groups A,B,C,D # 契约对照四组（A/B/C 命中缓存 0 调用；D 首跑 80 次，复跑 0 调用）
+python reader_contract_eval.py --groups A,B,C,D,E # 契约对照五组（A/B/C/E 命中缓存 0 调用；D 首跑 80 次，复跑 0 调用；默认只跑 A,B,C）
 python index_text_eval.py      # 日期前缀配对评测（首轮 159 条计费，重跑 0 费用）
 ```
 
@@ -73,7 +79,7 @@ python -c "import sqlite3;print(sqlite3.sqlite_version);sqlite3.connect(':memory
 
 ## 指标口径
 
-- `recall@6` = |top6 ∩ golden| / |golden|，40 题平均（主指标）。
+- `recall@6` = |top6 ∩ golden| / |golden|，40 题平均（**当年主指标**；产品现在的生产口径是 R@4，见 `docs/08`）。
 - `recall@10`、`MRR`（第一个 golden 的倒数排名，取不到记 0）、`平均命中数@6`（绝对条数）。
 - `候选池覆盖@50` = 该路 top-50 里能捞到多少比例的 golden——把"能不能召回"和"排得好不好"分开看。
 - 随机排序基线与 oracle 上界都由脚本实测（蒙特卡洛 300 次，种子 20261111）。

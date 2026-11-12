@@ -1,6 +1,12 @@
 # 四路召回评测报告：recall@6（真实语料 119 条 / 40 题）
 
 > 一次性评测原型，不属于产品代码。所有数字由 `recall_eval.py` 产出、`make_report.py` 渲染。
+>
+> ⚠️ **时效说明（2026-11-12）**：本报告是 **v1 TF-IDF 替身时代**的历史结论（四路 / RRF / MMR / recall@6）。
+> 产品后已定为 `RETRIEVAL_ROUTES=vector` 单路 + 生产口径 R@4（真实 embedding 下 R1=0.8729、等权融合 0.6833 为负增益），
+> 本报告"R3 必须留 / MMR 不值得开 / 主指标 recall@6"等**产品建议均已过时**，仅作历史留档。
+> 当前结论见 [`docs/04-embedding重测报告.md`](../../docs/04-embedding重测报告.md) 与
+> [`docs/08-生产指标与失败分析.md`](../../docs/08-生产指标与失败分析.md)。
 
 ## 0. TL;DR
 

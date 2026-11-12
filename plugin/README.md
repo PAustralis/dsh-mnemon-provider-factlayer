@@ -6,11 +6,22 @@
 ISO 时间、`results` 数组、`provider-native` 分数语义）。**业务逻辑一律不在这层**：检索、派生、
 作废都在 Python shim 里。
 
+> ⚠️ **随包读者契约（v4）：交付机制已实现但未启用；v4 外部验证失败，安装会退化；v5 通过双题库验证前不得安装。**
+> 本包同时携带一条读者契约 prompt-section（见 §「随包契约」）。该机制**已实现并构建，但未启用**
+> （profile 的 `dsh.profile.bundles` 没有本包）。v4 在 LongMemEval 337 题外部对照中未复现内部增益
+> （A 74.8% → E 71.2%，knowledge-update 显著变差），**禁止安装**。依据与状态口径以
+> [`../docs/12-读者契约v4.md`](../docs/12-读者契约v4.md) 顶部与 [`../docs/16-契约外部效度.md`](../docs/16-契约外部效度.md) 为准；
+> v5 通过内部 40 题 + LongMemEval 337 题双题库验证后才允许启用。**provider 适配器本身不受此禁令影响。**
+
 - 包名：`dsh-mnemon-provider-factlayer`
 - `manifest.typeId` = 模块 `id` = `adapter.id` = **`factlayer`**
 - 类型镜像：`src/contract.ts`（抄自 `docs/05-provider接口契约.md` 与
-  `dsh-mnemon-source-memory-spaces@0.5.24` 的 `definitions-*.d.ts` / `contracts.d.ts`）
-- 契约锚点：`dsh-mnemon@0.5.37`、`dsh-mnemon-source-memory-spaces@0.5.24`
+  `dsh-mnemon-source-memory-spaces@0.5.24` 的 `definitions-*.d.ts` / `contracts.d.ts`；
+  `definitions-BNmfQoWk.d.ts` 在 0.5.24→0.5.27 **SHA256 未变**，本地镜像仍逐字段对得上）
+- 契约锚点：当前实装 **`dsh-mnemon@0.5.44` / `dsh-mnemon-source-memory-spaces@0.5.27`**。
+  契约四真源（`definitions-*.d.ts`、`definitions-*.js`、`plugin-*.js`、`provider-sdk.*`）
+  从 0.5.37/0.5.24 升级后 **SHA256 未变**（`docs/21-mnemon版本漂移核对.md` §2）；
+  引用 mnemon 源码时请注明版本与文件哈希，升级漂移按 `docs/21` §6 重定位。
 
 ## 前置条件
 
@@ -20,7 +31,7 @@ ISO 时间、`results` 数组、`provider-native` 分数语义）。**业务逻�
    python -m uvicorn app.main:create_app --factory --workers 1   # 默认 127.0.0.1:8000
    ```
 
-2. 宿主 profile 已装 `dsh-mnemon`（0.5.37+）。本包**不把 peer 装进自己的 node_modules**：
+2. 宿主 profile 已装 `dsh-mnemon`（`peerDependencies` 为 `^0.5.37` / `^0.5.24`；本机实装 0.5.44 / 0.5.27）。本包**不把 peer 装进自己的 node_modules**：
    `dsh-mnemon` / `dsh-mnemon-source-memory-spaces` 是 `peerDependencies`，由宿主 profile 提供。
 
 ## 构建与测试
@@ -73,7 +84,8 @@ pnpm -C <profile> add file:<本仓库>/plugin      # 或 pnpm pack 后安装 tar
 ### 方式 B：profile 的 `cordis.patch.yml`（可整块粘贴）
 
 profile patch 按 `id` **整块替换**该行的 `config`（不是深合并），所以下面的块必须把想保留的
-provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + factlayer 的完整可粘贴块：
+provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + factlayer 的完整可粘贴块
+（本机已升到 0.5.44；若上游增删默认 provider，以当前 bundle 的 `cordis.patch.yml` 为准再补全）：
 
 ```yaml
 # <profile>/cordis.patch.yml（例如 %USERPROFILE%\.dsh\profiles\web\cordis.patch.yml）
@@ -148,6 +160,13 @@ provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + fa
 
 ## 随包契约（读者契约 v4）
 
+> ⚠️ **状态：交付机制已实现、未启用；v4 外部验证失败，安装会退化；v5 通过双题库验证前不得安装。**
+> 本节的机制（prompt-section 插件 + bundle patch + 随包正文）**已实现并构建**，但没有装进任何
+> profile（`dsh.profile.bundles` 无本包），契约**未进入系统提示**。v4 在 LongMemEval 337 题上
+> 未复现内部增益且 knowledge-update 显著变差，**禁止安装**；下面的"装载方式"仅供 v5 通过
+> 内部 40 题 + LongMemEval 337 题双题库验证后参考。状态依据见
+> [`../docs/12-读者契约v4.md`](../docs/12-读者契约v4.md) 顶部与 [`../docs/16-契约外部效度.md`](../docs/16-契约外部效度.md)。
+
 本包同时是 **provider 与 profile bundle**：同一个包既提供 `factlayer` 适配器（主入口），
 又通过一条 bundle patch 注册**读者契约**的全局提示词段。契约正文随仓库/随 npm 包交付，
 不写进任何 profile 配置。
@@ -164,7 +183,9 @@ provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + fa
 插件文件叫 `contract-plugin.ts` 而不是 `contract.ts`：`src/contract.ts` 是 provider 契约的
 类型镜像（被 5 个 src 模块引用），占用中的文件名不重命名；对外子路径仍是 `./contract`。
 
-### 装载方式（手改 bundles 数组，不要 `install_bundle`）
+### 装载方式（**v4 禁止执行；仅 v5 通过双题库后参考**；手改 bundles 数组，不要 `install_bundle`）
+
+> ⚠️ 以下步骤当前**不要执行**：v4 禁止安装。保留它只是为了 v5 通过双题库验证后启用时有据可循。
 
 前置：本包能被 profile 解析到（现有 junction 或已安装），且已构建（`pnpm -C plugin run build`，
 需要 `dist/contract-plugin.js` 与 `dist/contract-text.js` 存在）。
@@ -223,9 +244,12 @@ provider 全部列出。下面是 `dsh-mnemon@0.5.37` 默认 9 个 provider + fa
    指向 profile 的 junction（生产需要，不要删）。因此单测不再断言「裸 import 必失败」，而是
    给 `loadEntryModule` 注入一个解析必然失败的 importer 来真测「SDK 不可解析」错误分支，
    并在 peer 可解析时断言入口真的完成装配（见 `tests/module.test.ts`）。
-3. **未与真实 dsh-mnemon 装配联调**：本仓库按任务要求不安装 peer；`host.install` 的形状、
-   `providerConnection` 的调用、`discover` 写 `connection` 都按 05/06 的源码行号实现，
-   但「装进 profile 后 Memory 页真的出现空间」需要宿主环境验证。
+3. **已与真实 `dsh-mnemon` 装配联调**：本节原写"未与真实 dsh-mnemon 装配联调"，该结论已被
+   [`../docs/07-部署与联调清单.md`](../docs/07-部署与联调清单.md) §9/§9.1 的真机验收推翻——
+   VM 上 `host.install`、`manifest.typeId=factlayer`、`adapter.id`、`status.healthy=true`、
+   `search` 返回 ECS 记录、`discover` 返回 `externalId:"factlayer-default"` 全部通过。
+   本仓库默认仍不安装 peer（单测用注入 importer 覆盖），但"装进 profile 后 Memory 页真的出现空间"
+   已在 VM 验证。
 4. **`summaryI18nKey` 没有对应 locale 条目**：manifest 16 字段要求写全，客户端在缺翻译时
    回退到 `summary`（类型注释如此声明）。
 5. **status 失败结果不缓存**：只对「成功快照」做 30s SWR。shim 停机时每次目录刷新最多等

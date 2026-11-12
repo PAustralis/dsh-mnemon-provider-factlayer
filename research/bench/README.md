@@ -47,7 +47,7 @@ python research/bench/convert_longmemeval.py --split m --out research/bench/conv
 | `raw/longmemeval/SHA256SUMS` | — | ✅ | oracle/s 本地实测，m 为 LFS oid |
 | `converted/longmemeval.jsonl` | 16.5 MB | ✅ | **读者级题库**（oracle，500 题） |
 | `converted/local/longmemeval_s.jsonl` | 307.3 MB | ❌ gitignore | **证据级题库**（s，500 题，去重后 246,595 轮）；`converted/local/` 整目录不入库 |
-| `converted/samples/longmemeval_s_first20.jsonl` | 11.8 MB | ✅ | s 的前 20 条转换结果（格式样本） |
+| `converted/samples/longmemeval_s_first20.jsonl` | 12.3 MB | ✅ | s 的前 20 条转换结果（格式样本） |
 | `converted/longmemeval_clean.jsonl` | 11.3 MB | ✅ | **干净子集**（337/500 题；排除全量泄漏命中的 163 题，保留 30 道 abs） |
 | `manifest.json` | 0.4 MB | ✅ | 逐题映射 + `clean_set` + `leak_screening` |
 | `checks.json` | 480 KB | ✅ | 覆盖 / 全量泄漏 / 重建 / 时间戳 / 语言；逐题 `leak_suspected` |

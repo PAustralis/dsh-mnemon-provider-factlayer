@@ -4,7 +4,8 @@
 > 检索侧的字段映射见 `03-对接层契约映射.md`（§1.2 请求、§1.3 响应、§4.1 `hint`/`unavailable`）——**本文不重复，只引用**。
 > 老仓库 `HANDOFF.md` 只读交叉验证；**与源码冲突处一律以源码为准并注明**。未改 03，未改 HANDOFF，不含代码。
 >
-> 复核锚点（2026-11-11，本机实装）：`dsh-mnemon@0.5.37`、`dsh-mnemon-source-memory-spaces@0.5.24`、`dsh-mnemon-strategy-default-*`（three-tier）。
+> 复核锚点（2026-11-12，本机实装）：`dsh-mnemon@0.5.44`、`dsh-mnemon-source-memory-spaces@0.5.27`、`dsh-mnemon-strategy-default-*`（three-tier 0.5.13）。
+> **锚点口径**：下文 `P:` 已按 **0.5.27** 的 `lib/index.js` 重定位，`M:` 已按 **0.5.44** 的 `dsh-mnemon/lib/index.js` 重定位（旧 0.5.24/0.5.37 行号整体漂移）；`PD`/`PG`/`PJ`/`PS` 对应文件 SHA256 在 0.5.24→0.5.27 **未变**，行号可直接沿用；`PC` 在 522 行前的 `Insight`/`RememberRequest`/`capabilities` 段也未变。升级对照见 `docs/21-mnemon版本漂移核对.md` §6。**以后引用 mnemon 源码请注明版本**；再升级时按 `docs/21` §6 重定位。
 
 ---
 
@@ -22,14 +23,14 @@
 
 | 缩写 | 文件 |
 |---|---|
-| **PD** | `…\dsh-mnemon-source-memory-spaces@0.5.24_dsh-mnemon@0.5.37\…\lib\definitions-BNmfQoWk.d.ts` ← **适配器/清单的唯一真源**（文件名带内容哈希，升级会变，用 `lib\definitions-*.d.ts` 找） |
-| **PG** | 同包 `lib\definitions-DfmOqJjR.js`（`MEMORY_SPACE_PROVIDER_API_VERSION`、manifest 校验） |
-| **PJ** | 同包 `lib\plugin-m1PeU1IE.js`（注册表、`assertRuntime`、descriptor 投影） |
-| **PC** | 同包 `lib\types\contracts.d.ts`（`Insight` / `SearchRequest` / `RememberRequest` / 能力位） |
-| **PS** | 同包 `lib\provider-sdk.d.ts`、`lib\provider-sdk.js`（对外导出面、`HttpMemoryProvider`） |
-| **P** | 同包 `lib\index.js`（Source 本体：调用点、归一化、回执判定） |
-| **M** | `…\dsh-mnemon@0.5.37\…\lib\index.js`（Core：能力门禁、错误映射、写 worker） |
-| **MS** | `…\dsh-mnemon@0.5.37\…\lib\strategy-configuration-CKP2kRss.js`（输入校验原语 `integer/text/stringArray/record`，即 `memoryInput*`） |
+| **PD** | `…\dsh-mnemon-source-memory-spaces@0.5.27_dsh-mnemon@0.5.44\…\lib\definitions-BNmfQoWk.d.ts` ← **适配器/清单的唯一真源**（文件名带内容哈希；0.5.24→0.5.27 SHA256 未变，行号可沿用） |
+| **PG** | 同包 `lib\definitions-DfmOqJjR.js`（`MEMORY_SPACE_PROVIDER_API_VERSION`、manifest 校验；SHA256 未变） |
+| **PJ** | 同包 `lib\plugin-m1PeU1IE.js`（注册表、`assertRuntime`、descriptor 投影；SHA256 未变） |
+| **PC** | 同包 `lib\types\contracts.d.ts`（`Insight` / `SearchRequest` / `RememberRequest` / 能力位；前 522 行未变） |
+| **PS** | 同包 `lib\provider-sdk.d.ts`、`lib\provider-sdk.js`（对外导出面、`HttpMemoryProvider`；SHA256 未变） |
+| **P** | 同包 `lib\index.js`（Source 本体：调用点、归一化、回执判定；行号按 0.5.27） |
+| **M** | `…\dsh-mnemon@0.5.44\…\lib\index.js`（Core：能力门禁、错误映射、写 worker；行号按 0.5.44） |
+| **MS** | `…\dsh-mnemon@0.5.44\…\lib\strategy-configuration-CKP2kRss.js`（输入校验原语 `integer/text/stringArray/record`，即 `memoryInput*`） |
 | **S** | `…\dsh-mnemon-strategy-default_*\…\dsh-mnemon-strategy-default-three-tier\lib\index.js` |
 
 ---
@@ -48,23 +49,23 @@ DSH bundle (dsh-mnemon/cordis.patch.yml)
 ```
 
 - `host` 是**闭包私有的 `PrivateMemorySpaceProviderHost`，不是 Cordis Service，`ctx.mnemonProvider` 不存在** [A+] `PJ:324-370`；子模块拿不到任何别的父权限 [A+] `PJ:377-387`。
-- 子模块必须 **default export 一个 typed child module**：`defineMemorySpaceProvider({ id, apply, Config? })` [A+] `P:4280-4296`、`PJ:161`；`id` 必须匹配 `^[a-z][a-z0-9-]{0,127}$` [A+] `PG:4,6-10`。
-- 子模块**必须真的 install 一份 definition**，否则装配直接失败：`Memory Space Provider child did not install a definition: <id>` [A+] `P:4317`。
+- 子模块必须 **default export 一个 typed child module**：`defineMemorySpaceProvider({ id, apply, Config? })` [A+] `P:4314-4330`、`PJ:161`；`id` 必须匹配 `^[a-z][a-z0-9-]{0,127}$` [A+] `PG:4,6-10`。
+- 子模块**必须真的 install 一份 definition**，否则装配直接失败：`Memory Space Provider child did not install a definition: <id>` [A+] `P:4351`。
 - `definition.manifest.typeId` 必须等于 `module.id`，否则 `PJ:344` 抛错；`adapter.id` 必须等于 `manifest.typeId`，否则 `PJ:259` 抛错（**注意之后会被 Proxy 换成 instanceId**，见 §6.4）。
 
 ### 1.2 声明式挂载：`providers` 是唯一入口
 
 | 事实 | 证据 |
 |---|---|
-| Schema：`providers: (string \| { use: string; instanceId?: string; config?: any })[]`，默认 `[]` | [A+] `P:4267-4272` |
-| `use` = 包名，经 `loader.import(use)` 解析；**不做依赖扫描**，只认显式列出的子模块 | [A+] `P:4285-4295` |
-| 至少一个子模块，否则 `Memory Spaces requires at least one explicit Provider child` | [A+] `P:4287,4309` |
-| `instanceId` 缺省 = `module.id`；重复 `instanceId` 直接抛错 | [A+] `P:4297,4301` |
-| 每个子模块的 `config` 交给 `module.apply(ctx, host, config)` 与 `plugin.Config` | [A+] `P:4299`、`PJ:378-386` |
-| 装配结果进 `memoryConfigurationDigest`，**改 provider 列表 = 换 generation**（View 需要重算） | [A+] `P:4324-4327` |
+| Schema：`providers: (string \| { use: string; instanceId?: string; config?: any })[]`，默认 `[]` | [A+] `P:4301-4306` |
+| `use` = 包名，经 `loader.import(use)` 解析；**不做依赖扫描**，只认显式列出的子模块 | [A+] `P:4319-4329` |
+| 至少一个子模块，否则 `Memory Spaces requires at least one explicit Provider child` | [A+] `P:4321,4309` |
+| `instanceId` 缺省 = `module.id`；重复 `instanceId` 直接抛错 | [A+] `P:4331,4301` |
+| 每个子模块的 `config` 交给 `module.apply(ctx, host, config)` 与 `plugin.Config` | [A+] `P:4333`、`PJ:378-386` |
+| 装配结果进 `memoryConfigurationDigest`，**改 provider 列表 = 换 generation**（View 需要重算） | [A+] `P:4362-4365` |
 
 **⚠️ 交付形态的硬约束（本文最容易被忽略的一条）**：
-DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*`**，报错文案是 `Use an exact dsh-mnemon-source-* or dsh-mnemon-strategy-* package name` [A+] `M:17131,17163-17167`。
+DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*`**，报错文案是 `Use an exact dsh-mnemon-source-* or dsh-mnemon-strategy-* package name` [A+] `M:19008,17163-17167`。
 → **`dsh-mnemon-provider-*` 包无法从 GUI 的插件安装入口装**。落地方式只有两条：①随 bundle 的 `cordis.patch.yml` 一起发（官方 9 个 provider 就是这么发的 [A+] `dsh-mnemon\cordis.patch.yml:56-74`）；②用户手改 profile 的 `cordis.patch.yml`（本机 `web` profile 的 `cordis.patch.yml:45-101` 已整块覆盖过 mnemon config，说明这条路是现实路径）。**这是第三层交付必须先向用户说明的成本**，不是实现细节。
 
 ### 1.3 运行时状态：启用 ≠ 装配
@@ -73,10 +74,10 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 |---|---|---|
 | 服务配置/开关持久化 | `<dataDir>\state\memory-providers.json`（`services` / `enabled` / `bodies`） | [A+] `PC:654,1070-1079` |
 | 读服务目录（RPC `provider-services`） | `MemoryProviderServiceCatalog { providers, items, generatedAt }` | [A+] `P:355-374` |
-| 保存服务配置（RPC `provider-service-update`） | **必须先 `discover()`**，否则 `… does not support Memory Space discovery` | [A+] `P:3072-3081` |
-| 重扫（RPC `provider-rediscover`） | 每 provider 30 s 上限（`MEMORY_SPACES_REDISCOVERY_PROVIDER_TIMEOUT_MS`），超时/失败只记录、不动已有空间 | [A+] `P:1687,3090-3164` |
+| 保存服务配置（RPC `provider-service-update`） | **必须先 `discover()`**，否则 `… does not support Memory Space discovery` | [A+] `P:3100-3109` |
+| 重扫（RPC `provider-rediscover`） | 每 provider 30 s 上限（`MEMORY_SPACES_REDISCOVERY_PROVIDER_TIMEOUT_MS`），超时/失败只记录、不动已有空间 | [A+] `P:1715,3090-3164` |
 | 空间是否可读 | `active && (native \|\| serviceEnabled)`；`serviceEnabled` 要 `configured && enabled===true` | [A+] `P:343-345,313-315` |
-| 写入是否开放 | `config.writeEnabled`，否则所有写方法在 Source 层就抛 `… configured read-only` | [A+] `P:3358-3360` |
+| 写入是否开放 | `config.writeEnabled`，否则所有写方法在 Source 层就抛 `… configured read-only` | [A+] `P:3386-3388` |
 
 ---
 
@@ -89,22 +90,22 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 | # | 成员 | 类型必填 | 签名（参数顺序照抄类型） | 返回 | 调用方在什么场景调用 | 证据 |
 |---|---|---|---|---|---|---|
 | 1 | `id` | ✅ | `readonly string` | — | 注册时校验；运行时被 Proxy 换成 instanceId | [A+] `PD:74`、`PJ:259,273-279` |
-| 2 | `scoreSemantics` | ❌ 但**必须**与 manifest 一致 | `{ kind: 'normalized-relevance' \| 'provider-native' }` | — | recall 质量策略定档 | [A+] `PD:75`、`P:2455,1463-1514` |
-| 3 | `status` | ✅ | `(body: MemorySpace, signal?) => Promise<ProviderSpaceStatus>` | `{healthy, error?, stats?}` | **每个空间目录刷新都调**（Memory 页、Status、实体读） | [A+] `PD:80`、`P:2013,2873` |
-| 4 | `search` | ✅ | `(body, request: SearchRequest, signal?) => Promise<ProviderSearchResult>` | `{results: Insight[], hint?}` | `mnemon_recall` / GUI 检索 / `list()` 的 query-only 兜底 / 元数据采样 | [A+] `PD:81`、`P:2432,2688,2578` |
-| 5 | `graph` | ✅ | `(body, signal?) => Promise<MemoryGraphSnapshot>` | `{nodes, edges, generatedAt, …}` | 图谱页；**仅当 `capabilities.graph`** | [A+] `PD:82`、`P:2607-2628` |
-| 6 | `list` | ✅ | `(body, request: MemoryListRequest, signal?) => Promise<Insight[]>` | 裸 `Insight[]` | 列表页、实体索引兜底、元数据采样；**仅当 `capabilities.browse`** | [A+] `PD:83`、`P:2691,2910,2585` |
-| 7 | `remember` | ✅ | `(body, request: RememberRequest, signal?) => Promise<JsonValue>` | **任意 JSON 回执**（见 §4.5） | `mnemon_remember`（写 worker 内部）；`rememberMany` 的逐条兜底 | [A+] `PD:84`、`P:2969` |
-| 8 | `discover?` | 可选，**但启用服务时事实必填** | `(connection: MemoryProviderConnection, signal?) => Promise<ProviderMemorySpace[]>` | 命名空间列表 | 保存服务配置、启动/手动重扫 | [A+] `PD:77`、`P:3078,3123` |
-| 9 | `invalidateStatus?` | 可选 | `(memoryBodyId?: string) => void` | — | 用户点"重新连接"一处 | [A+] `PD:79`、`P:2385` |
-| 10 | `metadataSample?` | 可选 | `(body, limit: number, signal?) => Promise<Insight[]>` | 裸 `Insight[]` | 只有 native 走这条；否则退回 `list()`/`search()` | [A+] `PD:86`、`P:2572-2586` |
-| 11 | `entityIndex?` | 可选 | `(body, signal?) => Promise<ProviderEntityIndex>` | `{memories: Insight[], complete: boolean}` | 实体页；**仅当 `capabilities.entities`** | [A+] `PD:92`、`P:2827,2906` |
-| 12 | `rememberMany?` | 可选 | `(body, requests: readonly RememberRequest[], signal?) => Promise<JsonValue[]>` | **与 requests 等长的回执数组** | 写通道 `remember-many`（单次 ≤1000 条）；写 worker 收多张票时 | [A+] `PD:94`、`P:2955-2965,3684-3686` |
-| 13 | `get?` | 可选 | `(body, id: string, signal?) => Promise<Insight \| undefined>` | 单条或 `undefined` | 用 id 反查归属空间（`forget`/`related` 前定位） | [A+] `PD:100`、`P:2981-2993` |
-| 14 | `related?` | 可选 | `(body, id, depth: number, edge?: EdgeType, signal?) => Promise<Insight[]>` | 裸 `Insight[]` | `mnemon_related`；**仅当 `capabilities.related`** | [A+] `PD:101`、`P:2995-3001` |
-| 15 | `link?` | 可选 | `(body, sourceId, targetId, type: EdgeType, weight: number, reason?, signal?) => Promise<JsonValue>` | 回执 | `mnemon_link`；**仅当 `capabilities.link`** | [A+] `PD:102`、`P:3002-3011` |
-| 16 | `forget?` | 可选 | `(body, id: string, signal?) => Promise<JsonValue>` | 回执 | `mnemon_forget`；**仅当 `capabilities.forget`** | [A+] `PD:103`、`P:3013-3020` |
-| 17 | `dispose?` | 可选 | `() => void \| Promise<void>` | — | generation 销毁，**逆序**调用；任一抛错聚合成 `AggregateError` | [A+] `PD:105`、`P:1984-1990` |
+| 2 | `scoreSemantics` | ❌ 但**必须**与 manifest 一致 | `{ kind: 'normalized-relevance' \| 'provider-native' }` | — | recall 质量策略定档 | [A+] `PD:75`、`P:2483,1463-1514` |
+| 3 | `status` | ✅ | `(body: MemorySpace, signal?) => Promise<ProviderSpaceStatus>` | `{healthy, error?, stats?}` | **每个空间目录刷新都调**（Memory 页、Status、实体读） | [A+] `PD:80`、`P:2041,2873` |
+| 4 | `search` | ✅ | `(body, request: SearchRequest, signal?) => Promise<ProviderSearchResult>` | `{results: Insight[], hint?}` | `mnemon_recall` / GUI 检索 / `list()` 的 query-only 兜底 / 元数据采样 | [A+] `PD:81`、`P:2460,2688,2578` |
+| 5 | `graph` | ✅ | `(body, signal?) => Promise<MemoryGraphSnapshot>` | `{nodes, edges, generatedAt, …}` | 图谱页；**仅当 `capabilities.graph`** | [A+] `PD:82`、`P:2635-2656` |
+| 6 | `list` | ✅ | `(body, request: MemoryListRequest, signal?) => Promise<Insight[]>` | 裸 `Insight[]` | 列表页、实体索引兜底、元数据采样；**仅当 `capabilities.browse`** | [A+] `PD:83`、`P:2719,2910,2585` |
+| 7 | `remember` | ✅ | `(body, request: RememberRequest, signal?) => Promise<JsonValue>` | **任意 JSON 回执**（见 §4.5） | `mnemon_remember`（写 worker 内部）；`rememberMany` 的逐条兜底 | [A+] `PD:84`、`P:2997` |
+| 8 | `discover?` | 可选，**但启用服务时事实必填** | `(connection: MemoryProviderConnection, signal?) => Promise<ProviderMemorySpace[]>` | 命名空间列表 | 保存服务配置、启动/手动重扫 | [A+] `PD:77`、`P:3106,3123` |
+| 9 | `invalidateStatus?` | 可选 | `(memoryBodyId?: string) => void` | — | 用户点"重新连接"一处 | [A+] `PD:79`、`P:2413` |
+| 10 | `metadataSample?` | 可选 | `(body, limit: number, signal?) => Promise<Insight[]>` | 裸 `Insight[]` | 只有 native 走这条；否则退回 `list()`/`search()` | [A+] `PD:86`、`P:2600-2614` |
+| 11 | `entityIndex?` | 可选 | `(body, signal?) => Promise<ProviderEntityIndex>` | `{memories: Insight[], complete: boolean}` | 实体页；**仅当 `capabilities.entities`** | [A+] `PD:92`、`P:2855,2906` |
+| 12 | `rememberMany?` | 可选 | `(body, requests: readonly RememberRequest[], signal?) => Promise<JsonValue[]>` | **与 requests 等长的回执数组** | 写通道 `remember-many`（单次 ≤1000 条）；写 worker 收多张票时 | [A+] `PD:94`、`P:2983-2993,3684-3686` |
+| 13 | `get?` | 可选 | `(body, id: string, signal?) => Promise<Insight \| undefined>` | 单条或 `undefined` | 用 id 反查归属空间（`forget`/`related` 前定位） | [A+] `PD:100`、`P:3009-3021` |
+| 14 | `related?` | 可选 | `(body, id, depth: number, edge?: EdgeType, signal?) => Promise<Insight[]>` | 裸 `Insight[]` | `mnemon_related`；**仅当 `capabilities.related`** | [A+] `PD:101`、`P:3023-3029` |
+| 15 | `link?` | 可选 | `(body, sourceId, targetId, type: EdgeType, weight: number, reason?, signal?) => Promise<JsonValue>` | 回执 | `mnemon_link`；**仅当 `capabilities.link`** | [A+] `PD:102`、`P:3030-3039` |
+| 16 | `forget?` | 可选 | `(body, id: string, signal?) => Promise<JsonValue>` | 回执 | `mnemon_forget`；**仅当 `capabilities.forget`** | [A+] `PD:103`、`P:3041-3048` |
+| 17 | `dispose?` | 可选 | `() => void \| Promise<void>` | — | generation 销毁，**逆序**调用；任一抛错聚合成 `AggregateError` | [A+] `PD:105`、`P:2012-2018` |
 
 **与 HANDOFF 的一致性**：HANDOFF §5 的"必需 6 / 可选 10"= `id/status/search/graph/list/remember` + 其余，**与类型定义逐字吻合**，无冲突 [A] §5 ↔ [A+] `PD:73-106`。
 
@@ -125,8 +126,8 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 | 条件 | `manifest.scoreSemantics==='normalized-relevance'` → `adapter.scoreSemantics.kind` 必须是它 | [A+] `PJ:270` |
 
 推论（第三层必须知道）：
-1. **能力位声明 `false` 的方法可以不实现，装配不会报错**；但类型层面仍要求 `status/search/graph/list/remember` 存在（TS 编译期）。运行时漏实现 `status` 的后果是：`collectSpaces` 捕获异常并把空间标成 `unhealthy`，错误文案是 `… is not a function` [A+] `P:2012-2019` —— 不崩，但**整个空间永远显示不健康**。
-2. `capabilities.entities` **没有对应的方法强制**；`entityIndex` 缺失时 Source 退回 `list()`，且若 `browse` 也是 `false`，实体页直接给 `query-only / query-required` [A+] `P:2827-2831`。
+1. **能力位声明 `false` 的方法可以不实现，装配不会报错**；但类型层面仍要求 `status/search/graph/list/remember` 存在（TS 编译期）。运行时漏实现 `status` 的后果是：`collectSpaces` 捕获异常并把空间标成 `unhealthy`，错误文案是 `… is not a function` [A+] `P:2040-2047` —— 不崩，但**整个空间永远显示不健康**。
+2. `capabilities.entities` **没有对应的方法强制**；`entityIndex` 缺失时 Source 退回 `list()`，且若 `browse` 也是 `false`，实体页直接给 `query-only / query-required` [A+] `P:2855-2859`。
 3. Source **不校验 `Insight` 的字段**（见 §3.13）：形状错了不会在装配期被拦住，会一路带到运行期。
 
 ---
@@ -139,52 +140,52 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 
 | 事实 | 证据 |
 |---|---|
-| **`results` 缺失或非数组 → 该空间降级为 `unavailable`，不抛到工具层**（`result.results.length` 在 `try` 内） | [A+] `P:2431-2448` |
-| 每个空间的 `hint` 被拼成 `"<空间名>: <hint>"`，多空间用 `\n` 连接后作为最终 `hint` | [A+] `P:2465,2558` |
-| 抛错时 Source 自己造 hint：`unavailable: <error.message>`，而 `sources[].hint` 只放原始 message | [A+] `P:2444-2446` |
-| `mode==='smart'` 且无任何过滤条件时，Source 可能**再调一次 `search`**（换 query、`mode:'keyword'`）做补救；**只对 native 空间做**，失败静默忽略 | [A+] `P:2450,2478-2502` |
-| 跨 Provider 有多个 `provider.id` 时写 `federatedScore = 1/(60+rank)`，且**排序改成按 Provider 返回顺序** | [A+] `P:2467-2470` |
-| 候选量由策略放大：`candidateLimit = min(50, max(limit, ceil(limit×candidateMultiplier)))`，默认 ×3 | [A+] `P:1460-1462,2398,3454` |
+| **`results` 缺失或非数组 → 该空间降级为 `unavailable`，不抛到工具层**（`result.results.length` 在 `try` 内） | [A+] `P:2459-2476` |
+| 每个空间的 `hint` 被拼成 `"<空间名>: <hint>"`，多空间用 `\n` 连接后作为最终 `hint` | [A+] `P:2493,2558` |
+| 抛错时 Source 自己造 hint：`unavailable: <error.message>`，而 `sources[].hint` 只放原始 message | [A+] `P:2472-2474` |
+| `mode==='smart'` 且无任何过滤条件时，Source 可能**再调一次 `search`**（换 query、`mode:'keyword'`）做补救；**只对 native 空间做**，失败静默忽略 | [A+] `P:2478,2478-2502` |
+| 跨 Provider 有多个 `provider.id` 时写 `federatedScore = 1/(60+rank)`，且**排序改成按 Provider 返回顺序** | [A+] `P:2495-2498` |
+| 候选量由策略放大：`candidateLimit = min(50, max(limit, ceil(limit×candidateMultiplier)))`，默认 ×3 | [A+] `P:1488-1490,2398,3454` |
 
 ### 3.2 `list`（`MemoryListRequest`）
 
 | 字段 | 类型 | 必填 | 调用方归一化 / 后果 | 证据 |
 |---|---|---|---|---|
-| `query` | `string` | 否 | Source 侧 `trim()`，>500 抛错；**只用于本地过滤**（`content`/`id` 子串，大小写不敏感） | [A+] `P:2668-2670,2694`、`PC:447-452` |
-| `category` | `Category` | 否 | 枚举校验，非法抛错；同样在 Source 侧过滤 | [A+] `P:2671,2694` |
-| `limit` | `number` | 否 | 默认 200，**必须整数且在 1..1000，否则抛错**（不是钳制）；最终结果再被 `slice(0, limit)` | [A+] `P:2672,2713`、`MS:71-74` |
-| `memoryBodyIds` | `string[]` | 否 | **在 Source 层消费**，不进 Provider 请求 | [A+] `P:2673` |
+| `query` | `string` | 否 | Source 侧 `trim()`，>500 抛错；**只用于本地过滤**（`content`/`id` 子串，大小写不敏感） | [A+] `P:2696-2698,2694`、`PC:447-452` |
+| `category` | `Category` | 否 | 枚举校验，非法抛错；同样在 Source 侧过滤 | [A+] `P:2699,2694` |
+| `limit` | `number` | 否 | 默认 200，**必须整数且在 1..1000，否则抛错**（不是钳制）；最终结果再被 `slice(0, limit)` | [A+] `P:2700,2713`、`MS:71-74` |
+| `memoryBodyIds` | `string[]` | 否 | **在 Source 层消费**，不进 Provider 请求 | [A+] `P:2701` |
 
 丢弃/崩溃规则（**关键，03 未覆盖**）：
-- 返回项缺 `content`：**只有带 `query` 时才炸**——过滤表达式先短路 `query === ""`，无查询时不会碰 `item.content` [A+] `P:2694`。带查询时 `TypeError` 落在 `try` 内 → 该空间 `unavailable` [A+] `P:2700-2705`。
+- 返回项缺 `content`：**只有带 `query` 时才炸**——过滤表达式先短路 `query === ""`，无查询时不会碰 `item.content` [A+] `P:2722`。带查询时 `TypeError` 落在 `try` 内 → 该空间 `unavailable` [A+] `P:2728-2733`。
 - 返回项缺 `id`：同上，`item.id.toLocaleLowerCase()` 抛错。
 - 返回非数组：`.filter` 抛错 → `unavailable`。
-- `capabilities.browse === false` 时**永不调用 `list`**；若同时 `search === true`，Source 改调 `search({query, limit})`（`query` 为空则直接返回 `query-required` 而不调用任何方法）[A+] `P:2675-2690`。
+- `capabilities.browse === false` 时**永不调用 `list`**；若同时 `search === true`，Source 改调 `search({query, limit})`（`query` 为空则直接返回 `query-required` 而不调用任何方法）[A+] `P:2703-2718`。
 
 ### 3.3 `graph`（`MemoryGraphSnapshot`）
 
 | 字段 | 必填 | 语义 / 后果 | 证据 |
 |---|---|---|---|
-| `nodes[]` | ✅ | `GraphNode extends Insight`，每个节点额外 `color: string`；Source 覆盖写 `graphId = "<空间id>:<node.id>"` | [A+] `PC:381-388`、`P:2644-2648` |
+| `nodes[]` | ✅ | `GraphNode extends Insight`，每个节点额外 `color: string`；Source 覆盖写 `graphId = "<空间id>:<node.id>"` | [A+] `PC:381-388`、`P:2672-2676` |
 | `edges[]` | ✅ | `{sourceId, targetId, label, color, type?}`；`type` 仅 `temporal\|semantic\|causal\|entity\|scope` | [A+] `PC:389-395`、`PC:240-241` |
-| `generatedAt` | ✅（类型） | Source 返回时**用自己的时间覆盖**，Provider 给的值不进最终响应 | [A+] `P:2655-2658` |
-| `memoryBodies` / `sources` | 否 | Source 也全部自己重写，Provider 给了会被覆盖 | [A+] `P:2659-2664` |
+| `generatedAt` | ✅（类型） | Source 返回时**用自己的时间覆盖**，Provider 给的值不进最终响应 | [A+] `P:2683-2686` |
+| `memoryBodies` / `sources` | 否 | Source 也全部自己重写，Provider 给了会被覆盖 | [A+] `P:2687-2692` |
 
-- 缺失 `nodes`/`edges` → `snapshot.nodes.length` 抛错，落在 `try` 内 → 该空间 `unavailable`，其余空间照常 [A+] `P:2622-2637`。
-- **`capabilities.graph === false` 时永不调用**；Source 用 `browse` 做平铺投影（`projection`），否则 `query-only` / `unsupported` [A+] `P:2607-2621`。
+- 缺失 `nodes`/`edges` → `snapshot.nodes.length` 抛错，落在 `try` 内 → 该空间 `unavailable`，其余空间照常 [A+] `P:2650-2665`。
+- **`capabilities.graph === false` 时永不调用**；Source 用 `browse` 做平铺投影（`projection`），否则 `query-only` / `unsupported` [A+] `P:2635-2649`。
 - 失效标记**不能塞 `edge.type`**（枚举固定 4+1 值），只能进节点 `tags` 或 `label` [A] §15.5、[A+] `PC:394`。
 
 ### 3.4 `status`（`ProviderSpaceStatus`）
 
 | 字段 | 必填 | 语义 | 证据 |
 |---|---|---|---|
-| `healthy` | ✅ | 布尔；非布尔/缺失 → 空间视图里 `healthy` 变 `undefined`（UI 视为异常） | [A+] `PD:39-43`、`P:2021-2024` |
+| `healthy` | ✅ | 布尔；非布尔/缺失 → 空间视图里 `healthy` 变 `undefined`（UI 视为异常） | [A+] `PD:39-43`、`P:2049-2052` |
 | `error` | 否 | 人类可读失败原因，直接进空间视图 `error` | [A+] 同上 |
 | `stats` | 否 | `MemorySpaceStats { totalInsights, deletedInsights, edgeCount, oplogCount, dbSizeBytes, byCategory, topEntities[] }` | [A+] `PC:306-317` |
 
-- **调用频率最高**：每次空间目录刷新都会对每个空间调一次；`spaces(signal)` 会合并并发但**不缓存结果** [A+] `P:1992-2032`。
-- 实体读路径会调 `status(body)`（**不带 signal**）并缓存，`maxAgeMs` 复用窗口 [A+] `P:2866-2882`。
-- 抛错 → 被 catch 成 `{healthy:false, error}`，**不会**让目录接口失败 [A+] `P:2014-2019,2873-2875`。
+- **调用频率最高**：每次空间目录刷新都会对每个空间调一次；`spaces(signal)` 会合并并发但**不缓存结果** [A+] `P:2020-2060`。
+- 实体读路径会调 `status(body)`（**不带 signal**）并缓存，`maxAgeMs` 复用窗口 [A+] `P:2894-2910`。
+- 抛错 → 被 catch 成 `{healthy:false, error}`，**不会**让目录接口失败 [A+] `P:2042-2047,2873-2875`。
 - **无超时保护**（见 §5.2）：`status` 自己慢就会拖慢整个空间目录。
 
 ### 3.5 `discover`（`ProviderMemorySpace[]`）
@@ -200,57 +201,57 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 - 空间 id 必须匹配 `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`（`MEMORY_SPACE_ID_PATTERN`）[A+] `P:232-235`。
 - 已挂载空间的 `externalId` 不变时，保留本地 `name`/`description`（若 `metadataSource !== "provider"`）与 `active` 状态 [A+] `P:420-432`。
 - 服务级字段支持 `discoveryDefaultFrom`：从第一个发现的空间里回填空着的服务字段 [A+] `P:434-441`。
-- **`discover` 缺失 → 服务保存直接失败**（`P:3078`），而"启用第三方空间"必须先保存服务配置 → **UI 路径绕不过 `discover`**（只有手改 `state\memory-providers.json` 才能绕过）；`rediscover` 路径遇到缺失是静默跳过 [A+] `P:3078,3117`。
+- **`discover` 缺失 → 服务保存直接失败**（`P:3106`），而"启用第三方空间"必须先保存服务配置 → **UI 路径绕不过 `discover`**（只有手改 `state\memory-providers.json` 才能绕过）；`rediscover` 路径遇到缺失是静默跳过 [A+] `P:3106,3117`。
 
 ### 3.6 `metadataSample`（可选，几乎只有 native 用）
 
-- 调用点固定 `limit = 6`；返回结果再被 `slice(0, 6)` [A+] `P:2569,2594`。
-- 每条 evidence：`content` 截到 **720 字符**（721 处加 `…`）、`category`、`entities` 取前 **8** 个 [A+] `P:2594-2598`。
-- 非 native Provider 走 `METADATA_SEARCH_FIRST_PROVIDERS` 白名单或 `!browse` → `search({query: description 或 name 的前 400 字, mode:'basic', limit:6})`；否则 `list({limit:6})` [A+] `P:2572-2586`。
-- **这条路径没有任何 try/catch**：Provider 抛错 → RPC `internal` 错误冒到调用方（见 §5.1）[A+] `P:2566-2599`。
+- 调用点固定 `limit = 6`；返回结果再被 `slice(0, 6)` [A+] `P:2597,2594`。
+- 每条 evidence：`content` 截到 **720 字符**（721 处加 `…`）、`category`、`entities` 取前 **8** 个 [A+] `P:2622-2626`。
+- 非 native Provider 走 `METADATA_SEARCH_FIRST_PROVIDERS` 白名单或 `!browse` → `search({query: description 或 name 的前 400 字, mode:'basic', limit:6})`；否则 `list({limit:6})` [A+] `P:2600-2614`。
+- **这条路径没有任何 try/catch**：Provider 抛错 → RPC `internal` 错误冒到调用方（见 §5.1）[A+] `P:2594-2627`。
 
 ### 3.7 `entityIndex`（可选）
 
-- `ProviderEntityIndex { memories: Insight[]; complete: boolean }`；`complete=false` 会让 UI 出现 `"The Provider indexed only part of this space."` [A+] `PD:55-60`、`P:2836-2837`。
-- 每条 memory 会被 `entityMemory()` **剥掉检索字段**（`score`/`normalizedScore`/`relevanceTier`/`federatedScore`/`confidence`/`intent`/`matchedVia`/`depth`/`edgeType`），只留列表语义 [A+] `P:2914-2917`。
+- `ProviderEntityIndex { memories: Insight[]; complete: boolean }`；`complete=false` 会让 UI 出现 `"The Provider indexed only part of this space."` [A+] `PD:55-60`、`P:2864-2865`。
+- 每条 memory 会被 `entityMemory()` **剥掉检索字段**（`score`/`normalizedScore`/`relevanceTier`/`federatedScore`/`confidence`/`intent`/`matchedVia`/`depth`/`edgeType`），只留列表语义 [A+] `P:2942-2945`。
 - 实体键归一化用 `normalizeEntityKey`（大小写/拼写归一）；Provider 只需给 `entities: string[]` [A+] `PC:245-249`。
-- **`capabilities.entities === false` → 永不调用**，实体页直接 `unsupported` [A+] `P:2815-2819`。
+- **`capabilities.entities === false` → 永不调用**，实体页直接 `unsupported` [A+] `P:2843-2847`。
 
 ### 3.8 `get`（可选，但决定 `forget`/`related` 能否按 id 用）
 
-- Source 只在"要用 id 定位归属空间"时调用：`locate()` 遍历候选空间，逐空间 `provider.get(body, exact)` [A+] `P:2981-2993`。
-- **返回值里的 `id` 必须与请求的 `id` 严格相等**，否则那条被**静默丢弃**：`if (insight !== undefined && insight.id === exact)` [A+] `P:2991`。
+- Source 只在"要用 id 定位归属空间"时调用：`locate()` 遍历候选空间，逐空间 `provider.get(body, exact)` [A+] `P:3009-3021`。
+- **返回值里的 `id` 必须与请求的 `id` 严格相等**，否则那条被**静默丢弃**：`if (insight !== undefined && insight.id === exact)` [A+] `P:3019`。
 - 返回 `undefined` = "这个空间没有这条"，是正常语义，不报错 [A+] `PD:96-100`。
-- **无 try/catch**：抛错会冒泡到工具层 [A+] `P:2990`。
+- **无 try/catch**：抛错会冒泡到工具层 [A+] `P:3018`。
 
 ### 3.9 `related`（可选）
 
 | 参数 | 约束 | 证据 |
 |---|---|---|
-| `id` | 非空、≤2000 | [A+] `P:3000` |
-| `depth` | 默认 2，**必须整数且在 1..5，否则抛 `value must be an integer within 1..5`**（不是钳制） | [A+] `P:3000`、`PD:101` |
-| `edge` | 可选，必须是 `EDGE_TYPES` 之一，否则抛错 | [A+] `P:2997`、`PC:240-241` |
-| 能力门禁 | `capabilities.related === false` **或**方法缺失 → 抛 `… does not support related-memory traversal` | [A+] `P:2999` |
+| `id` | 非空、≤2000 | [A+] `P:3028` |
+| `depth` | 默认 2，**必须整数且在 1..5，否则抛 `value must be an integer within 1..5`**（不是钳制） | [A+] `P:3028`、`PD:101` |
+| `edge` | 可选，必须是 `EDGE_TYPES` 之一，否则抛错 | [A+] `P:3025`、`PC:240-241` |
+| 能力门禁 | `capabilities.related === false` **或**方法缺失 → 抛 `… does not support related-memory traversal` | [A+] `P:3027` |
 
 ### 3.10 `link`（可选）
 
 | 参数 | 约束 | 证据 |
 |---|---|---|
-| `sourceId` / `targetId` | 非空、≤2000 | [A+] `P:3009` |
-| `type` | 缺省 `semantic`；必须在 `EDGE_TYPES` 内 | [A+] `P:3006`、`PC:240` |
-| `weight` | 必须有限且 `0..1`，否则 `weight must be within 0..1` | [A+] `P:3005` |
-| `reason` | 可选；`trim()` 后为空串 **归一成 `undefined`**（不是 `""`） | [A+] `P:3009` |
-| 能力门禁 | `capabilities.link` 为假或方法缺失 → 抛 `… does not support explicit memory links` | [A+] `P:3008` |
+| `sourceId` / `targetId` | 非空、≤2000 | [A+] `P:3037` |
+| `type` | 缺省 `semantic`；必须在 `EDGE_TYPES` 内 | [A+] `P:3034`、`PC:240` |
+| `weight` | 必须有限且 `0..1`，否则 `weight must be within 0..1` | [A+] `P:3033` |
+| `reason` | 可选；`trim()` 后为空串 **归一成 `undefined`**（不是 `""`） | [A+] `P:3037` |
+| 能力门禁 | `capabilities.link` 为假或方法缺失 → 抛 `… does not support explicit memory links` | [A+] `P:3036` |
 
 ### 3.11 `forget`（可选）
 
-- `id` 非空 ≤2000；`capabilities.forget` 为假或方法缺失 → 抛 `… does not expose safe forget semantics in this integration` [A+] `P:3017-3018`。
-- 回执走同一套判定（§4.5）；**只有判定为 committed 才会触发空间激活/`touch()`** [A+] `P:3019,3352-3357`。
+- `id` 非空 ≤2000；`capabilities.forget` 为假或方法缺失 → 抛 `… does not expose safe forget semantics in this integration` [A+] `P:3045-3046`。
+- 回执走同一套判定（§4.5）；**只有判定为 committed 才会触发空间激活/`touch()`** [A+] `P:3047,3352-3357`。
 
 ### 3.12 `dispose` / `invalidateStatus`
 
-- `dispose`：generation 销毁时**逆序**调用，异常收集后 `AggregateError` [A+] `P:1984-1990`。
-- `invalidateStatus`：仅在 `reconnectSpace` 里被调用（用户点重连），`?.` 可选链 [A+] `P:2385`。
+- `dispose`：generation 销毁时**逆序**调用，异常收集后 `AggregateError` [A+] `P:2012-2018`。
+- `invalidateStatus`：仅在 `reconnectSpace` 里被调用（用户点重连），`?.` 可选链 [A+] `P:2413`。
 
 ### 3.13 统一"静默丢弃"清单（把 03 与本节的边界钉死）
 
@@ -259,13 +260,13 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 | `Insight.id` 缺失/空/超 1000 字符 | **策略层 S**，不是宿主 | `id.length===0 或 >1000` → `continue`，**静默丢** | [A+] `S:95` |
 | `Insight.content` 缺失 | **策略层 S** 直接 `truncateMemoryText(undefined)` → **TypeError** | 工具调用失败，**不是静默** | [A+] `S:105`、`S:81-87` |
 | `Insight.content` 为空串 | 策略层 | 静默丢（`content === ""` → `continue`） | [A+] `S:106` |
-| `createdAt` 非 ISO 字符串 | Provider 自己的归一化（各包自实现） | 宿主原样透传（`S:120` 只做截断），排序键会退化；**"给数字被静默丢弃"是 Provider 侧 normalize 的行为**，官方 honcho 用 `jsonString(item?.created_at)` 取时间，数字直接被丢、字段整个消失 `honcho\lib\index.js:11` | [A] §7 坑 4；[A+] `S:120`、`honcho\lib\index.js:4-21` |
-| `score` 缺失 | 质量策略 | tier `unknown`，strict-v1 下最多 2 条、策略每回合只收 1 条 | [A+] `P:1464-1469,1526-1531`、`S:54` |
+| `createdAt` 非 ISO 字符串 | Provider 自己的归一化（各包自实现） | Source **只原样透传、不做 ISO 校验**（`docs/21` §3.3/§5：两版都没有校验代码）；排序键/展示按字符串处理。**"必须是 ISO"是契约意图，不是 Source 强制**；我们仍按 ISO 输出 | [A] §7 坑 4 ×（已被 docs/21 更正）；`docs/21` §5、`S:120` |
+| `score` 缺失 | 质量策略 | tier `unknown`，strict-v1 下最多 2 条、策略每回合只收 1 条 | [A+] `P:1492-1497,1526-1531`、`S:54` |
 | `tier === "low"` | 策略层 | 静默丢 | [A+] `S:97` |
-| `medium` / `unknown` 超配额 | 策略层 | 每回合各 **1** 条（不是 2；2 是 Source 策略的 `maxUnknownResults` 默认值） | [A+] `S:53-54,98-99`、`P:3457` |
+| `medium` / `unknown` 超配额 | 策略层 | 每回合各 **1** 条（不是 2；2 是 Source 策略的 `maxUnknownResults` 默认值） | [A+] `S:53-54,98-99`、`P:3491` |
 | 相同 `id` 或相同 `content` 摘要 | 策略层 | 去重后静默丢 | [A+] `S:100-102,57-59` |
-| `list` 返回项缺 `content`/`id` 且带 query | Source | 该空间整体 `unavailable`（不是丢单条） | [A+] `P:2694,2700-2705` |
-| `get` 返回的 `id` ≠ 请求 id | Source | 单条静默丢 | [A+] `P:2991` |
+| `list` 返回项缺 `content`/`id` 且带 query | Source | 该空间整体 `unavailable`（不是丢单条） | [A+] `P:2722,2700-2705` |
+| `get` 返回的 `id` ≠ 请求 id | Source | 单条静默丢 | [A+] `P:3019` |
 
 > **对 03 的一处收紧**：03 §1.3 把"`id`/`content` 缺失 → 静默丢弃"标为宿主行为。**严格来说宿主不校验也不静默**——`id` 的丢弃发生在策略层（`S:95`），`content` 缺失会造成 TypeError 而不是安静丢弃。真正"静默 return undefined + filter"的是**各 Provider 自己的 normalize**（例如 honcho 的 `insight()`），HANDOFF §7 坑 4 说的正是这一层。详见 §9。
 
@@ -281,23 +282,23 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 子 Agent（任意）: mnemon_remember ─→ sourceAction → /dsh-mnemon-write `remember` → Source.remember → adapter.remember
 ```
 
-- "每次写入本身是一次子智能体运行"（HANDOFF §5）**在主 Agent 路径成立**：`write()` 里 `this.delegate(parent, "write", …)` [A+] `M:10867-10882`；子 Agent 路径**不再套娃**（`isSubagent(exec.agent) ? sourceAction(...) : coordinator.remember(...)`）[A+] `M:15954`。→ HANDOFF §5 的描述对主路径准确，但对"写 worker 内的工具调用"要按直连理解（否则会以为递归）。
-- Source 侧入口：`remember(request, signal)` → `assertWritable()` → `prepareRemember()` → `provider.remember()` → `activateAfterWrite()` → `annotateResult()` [A+] `P:2922-2928`。
+- "每次写入本身是一次子智能体运行"（HANDOFF §5）**在主 Agent 路径成立**：`write()` 里 `this.delegate(parent, "write", …)` [A+] `M:11760-11775`；子 Agent 路径**不再套娃**（`isSubagent(exec.agent) ? sourceAction(...) : coordinator.remember(...)`）[A+] `M:17831`。→ HANDOFF §5 的描述对主路径准确，但对"写 worker 内的工具调用"要按直连理解（否则会以为递归）。
+- Source 侧入口：`remember(request, signal)` → `assertWritable()` → `prepareRemember()` → `provider.remember()` → `activateAfterWrite()` → `annotateResult()` [A+] `P:2950-2956`。
 
 ### 4.2 `RememberRequest` 完整字段表（含宿主归一化，**这是 Provider 实际收到的值**）
 
 | 字段 | 类型 | 必填 | Host 归一化（`prepareRemember`） | 证据 |
 |---|---|---|---|---|
-| `content` | `string` | ✅ | `trim()` 后非空，**≤8192 字符**，否则抛错 | [A+] `P:3313,1812-1817` |
-| `category` | `Category`(6 值) | ✅（宿主补） | 枚举校验；缺省 **`'general'`** | [A+] `P:3315,236-237` |
-| `source` | `'user'\|'agent'\|'external'` | ✅（宿主补） | 枚举校验；缺省 **`'user'`** | [A+] `P:3316,238-239` |
-| `importance` | `number` | 否 | 给了就必须是 **1..5 整数**，否则抛错；缺省不发该键（由 Provider 决定默认） | [A+] `P:3314`、`PC:300` |
-| `tags` | `string[]` | 否 | 每个 `trim`、去空；**≤20 个**；**任一含英文逗号 → 抛错**；全空 → 不发该键 | [A+] `P:3317,1822-1828` |
-| `entities` | `string[]` | 否 | 同上，**≤50 个**，禁逗号 | [A+] `P:3318` |
-| `memoryBodyId` | `string` | ✅（宿主补） | 目标空间 id；缺省时要求"活动空间恰好 1 个"，否则抛 `memoryBodyId is required when the number of active memory spaces is not exactly one` | [A+] `P:3299-3308,3326` |
+| `content` | `string` | ✅ | `trim()` 后非空，**≤8192 字符**，否则抛错 | [A+] `P:3341,1812-1817` |
+| `category` | `Category`(6 值) | ✅（宿主补） | 枚举校验；缺省 **`'general'`** | [A+] `P:3343,236-237` |
+| `source` | `'user'\|'agent'\|'external'` | ✅（宿主补） | 枚举校验；缺省 **`'user'`** | [A+] `P:3344,238-239` |
+| `importance` | `number` | 否 | 给了就必须是 **1..5 整数**，否则抛错；缺省不发该键（由 Provider 决定默认） | [A+] `P:3342`、`PC:300` |
+| `tags` | `string[]` | 否 | 每个 `trim`、去空；**≤20 个**；**任一含英文逗号 → 抛错**；全空 → 不发该键 | [A+] `P:3345,1822-1828` |
+| `entities` | `string[]` | 否 | 同上，**≤50 个**，禁逗号 | [A+] `P:3346` |
+| `memoryBodyId` | `string` | ✅（宿主补） | 目标空间 id；缺省时要求"活动空间恰好 1 个"，否则抛 `memoryBodyId is required when the number of active memory spaces is not exactly one` | [A+] `P:3327-3336,3326` |
 
-**扩展位：没有。** 三个白名单（RPC 输入 → Source `prepareRemember` → Provider）逐层重建对象，任何自定义键（`metadata`/`extra`/`session_id`/`client_write_id`/`valid_at`…）都进不去 [A] §7 坑 1；[A+] `P:3319-3330`、`P:3666`。
-**RPC 层与 Source 层上限不一致（坑）**：RPC 允许 `content` 到 **100000**（`memoryInputText(input.content, "content", 1e5)`），但 `prepareRemember` 只允许 **8192**，超过即在 Source 层抛错 [A+] `P:3666` vs `P:3313`。→ 第三层不要依赖 100k，按 8192 设计。
+**扩展位：没有。** 三个白名单（RPC 输入 → Source `prepareRemember` → Provider）逐层重建对象，任何自定义键（`metadata`/`extra`/`session_id`/`client_write_id`/`valid_at`…）都进不去 [A] §7 坑 1；[A+] `P:3347-3358`、`P:3700`。
+**RPC 层与 Source 层上限不一致（坑）**：RPC 允许 `content` 到 **100000**（`memoryInputText(input.content, "content", 1e5)`），但 `prepareRemember` 只允许 **8192**，超过即在 Source 层抛错 [A+] `P:3700` vs `P:3341`。→ 第三层不要依赖 100k，按 8192 设计。
 
 ### 4.3 `content` 的结构化编码约定（引用 HANDOFF §23，不重写）
 
@@ -315,7 +316,7 @@ DSH 的**在线安装器只接受 `dsh-mnemon-source-*` / `dsh-mnemon-strategy-*
 | 解析者 | **shim（Python），不是插件**；插件只做管道，逐字转发 |
 | 剥离时机 | **进 Graphiti 之前**剥离，避免 `{"v":1,…}` 污染 embedding；原文含块存入 `source_content` |
 
-证据：[A] §23.1–§23.5。**与源码的一致性**：Source 对 `content` 只做长度/非空校验，**不解析也不改写内容** [A+] `P:3313`；因此"插件只当管道"这一条在 0.5.37 依然成立，格式升级不需要重新发布插件。**唯一新增约束**：`content` 上限 8192（§4.2），围栏块与正文合计不能超。
+证据：[A] §23.1–§23.5。**与源码的一致性**：Source 对 `content` 只做长度/非空校验，**不解析也不改写内容** [A+] `P:3341`；因此"插件只当管道"这一条在 0.5.27 依然成立，格式升级不需要重新发布插件。**唯一新增约束**：`content` 上限 8192（§4.2），围栏块与正文合计不能超。
 
 ### 4.4 写入回执：`remember` 返回什么才算"写成功"
 
@@ -323,24 +324,24 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | 判定顺序 | 条件 | 结果 | 证据 |
 |---|---|---|---|
-| 1 | 状态串含 `partial`，或 `errors` 非空 **且** 有计数 > 0 | `partial` | [A+] `P:1880` |
-| 2 | `success===false` / `ok===false` / `errors` 非空 / 状态串 ∈ {`canceled`,`cancelled`,`error`,`failed`} | `failed` | [A+] `P:1881,1854-1859` |
-| 3 | 状态串 === `candidate` | `candidate` | [A+] `P:1882` |
-| 4 | 状态串 ∈ {`accepted`,`pending`,`processing`,`queued`,`running`} | `accepted` | [A+] `P:1883,1847-1853` |
-| 5 | `committed===false` / `durable===false` / 状态串 === `skipped` | `unknown` | [A+] `P:1884` |
-| 6 | `committed===true` / `durable===true` / 状态串 ∈ 16 词 / 计数字段 > 0 | **`committed`** | [A+] `P:1885,1829-1846` |
-| 7 | 其它（含**空对象、只有 `id` 的对象**） | **`unknown`** | [A+] `P:1886` |
+| 1 | 状态串含 `partial`，或 `errors` 非空 **且** 有计数 > 0 | `partial` | [A+] `P:1908` |
+| 2 | `success===false` / `ok===false` / `errors` 非空 / 状态串 ∈ {`canceled`,`cancelled`,`error`,`failed`} | `failed` | [A+] `P:1909,1854-1859` |
+| 3 | 状态串 === `candidate` | `candidate` | [A+] `P:1910` |
+| 4 | 状态串 ∈ {`accepted`,`pending`,`processing`,`queued`,`running`} | `accepted` | [A+] `P:1911,1847-1853` |
+| 5 | `committed===false` / `durable===false` / 状态串 === `skipped` | `unknown` | [A+] `P:1912` |
+| 6 | `committed===true` / `durable===true` / 状态串 ∈ 16 词 / 计数字段 > 0 | **`committed`** | [A+] `P:1913,1829-1846` |
+| 7 | 其它（含**空对象、只有 `id` 的对象**） | **`unknown`** | [A+] `P:1914` |
 
-- 状态串来源：`action` → `status` → `state`（按序取第一个字符串，`trim().toLowerCase()`）[A+] `P:1873-1877`。
-- committed 16 词：`added, committed, completed, created, deleted, forgotten, imported, invalidated, linked, merged, removed, replaced, stored, succeeded, success, updated` [A+] `P:1829-1846`。
-- 计数字段：`created, deleted, edges_inserted, imported, removed, stored, updated`（必须 `>0`）[A+] `P:1860-1868`。
-- **只有 `committed` 触发 `activateAfterWrite`** → 才会 `invalidateEntityIndex` + 自动激活/`touch()` 空间 [A+] `P:2926,3352-3357,1888-1890`。
-- **`accepted` 永不触发激活**：与 HANDOFF §22.2 结论一致 [A] §22.2 ↔ [A+] `P:1883-1889`。
-- **上游还有第二道闸**：主 Agent 的写工具结果要靠 `writeLanded(receipt)` 才算"落地"，`writeLanded` = committed **或** 状态串 ∈ {`accepted`,`queued`,`pending`,`processing`}；不满足时 `action` 被改写成 **`unknown`**、`memoryBodyIds` 为空 [A+] `M:10303-10311,10899-10908`。→ **回执缺 `action` 字段 → 记忆其实写进去了，但工具告诉模型"unknown、没有空间"**。这是第三层最容易踩的坑。
+- 状态串来源：`action` → `status` → `state`（按序取第一个字符串，`trim().toLowerCase()`）[A+] `P:1901-1905`。
+- committed 16 词：`added, committed, completed, created, deleted, forgotten, imported, invalidated, linked, merged, removed, replaced, stored, succeeded, success, updated` [A+] `P:1857-1874`。
+- 计数字段：`created, deleted, edges_inserted, imported, removed, stored, updated`（必须 `>0`）[A+] `P:1888-1896`。
+- **只有 `committed` 触发 `activateAfterWrite`** → 才会 `invalidateEntityIndex` + 自动激活/`touch()` 空间 [A+] `P:2954,3352-3357,1888-1890`。
+- **`accepted` 永不触发激活**：与 HANDOFF §22.2 结论一致 [A] §22.2 ↔ [A+] `P:1911-1917`。
+- **上游还有第二道闸**：主 Agent 的写工具结果要靠 `writeLanded(receipt)` 才算"落地"，`writeLanded` = committed **或** 状态串 ∈ {`accepted`,`queued`,`pending`,`processing`}；不满足时 `action` 被改写成 **`unknown`**、`memoryBodyIds` 为空 [A+] `M:11104-11112,10899-10908`。→ **回执缺 `action` 字段 → 记忆其实写进去了，但工具告诉模型"unknown、没有空间"**。这是第三层最容易踩的坑。
 
 ### 4.5 幂等键在哪：**契约里没有**
 
-- `RememberRequest` 的全部字段见 §4.2，**没有任何"客户端写入 id"**；Source 也不生成、不比对 [A+] `PC:296-305`、`P:3309-3331`。
+- `RememberRequest` 的全部字段见 §4.2，**没有任何"客户端写入 id"**；Source 也不生成、不比对 [A+] `PC:296-305`、`P:3337-3359`。
 - 因此**幂等只能由 Provider 自己定义**：可选做法是按 `(memoryBodyId, 规范化 content, category, source)` 做确定性摘要当幂等键；代价是"同一个人真的写两条一模一样的记忆"会被合并 [推断，需产品决策]。
 - HANDOFF §22.3 要求"必须加落盘 outbox"、§23.3 指出"写 worker 不会自动重试"——两者都因为**契约层没有重试与幂等位**，只能由第三层与 shim 共同承担 [A] §22.3、§23.3；[A+] 无重试见 §5.3。
 - 事实层现有 `client_write_id` **没有上游来源**，只能在第三层自造（§7 差距 #W2）。
@@ -349,11 +350,11 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | 约定 | 后果 | 证据 |
 |---|---|---|
-| 返回数组**长度必须等于请求数** | 不等即抛 `batch remember did not return one receipt per request for Memory Space <id>`，整批失败 | [A+] `P:2959` |
-| 顺序必须一一对应 | Source 按 `written.entries()` 下标回填到原请求位 | [A+] `P:2960-2964` |
-| 只对 native 做 8000 字符切分；第三方 Provider 的批次**不做切分** | 若某条 `content` 过长，由 Provider 自己决定 | [A+] `P:2956` |
-| 同一个 target 的请求会被分组；不同空间分批调 | — | [A+] `P:2939-2951` |
-| 未覆盖的请求逐条回落 `remember` | — | [A+] `P:2966-2972` |
+| 返回数组**长度必须等于请求数** | 不等即抛 `batch remember did not return one receipt per request for Memory Space <id>`，整批失败 | [A+] `P:2987` |
+| 顺序必须一一对应 | Source 按 `written.entries()` 下标回填到原请求位 | [A+] `P:2988-2992` |
+| 只对 native 做 8000 字符切分；第三方 Provider 的批次**不做切分** | 若某条 `content` 过长，由 Provider 自己决定 | [A+] `P:2984` |
+| 同一个 target 的请求会被分组；不同空间分批调 | — | [A+] `P:2967-2979` |
+| 未覆盖的请求逐条回落 `remember` | — | [A+] `P:2994-3000` |
 
 ---
 
@@ -363,19 +364,19 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | 方法 | 有 try/catch？ | 抛错的可见后果 | 证据 |
 |---|---|---|---|
-| `search` | ✅ 每空间独立 | 该空间 `status:"unavailable"`、`hint:"unavailable: <msg>"`、结果 0 条；**其它空间照常**；模型侧 `evidence.unavailable` 只在结果为空时才看到（03 §4.1） | [A+] `P:2438-2448` |
-| `list` | ✅ 每空间独立 | 该空间 `unavailable` + hint，其余照常 | [A+] `P:2700-2706` |
-| `graph` | ✅ 每空间独立 | 该空间 `unavailable` + hint，其余照常 | [A+] `P:2629-2637` |
-| `entityIndex` | ✅ 每空间独立 | 该空间实体读 `unavailable` | [A+] `P:2845-2851` |
-| `status` | ✅ 调用处兜底 | `{healthy:false, error}`，目录不失败；空间显示不健康 | [A+] `P:2014-2019,2873` |
-| `discover`（保存配置时） | ❌ | 整个保存操作失败，RPC 返回 `internal` + 原文 | [A+] `P:3079` |
-| `discover`（重扫时） | ✅ | 该 provider 记 `error`；超时额外记 `timedOut:true` + `did not answer within <N> seconds`，空间不动 | [A+] `P:3136-3157` |
-| `remember` | ❌ | 写失败，错误冒到工具/RPC（`internal`） | [A+] `P:2925` |
-| `rememberMany` | ❌ | 同上（含长度不匹配） | [A+] `P:2958-2959` |
-| `get` | ❌ | 冒到调用方（id 定位失败） | [A+] `P:2990` |
-| `related` / `link` / `forget` | ❌ | 冒到工具/RPC | [A+] `P:2995-3021` |
-| `metadataSample` | ❌ | 冒到 RPC | [A+] `P:2566-2599` |
-| `dispose` | ✅ 聚合 | `AggregateError("Memory Space Provider disposal failed")` | [A+] `P:1984-1990` |
+| `search` | ✅ 每空间独立 | 该空间 `status:"unavailable"`、`hint:"unavailable: <msg>"`、结果 0 条；**其它空间照常**；模型侧 `evidence.unavailable` 只在结果为空时才看到（03 §4.1） | [A+] `P:2466-2476` |
+| `list` | ✅ 每空间独立 | 该空间 `unavailable` + hint，其余照常 | [A+] `P:2728-2734` |
+| `graph` | ✅ 每空间独立 | 该空间 `unavailable` + hint，其余照常 | [A+] `P:2657-2665` |
+| `entityIndex` | ✅ 每空间独立 | 该空间实体读 `unavailable` | [A+] `P:2873-2879` |
+| `status` | ✅ 调用处兜底 | `{healthy:false, error}`，目录不失败；空间显示不健康 | [A+] `P:2042-2047,2873` |
+| `discover`（保存配置时） | ❌ | 整个保存操作失败，RPC 返回 `internal` + 原文 | [A+] `P:3107` |
+| `discover`（重扫时） | ✅ | 该 provider 记 `error`；超时额外记 `timedOut:true` + `did not answer within <N> seconds`，空间不动 | [A+] `P:3164-3185` |
+| `remember` | ❌ | 写失败，错误冒到工具/RPC（`internal`） | [A+] `P:2953` |
+| `rememberMany` | ❌ | 同上（含长度不匹配） | [A+] `P:2986-2987` |
+| `get` | ❌ | 冒到调用方（id 定位失败） | [A+] `P:3018` |
+| `related` / `link` / `forget` | ❌ | 冒到工具/RPC | [A+] `P:3023-3049` |
+| `metadataSample` | ❌ | 冒到 RPC | [A+] `P:2594-2627` |
+| `dispose` | ✅ 聚合 | `AggregateError("Memory Space Provider disposal failed")` | [A+] `P:2012-2018` |
 
 **结论**：**读路径全部"降级为空 + hint"，写路径全部"失败即失败"**。这就是为什么 03 §4.1 的"状态与结果不可兼得"只对读成立；写侧没有"部分成功"的自动补偿。
 
@@ -383,32 +384,32 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | 事实 | 证据 |
 |---|---|
-| Source **不给单次调用加超时**（`search`/`remember`/`graph`/… 直接透传调用方的 `signal`） | [A+] `P:2432,2925,2623` 等 |
-| 唯一内置超时：重扫 `discover` 的 **30 s**，`AbortSignal.timeout` + `AbortSignal.any` 与外部 signal 合并 | [A+] `P:1687,3119-3123` |
-| `config.timeoutMs`（默认 10000）**不作为 Source 侧超时**，只经 factory context 交给 Provider：`context.config.timeoutMs` | [A+] `P:1972-1977,3368,3489` |
+| Source **不给单次调用加超时**（`search`/`remember`/`graph`/… 直接透传调用方的 `signal`） | [A+] `P:2460,2925,2623` 等 |
+| 唯一内置超时：重扫 `discover` 的 **30 s**，`AbortSignal.timeout` + `AbortSignal.any` 与外部 signal 合并 | [A+] `P:1715,3119-3123` |
+| `config.timeoutMs`（默认 10000）**不作为 Source 侧超时**，只经 factory context 交给 Provider：`context.config.timeoutMs` | [A+] `P:2000-2005,3368,3489` |
 | Provider 必须自己实现超时：官方 `HttpMemoryProvider` 默认 **15 s**，且把超时转成 `"<label> request timed out after <ms>ms"` | [A+] `PS.js:46,76,99` |
 | 取消要**尊重 `signal`**：Source 在 RPC/工具层会传 `AbortSignal`；`HttpMemoryProvider` 已做 relay + `throwIfAborted` | [A+] `PS.js:71-74` |
-| 进程类 Provider：`runProcess` 有 `timeout` / `abort` / `output-limit` 三类失败，错误带 `reason` 字段，最终被 Core 映射进 `RpcError.details.reason` | [A+] `PS.js:39-62`、`P:1166-1174` |
+| 进程类 Provider：`runProcess` 有 `timeout` / `abort` / `output-limit` 三类失败，错误带 `reason` 字段，最终被 Core 映射进 `RpcError.details.reason` | [A+] `PS.js:39-62`、`P:1193-1202` |
 
 ### 5.3 有没有重试：**没有**
 
 - Source 与 Core 全链路没有任何重试/退避代码（本次在 `P` 与 `M` 全文检索 `retry/attempt` 无命中）[A+]。
-- 唯一"再试一次"的形态是 `search` 的 **smart 模式补救查询**（换 query 再调一次）与 `discover` 的**用户手动重扫**，都不是自动重试 [A+] `P:2450,3090`。
+- 唯一"再试一次"的形态是 `search` 的 **smart 模式补救查询**（换 query 再调一次）与 `discover` 的**用户手动重扫**，都不是自动重试 [A+] `P:2478,3090`。
 - HANDOFF §23.3 的"写 worker 不会自动重试"由此得到源码级确认 [A] §23.3 ↔ [A+] 本节。
 
 ### 5.4 `hint` / `unavailable` 语义 → **引用 03 §4.1**
 
-- `ProviderSearchResult.hint` **只在 `results` 为空时**才会变成模型的 `evidence.unavailable`；有结果时 hint 在路由层被丢弃 [A+] `P:4110`（03 §4.1 已系统化，不重复）。
-- 补充一条 03 未写的：**抛错路径的 hint 带 `unavailable: ` 前缀**（`P:2444`），**Provider 自己返回的 hint 不带前缀**（`P:2465`）。→ 模型可以据此区分"Provider 说没命中"和"Provider 挂了"，但**键名相同**，文案必须自带语义（03 §7 待验证 8 的建议仍成立）。
+- `ProviderSearchResult.hint` **只在 `results` 为空时**才会变成模型的 `evidence.unavailable`；有结果时 hint 在路由层被丢弃 [A+] `P:4144`（03 §4.1 已系统化，不重复）。
+- 补充一条 03 未写的：**抛错路径的 hint 带 `unavailable: ` 前缀**（`P:2472`），**Provider 自己返回的 hint 不带前缀**（`P:2493`）。→ 模型可以据此区分"Provider 说没命中"和"Provider 挂了"，但**键名相同**，文案必须自带语义（03 §7 待验证 8 的建议仍成立）。
 
 ### 5.5 错误面（RPC）
 
 | 事实 | 证据 |
 |---|---|
-| Provider 抛出的 `Error` → `{ok:false, error:{code:"internal", message, details}}` | [A+] `M:14366-14376` |
-| `ProcessError.reason` ∈ {`launch`,`timeout`,`aborted`,`output-limit`} 会被塞进 `details.reason` | [A+] `PS.d.ts:54-58`、`M:14366-14374` |
-| 参数/入参形状问题 → `code:"bad-request"` + `details.issues` | [A+] `M:14377-14386` |
-| 读/写端点还有**能力门禁**：例如 `search` 需要 `recall`、`forget`/`body-delete` 需要 `forget`、`provider-service-update`/`embedding-fill` 需要 `maintain` | [A+] `M:14387-14409` |
+| Provider 抛出的 `Error` → `{ok:false, error:{code:"internal", message, details}}` | [A+] `M:16083-16093` |
+| `ProcessError.reason` ∈ {`launch`,`timeout`,`aborted`,`output-limit`} 会被塞进 `details.reason` | [A+] `PS.d.ts:54-58`、`M:16083-16091` |
+| 参数/入参形状问题 → `code:"bad-request"` + `details.issues` | [A+] `M:16094-16103` |
+| 读/写端点还有**能力门禁**：例如 `search` 需要 `recall`、`forget`/`body-delete` 需要 `forget`、`provider-service-update`/`embedding-fill` 需要 `maintain` | [A+] `M:16104-16126` |
 
 ---
 
@@ -461,14 +462,14 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | 能力位 | Source 内部行为 | RPC 门禁 | 证据 |
 |---|---|---|---|
-| `search` | 允许 `search`；否则该空间 `unsupported` + `"This provider does not expose search."` | 读端点 `search`/`entities` 需要 `recall`/`search` | [A+] `P:2423-2430`、`M:14390-14391` |
-| `browse` | 允许 `list`；否则 `query-only`/`unsupported` | 读端点 `list` 需要 `browse` | [A+] `P:2675-2685`、`M:14389` |
-| `graph` | 允许 `graph`；否则退化成 browse 投影或 `query-required` | `graph` 需要 `graph` | [A+] `P:2607-2621`、`M:14388` |
-| `entities` | 允许实体页；**不强制 `entityIndex` 方法** | — | [A+] `P:2815-2819` |
-| `related` | 允许 `related` | `related` 需要 `related` | [A+] `P:2999`、`M:14392` |
-| `remember` | 允许写 | 写端点 `remember` 需要 `write` | [A+] `PJ:265`、`M:14400` |
-| `link` | 允许 `link` | 写端点 `link` 需要 `link` | [A+] `P:3008`、`M:14401` |
-| `forget` | 允许 `forget` | `forget`/`body-delete` 需要 `forget` | [A+] `P:3017`、`M:14402-14405` |
+| `search` | 允许 `search`；否则该空间 `unsupported` + `"This provider does not expose search."` | 读端点 `search`/`entities` 需要 `recall`/`search` | [A+] `P:2451-2458`、`M:16107-16108` |
+| `browse` | 允许 `list`；否则 `query-only`/`unsupported` | 读端点 `list` 需要 `browse` | [A+] `P:2703-2713`、`M:16106` |
+| `graph` | 允许 `graph`；否则退化成 browse 投影或 `query-required` | `graph` 需要 `graph` | [A+] `P:2635-2649`、`M:16105` |
+| `entities` | 允许实体页；**不强制 `entityIndex` 方法** | — | [A+] `P:2843-2847` |
+| `related` | 允许 `related` | `related` 需要 `related` | [A+] `P:3027`、`M:16109` |
+| `remember` | 允许写 | 写端点 `remember` 需要 `write` | [A+] `PJ:265`、`M:16117` |
+| `link` | 允许 `link` | 写端点 `link` 需要 `link` | [A+] `P:3036`、`M:16118` |
+| `forget` | 允许 `forget` | `forget`/`body-delete` 需要 `forget` | [A+] `P:3045`、`M:16119-16122` |
 | `writeMode: 'exact'` | 表示"写进去的就是写进去的"（无后台 LLM 抽取）；`'async-extracting'` 表示可能异步提炼，此时回执多为 `accepted` | 语义字段，Source 不做分支判断 | [A+] `PC:114`、[推断] 分支未见于 `P` 全文 |
 | `deletionMode` | `soft`/`hard`/`unsupported`；`unsupported` 时**不要**声明 `forget:true` | 语义字段 | [A+] `PC:115` |
 
@@ -477,12 +478,12 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 | 位置 | 类型 | 用途 | 证据 |
 |---|---|---|---|
 | manifest 顶层 | `'normalized-relevance'\|'provider-native'\|'none'` | 进 descriptor、进 generation digest、进装配断言 | [A+] `PD:133`、`PJ:254,270` |
-| adapter 只读属性 | `{ kind: 'normalized-relevance'\|'provider-native' }` | **recall 质量策略实际读的就是它** | [A+] `PD:75,48-53`、`P:2455,1475-1484` |
+| adapter 只读属性 | `{ kind: 'normalized-relevance'\|'provider-native' }` | **recall 质量策略实际读的就是它** | [A+] `PD:75,48-53`、`P:2483,1475-1484` |
 
-- 两处都声明 `normalized-relevance` 才会被当成 0..1 校准分（阈值 0.25 / 0.6）[A+] `P:1491-1513`。
+- 两处都声明 `normalized-relevance` 才会被当成 0..1 校准分（阈值 0.25 / 0.6）[A+] `P:1519-1541`。
 - **manifest 写 `normalized-relevance` 但 adapter 没声明 → 装配直接失败**（`declares normalized scores but its runtime does not`）[A+] `PJ:270`。
-- **反过来不校验**：manifest 写 `'none'`、adapter 声明 `provider-native` → 装配通过，但运行时按 `provider-native` 定档（全部 `ranked`，strict-v1 只放 `maxRankedResults` 默认 **4** 条）[A+] `P:2455,1469,3456`。→ **两处必须一致，且第三层应选 `provider-native`**（03 §6 P0 已论证：声明 normalized 会让 RRF 分 0.016 全部低于 0.25 被 drop）。
-- adapter 完全不给 `scoreSemantics`：分数被当 "unscaled" → tier `unknown` → 每回合只收 1 条 [A+] `P:1480-1484`、`S:54`。
+- **反过来不校验**：manifest 写 `'none'`、adapter 声明 `provider-native` → 装配通过，但运行时按 `provider-native` 定档（全部 `ranked`，strict-v1 只放 `maxRankedResults` 默认 **4** 条）[A+] `P:2483,1469,3456`。→ **两处必须一致，且第三层应选 `provider-native`**（03 §6 P0 已论证：声明 normalized 会让 RRF 分 0.016 全部低于 0.25 被 drop）。
+- adapter 完全不给 `scoreSemantics`：分数被当 "unscaled" → tier `unknown` → 每回合只收 1 条 [A+] `P:1508-1512`、`S:54`。
 
 ### 6.5 从 manifest 到 descriptor / 实例 id 的投影
 
@@ -495,10 +496,10 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | 成员 | 内容 | 证据 |
 |---|---|---|
-| `memorySpaces` | `MemorySpaceAuthority { runner.effectiveDataDir(), list(), providerConnection(id, expectedProviderId) }` | [A+] `PD:5-11`、`P:1972-1977` |
+| `memorySpaces` | `MemorySpaceAuthority { runner.effectiveDataDir(), list(), providerConnection(id, expectedProviderId) }` | [A+] `PD:5-11`、`P:2000-2005` |
 | `memoryBodies` | **已废弃别名**，同一对象；新代码只用 `memorySpaces` | [A+] `PD:29-32` |
-| `config` | `{ timeoutMs, defaultRecallLimit? }`（即 Source 的解析后 config，含更多字段） | [A+] `PD:33-36`、`P:1975` |
-| `nativeRunner` | 仅 native 用（`runJson`/`runText`，带超时与输出上限） | [A+] `PD:23-27`、`P:1976` |
+| `config` | `{ timeoutMs, defaultRecallLimit? }`（即 Source 的解析后 config，含更多字段） | [A+] `PD:33-36`、`P:2003` |
+| `nativeRunner` | 仅 native 用（`runJson`/`runText`，带超时与输出上限） | [A+] `PD:23-27`、`P:2004` |
 | `providerInstanceId` | 该子模块在本 Source 内的稳定实例 id | [A+] `PD:135-139`、`PJ:313-317` |
 | `manifest` | 冻结后的清单 | 同上 |
 
@@ -523,54 +524,55 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 | `search` / `remember` / `list` 的实现 | [A+] `PS.d.ts:31`（只有 `list` 是 abstract，其余全部自写） |
 | `discover` / `status` / `link` / `forget` / `get` / `related` | 同上 |
 
-> 基类还有一个**必须覆盖**的默认行为：不实现 `graph()` 就会得到"把 `list()` 前 200 条当节点、边为空"的平铺图。如果 `capabilities.graph` 声明为 `true`，这个默认实现会**产出一张没有边的假图**——要么自己实现，要么把 `graph` 声明为 `false` 走 browse 投影 [A+] `PS.js:48-57`、`P:2607`。
+> 基类还有一个**必须覆盖**的默认行为：不实现 `graph()` 就会得到"把 `list()` 前 200 条当节点、边为空"的平铺图。如果 `capabilities.graph` 声明为 `true`，这个默认实现会**产出一张没有边的假图**——要么自己实现，要么把 `graph` 声明为 `false` 走 browse 投影 [A+] `PS.js:48-57`、`P:2635`。
 
 ---
 
 ## 7. 与 factlayer 现有实现的差距清单（必答 6）
 
-以 `app/main.py` 现有端点为基准 [A+] `main.py:228-373`，对照 Provider 契约。
+以 `app/main.py` 现有端点为基准对照 Provider 契约。**行号说明（2026-11-12）**：原稿引用的行号（`main.py:228-373` 等）来自更早版本，已整体失效；下表改为**函数/端点名**，不随行号漂移。当前快照：`app/main.py` 端点区 **572-764**（文件 787 行）；`app/write_path.py` 的 `create_memory` 回执 **184-188**、id 生成 **134**；`app/retrieval.py` 的 `_build_items` **799-849**。
 
 ### 7.1 端点级
 
 | 契约要求 | factlayer 现状 | 差距 | 证据 |
 |---|---|---|---|
-| `search` | `POST /search` ✅ | 返回 `{count, items, hint, hidden, token_count, routes, output…}`，**键名 `items` 而非 `results`** → 需在第三层重命名，**不能直接把 body 转给 Host** | `main.py:292-306`、`retrieval.py:677-693` |
-| `remember` | `POST /memories` ✅ | 必填 `client_write_id` / `session_id` / `source_client` —— **契约三个字段都没有对应** | `main.py:56-62,238-248` |
-| `get` | `GET /memories/{id}` ✅ | 可直接映射；404 语义 = `undefined` | `main.py:250-255` |
-| `list` | `GET /memories?session_id=` ⚠️ | 契约的 `MemoryListRequest` 是 `{query?, category?, limit?, memoryBodyIds?}`，**没有 `session_id`、没有 offset** → 只能表达成"某个空间内的浏览"，或声明 `browse:false` 走 query-only | `main.py:257-266`、`PC:447-452` |
-| `graph` | **缺失** | 无节点/边投影。回落方案：`capabilities.graph:false` + `browse:true` 让 Source 平铺投影，或 `graph:false,browse:false` → `query-only` | `P:2607-2621` |
-| `status` | `GET /health` ✅ | 结构完全不同（`health_report` 是自造报告）→ 需适配成 `{healthy, error?, stats?}`，`stats` 才能填 `MemorySpaceStats` | `main.py:308-321` |
-| `discover` | **缺失** | **`discover` 缺失 → 服务根本保存不了**（`P:3078`）。必须有：至少返回一个命名空间（例如按 `group_id`/空间名枚举） | `P:3078` |
-| `forget` | **缺失** | 只有 `/supersedes`（作废旧说法），语义是"关系"不是"删除" → `capabilities.forget:false` + `deletionMode:'unsupported'` | `main.py:268-284`、`PC:115` |
-| `link` | **缺失** | `/supersedes` + `kind` 可以映射成 `link(type='semantic', weight=1, reason=kind)`，但**契约要求 4 值枚举里的 type**，`supersedes` 不是合法 type | `main.py:65-71`、`PC:240` |
-| `related` | **缺失** | 无多跳遍历。`GET /supersedes/state` 只能回答"这一对有没有边"，不足以做 depth 1..5 | `main.py:279-284` |
+| `search` | `POST /search` ✅ | 返回 `{count, items, hint, hidden, token_count, routes, output…}`，**键名 `items` 而非 `results`** → 需在第三层重命名，**不能直接把 body 转给 Host** | `main.py` 的 `search` 端点、`retrieval.py` 的输出组装（按函数名） |
+| `remember` | `POST /memories` ✅ | 必填 `client_write_id` / `session_id` / `source_client` —— **契约三个字段都没有对应** | `main.py` 的 `MemoryIn` 与 `create_memory` 端点 |
+| `get` | `GET /memories/{id}` ✅ | 可直接映射；404 语义 = `undefined` | `main.py` 的 `GET /memories/{memory_id}` |
+| `list` | `GET /memories?session_id=` ⚠️ | 契约的 `MemoryListRequest` 是 `{query?, category?, limit?, memoryBodyIds?}`，**没有 `session_id`、没有 offset** → 只能表达成"某个空间内的浏览"，或声明 `browse:false` 走 query-only | `main.py` 的 `GET /memories`、`PC:447-452` |
+| `graph` | **缺失** | 无节点/边投影。回落方案：`capabilities.graph:false` + `browse:true` 让 Source 平铺投影，或 `graph:false,browse:false` → `query-only` | `P:2635-2649` |
+| `status` | `GET /health` ✅ | 结构完全不同（`health_report` 是自造报告）→ 需适配成 `{healthy, error?, stats?}`，`stats` 才能填 `MemorySpaceStats` | `main.py` 的 `GET /health` |
+| `discover` | **缺失** | **`discover` 缺失 → 服务根本保存不了**（`P:3106`）。必须有：至少返回一个命名空间（例如按 `group_id`/空间名枚举） | `P:3106` |
+| `forget` | **缺失** | 只有 `/supersedes`（作废旧说法），语义是"关系"不是"删除" → `capabilities.forget:false` + `deletionMode:'unsupported'` | `main.py` 的 `POST /supersedes`、`PC:115` |
+| `link` | **缺失** | `/supersedes` + `kind` 可以映射成 `link(type='semantic', weight=1, reason=kind)`，但**契约要求 4 值枚举里的 type**，`supersedes` 不是合法 type | `main.py` 的 `SupersedeIn`、`PC:240` |
+| `related` | **缺失** | 无多跳遍历。`GET /supersedes/state` 只能回答"这一对有没有边"，不足以做 depth 1..5 | `main.py` 的 `GET /supersedes/state` |
 | `entityIndex` | **缺失** | 无实体索引；`capabilities.entities:false` 即可 | — |
-| `metadataSample` | **缺失** | 可选；缺失时 Source 退回 `search(basic)` | `P:2575-2582` |
-| `rememberMany` | **缺失** | 可选；缺失时逐条 `remember` | `P:2967-2972` |
+| `metadataSample` | **缺失** | 可选；缺失时 Source 退回 `search(basic)` | `P:2603-2610` |
+| `rememberMany` | **缺失** | 可选；缺失时逐条 `remember` | `P:2995-3000` |
 | `invalidateStatus` / `dispose` | **缺失** | 可选；无长连接可关时 `dispose` 可不写 | `PD:79,105` |
-| （契约无对应） | `POST /derive/tick`、`POST /admin/rebuild`、`POST /admin/backup`、`GET /admin/search`、`POST /admin/canary` | **不属于 Provider 契约**：Provider 只有 15 个方法，没有"运维端点"通道。这些只能由人/评测直接调 shim（与 03 §5 方案 A 的 admin 端点定位一致） | `main.py:323-371`、`03` §5 |
+| （契约无对应） | `POST /derive/tick`、`POST /admin/rebuild`、`POST /admin/backup`、`GET /admin/search`、`POST /admin/canary` | **不属于 Provider 契约**：Provider 只有 15 个方法，没有"运维端点"通道。这些只能由人/评测直接调 shim（与 03 §5 方案 A 的 admin 端点定位一致） | `main.py` 的 `/derive/tick` 与 `/admin/*` 端点、`03` §5 |
 
 ### 7.2 字段级
 
 | 契约字段 | factlayer 字段 | 处理 | 证据 |
 |---|---|---|---|
-| `Insight.id` | `id`（uuid4 hex） | ✅ 直接映射；长度合规（≤1000） | `write_path.py:133` |
-| `Insight.content` | `content` | ✅ 但**必须检查 ≤8192**：factlayer 允许更大，Source `prepareRemember` 会在 8192 抛错（写侧）；读侧再被策略截 1200 | `P:3313`、`S:48` |
-| `Insight.createdAt` | `createdAt` = `iso_utc(recorded_at)` ✅ **另有 `recorded_at`（毫秒整数）** | **不要**把 `recorded_at` 当 `createdAt` 传：策略层对它做 `truncateMemoryText(…, 300)`，整数没有 `.length` → **TypeError**（`S:120`） | `retrieval.py:819-820`、`S:120` |
-| `Insight.score` | `score`（RRF，≈0.016） | ✅ 存在即可；**必须配 `provider-native`**，否则按 0.25 阈值全部 drop | `retrieval.py:821`、`03` §6 |
-| `Insight.tags` | `tags`（含 `via:`/`weak`/`hidden:N`/`superseded-by:`/`expanded`/`cycle`/`chain-too-long`） | ✅ 直接映射；注意 tag 已做数值化（`hidden:2`），**不含英文逗号**，安全 | `retrieval.py:785-810` |
-| `Insight.category` / `importance` / `entities` / `source` | factlayer **没有** category/importance/entities；`source` 是 `source_client` 语义 | 缺失可接受（`category` 读侧可选）；写侧 Source 会给 `category:'general'`、`source:'user'` | `PC:250-279`、`P:3315-3316` |
+| `Insight.id` | `id`（uuid4 hex） | ✅ 直接映射；长度合规（≤1000） | `write_path.py` 的 `create_memory`（`memory_id = uuid.uuid4().hex`，当前 `:134`） |
+| `Insight.content` | `content` | ✅ 但**必须检查 ≤8192**：factlayer 允许更大，Source `prepareRemember` 会在 8192 抛错（写侧）；读侧再被策略截 1200 | `P:3341`、`S:48` |
+| `Insight.createdAt` | `createdAt` = `iso_utc(recorded_at)` ✅ **另有 `recorded_at`（毫秒整数）** | **不要**把 `recorded_at` 当 `createdAt` 传：策略层对它做 `truncateMemoryText(…, 300)`，整数没有 `.length` → **TypeError**（`S:120`） | `retrieval.py` 的 `_build_items`（当前 `:833`）、`S:120` |
+| `Insight.score` | `score`（RRF，≈0.016） | ✅ 存在即可；**必须配 `provider-native`**，否则按 0.25 阈值全部 drop | `retrieval.py` 的 `_build_items`（当前 `:835`）、`03` §6 |
+| `Insight.tags` | `tags`（含 `via:`/`weak`/`hidden:N`/`superseded-by:`/`expanded`/`cycle`/`chain-too-long`） | ✅ 直接映射；注意 tag 已做数值化（`hidden:2`），**不含英文逗号**，安全 | `retrieval.py` 的 `_build_items` tags 组装（当前 `:799-823`） |
+| `Insight.category` / `importance` / `entities` / `source` | factlayer **没有** category/importance/entities；`source` 是 `source_client` 语义 | 缺失可接受（`category` 读侧可选）；写侧 Source 会给 `category:'general'`、`source:'user'` | `PC:250-279`、`P:3343-3344` |
 | `Insight.externalUri` | 无 | 可选；如要给人点回 shim 可填 | `PC:278` |
-| 额外字段 `recorded_at`/`seq`/`session_id`/`routes`/`content_truncated`/`expanded*`/`inherited_rank` | — | **必须剥掉**（或至少保证不参与 `content`/`id` 校验）：这些不在 `Insight` 里，策略层白名单会把它们全丢，留着只会增加 payload | `S:112-128` vs `retrieval.py:816-830` |
+| 额外字段 `recorded_at`/`seq`/`session_id`/`routes`/`content_truncated`/`expanded*`/`inherited_rank` | — | **必须剥掉**（或至少保证不参与 `content`/`id` 校验）：这些不在 `Insight` 里，策略层白名单会把它们全丢，留着只会增加 payload | `S:112-128` vs `retrieval.py` 的 `_build_items` |
 
-### 7.3 结构级（**这三条不做，接上就是错的**）
+### 7.3 结构级（**这四条不做，接上就是错的**）
 
 | # | 问题 | 后果 | 依据 |
 |---|---|---|---|
-| **W1** | `POST /memories` 回执是 `{id, seq, recorded_at, client_write_id}`，**没有 `action`/`status`/`committed`/计数** | `mutationResultCompletion` 判为 `unknown` → **不触发空间激活**；上游 `writeLanded` 为假 → 主 Agent 工具结果 `action:"unknown"`、`memoryBodyIds:[]`（记忆写了但模型被告知没落地） | `write_path.py:174-179`、`P:1885-1886`、`M:10303-10311` |
+| **W1** | `POST /memories` 回执是 `{id, seq, recorded_at, client_write_id}`，**没有 `action`/`status`/`committed`/计数** | `mutationResultCompletion` 判为 `unknown` → **不触发空间激活**；上游 `writeLanded` 为假 → 主 Agent 工具结果 `action:"unknown"`、`memoryBodyIds:[]`（记忆写了但模型被告知没落地） | `write_path.py` 的 `create_memory` 回执（当前 `:184-188`）、`P:1913-1914`、`M:11104-11112` |
 | **W2** | 幂等键 `client_write_id` 只能由第三层生成 | 契约无幂等位（§4.5）。用 `content` 摘要当键会合并"真的写了两遍"；用随机 uuid 则失去幂等 | §4.5 |
-| **W3** | `client_write_id`/`session_id`/`source_client` 三个必填字段**在 `RememberRequest` 里没有来源** | 必须由第三层造：`session_id` 可取 `memoryBodyId` 或空间名；`source_client` 固定 `"mnemon-provider"`；`client_write_id` 按 §4.5 定策略 | `main.py:56-62`、`P:3319-3330` |
+| **W3** | `client_write_id`/`session_id`/`source_client` 三个必填字段**在 `RememberRequest` 里没有来源** | 必须由第三层造：`session_id` 可取 `memoryBodyId` 或空间名；`source_client` 固定 `"mnemon-provider"`；`client_write_id` 按 §4.5 定策略 | `main.py` 的 `MemoryIn`、`P:3347-3358` |
+| **W4** | 回执**绝不能带 `memoryReceipt` 或 `completion` 键** | 带任一个即触发 Host 更严的**结构化通道**：要求 `completion==="committed"` **且** `status==="succeeded"` **且** `committedAt` 可被 `Date.parse`，不满足直接判未落地；此时 `committed:true` 的宽松启发式失效。shim 当前是扁平回执（无这两个键），**保持现状** | `docs/21` §3.4 末尾；`M:7895-7900`（0.5.44） |
 
 补充两条结构性事实（不属于"缺端点"，但会决定设计）：
 
@@ -599,14 +601,14 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | # | 待验证 | 为什么重要 | 怎么验 | 现状 |
 |---|---|---|---|---|
-| 1 | **写回执缺 `action` 的连锁反应**是否真如 §7.3-W1 所述（`unknown` + `memoryBodyIds:[]` + 不激活空间） | 决定"能不能先跑通再补回执"；如果误判，会把"写成功"当"写失败"重试，产生重复 | 真机写一条，看 `mnemon_remember` 的工具返回文案与空间 `active` 变化 | [A+] 代码路径明确，**未实测**；`M:10907` 的 `landed` 判定为静态阅读 |
-| 2 | **Source 是否真的不给 `remember` 加超时**（`config.timeoutMs` 仅传给 adapter） | 若为真，shim 卡住会一直挂住写 worker；若有隐藏超时，则必须处理中断后的半写状态 | 在 shim 上注入 hang，观察工具返回耗时与错误文案 | [A+] `P:1972-1977` 静态确认；**运行期未测** |
-| 3 | **`content` 8192 上限的实际触发点**（RPC 允许 100k） | 大事实/长围栏块会被 8192 拦在 Source 层，错误文案是 `content is too long (max 8192 characters)`，模型看到的是工具失败 | 写一条 9000 字的记忆 | [A+] `P:3666` vs `P:3313`；**未实测** |
+| 1 | **写回执缺 `action` 的连锁反应**是否真如 §7.3-W1 所述（`unknown` + `memoryBodyIds:[]` + 不激活空间） | 决定"能不能先跑通再补回执"；如果误判，会把"写成功"当"写失败"重试，产生重复 | 真机写一条，看 `mnemon_remember` 的工具返回文案与空间 `active` 变化 | [A+] 代码路径明确，**未实测**；`M:11800` 的 `landed` 判定为静态阅读 |
+| 2 | **Source 是否真的不给 `remember` 加超时**（`config.timeoutMs` 仅传给 adapter） | 若为真，shim 卡住会一直挂住写 worker；若有隐藏超时，则必须处理中断后的半写状态 | 在 shim 上注入 hang，观察工具返回耗时与错误文案 | [A+] `P:2000-2005` 静态确认；**运行期未测** |
+| 3 | **`content` 8192 上限的实际触发点**（RPC 允许 100k） | 大事实/长围栏块会被 8192 拦在 Source 层，错误文案是 `content is too long (max 8192 characters)`，模型看到的是工具失败 | 写一条 9000 字的记忆 | [A+] `P:3700` vs `P:3341`；**未实测** |
 | 4 | **`discover` 的粒度选择**（一个空间 vs 每 group 一个） | 决定 `memoryBodyIds` 能否表达"会话窗口"；也决定 rediscover 会不会重复挂载 | 实现后连点两次"重新发现"，看 `added` 是否幂等 | 设计题，**未决** |
-| 5 | **多空间混合（一个 `provider-native` + 一个 `normalized-relevance`）时，排序与 tier 如何交互** | 已确认：`useProviderOrder = 异构 \|\| 任一候选是 provider-native`（`P:2469`），此时排序只看 `providerRank`；而 tier 仍由**每个候选自己的** `scoreSemantics` 决定（`P:1475-1484`）→ 混合场景下会出现"按 A 的顺序、用 B 的阈值"。运行期观感未验证 | 两个空间各返回 2 条（一个声明 native、一个声明 normalized），看最终顺序与被 drop 的条数 | [A+] `P:2469-2470,1475-1484` 静态；**混合场景未实测**。附带结论（可当事实用）：`provider-native` 时 `score` 的**数值**不影响任何判定，只要"存在且有限"（`P:1470-1479`），所以 RRF 精度与排序无关 |
-| 6 | **`unavailable` 前缀文案**（`unavailable: <msg>`）在策略层是否被改写 | 03 §4.1 依赖 hint 原文透传；若策略重写文案，`NO_MATCH` 前缀方案要调整 | 让 Provider 抛错，看最终 `evidence.unavailable` | [A+] `P:2444` + `S:167-182` 静态；**未实测** |
+| 5 | **多空间混合（一个 `provider-native` + 一个 `normalized-relevance`）时，排序与 tier 如何交互** | 已确认：`useProviderOrder = 异构 \|\| 任一候选是 provider-native`（`P:2497`），此时排序只看 `providerRank`；而 tier 仍由**每个候选自己的** `scoreSemantics` 决定（`P:1503-1512`）→ 混合场景下会出现"按 A 的顺序、用 B 的阈值"。运行期观感未验证 | 两个空间各返回 2 条（一个声明 native、一个声明 normalized），看最终顺序与被 drop 的条数 | [A+] `P:2497-2498,1475-1484` 静态；**混合场景未实测**。附带结论（可当事实用）：`provider-native` 时 `score` 的**数值**不影响任何判定，只要"存在且有限"（`P:1498-1507`），所以 RRF 精度与排序无关 |
+| 6 | **`unavailable` 前缀文案**（`unavailable: <msg>`）在策略层是否被改写 | 03 §4.1 依赖 hint 原文透传；若策略重写文案，`NO_MATCH` 前缀方案要调整 | 让 Provider 抛错，看最终 `evidence.unavailable` | [A+] `P:2472` + `S:167-182` 静态；**未实测** |
 | 7 | **`state` 字段（`memory-providers.json`）与 `provider-service-update` 的并发安全** | 手工改 profile + GUI 保存服务配置可能互相覆盖 | 双端同时改 | [推断] 有 `withMemoryStorageLock` 引用（`P:10`）但未核对覆盖范围 |
-| 8 | **`ProcessError.reason` 是否真的出现在 `RpcError.details.reason`** | 影响 shim 崩溃时的错误诊断文案 | 用进程型 Provider 触发 launch 失败 | [A+] `M:14366-14374` + `PS.d.ts:54-58` 静态；**未实测** |
+| 8 | **`ProcessError.reason` 是否真的出现在 `RpcError.details.reason`** | 影响 shim 崩溃时的错误诊断文案 | 用进程型 Provider 触发 launch 失败 | [A+] `M:16083-16091` + `PS.d.ts:54-58` 静态；**未实测** |
 
 ---
 
@@ -617,13 +619,13 @@ Source 用**启发式**把任意 JSON 回执翻译成 5 个状态之一（`mutat
 
 | # | 03 的位置 | 03 的说法 | 源码事实 | 建议改法 |
 |---|---|---|---|---|
-| 1 | §1.3 表首行（`id`） | "缺 → **静默丢弃**；长度必须 1..1000，否则被策略跳过" | 两件事被合并了：**长度 1..1000 的静默跳过**确实在策略层（`S:95`）；但**缺失** `id` 会在策略层抛 `TypeError`（`S:95` 直接读 `.length`），**不是静默**。真正"return undefined + filter"的静默丢弃发生在**各 Provider 自己的 normalize**（HANDOFF §7 坑 4 说的是这一层）[A+] `S:95`、`P:2694` | 拆成两条：①"Provider **必须**保证 `id` 非空（缺了会在策略层抛错，整个召回失败）"；②"长度 >1000 会被策略静默跳过" |
+| 1 | §1.3 表首行（`id`） | "缺 → **静默丢弃**；长度必须 1..1000，否则被策略跳过" | 两件事被合并了：**长度 1..1000 的静默跳过**确实在策略层（`S:95`）；但**缺失** `id` 会在策略层抛 `TypeError`（`S:95` 直接读 `.length`），**不是静默**。真正"return undefined + filter"的静默丢弃发生在**各 Provider 自己的 normalize**（HANDOFF §7 坑 4 说的是这一层）[A+] `S:95`、`P:2722` | 拆成两条：①"Provider **必须**保证 `id` 非空（缺了会在策略层抛错，整个召回失败）"；②"长度 >1000 会被策略静默跳过" |
 | 2 | §1.3 表（`content`） | "缺 → **静默丢弃**" | `content` 缺失会让 `truncateMemoryText` 抛 `TypeError`（`S:105` → `truncate` 读 `.length`），**不是静默丢弃**；只有 `content === ""` 才静默丢（`S:106`）[A+] | 改为"缺 → 召回调用抛错；空串 → 静默丢" |
-| 3 | §1.3 表（`score`） | "缺失 → tier `unknown` → 最多选 2 条、策略每回合只收 1 条" | `2` 是 **Source** 的 `maxUnknownResults` 默认值（`P:3457`）；**策略层每回合只收 1 条**（`S:54`）。两者都对，但"最多 2 条"会被后续 1 条再截一次 | 补一句"Source 放 2 → 策略再截 1，最终 1 条" |
-| 4 | §1.3 表（`normalizedScore` / `relevanceTier` 那一行） | 这些字段"**全部不进模型上下文**：`evidence()` 的 provenance 白名单里没有它们"，引 `P:3976-3991` | 引错了层级：`score`（`normalizedScore ?? score`）**确实写进了 evidence item**（`P:3974`），`relevanceTier` **确实在 provenance 白名单里**（`P:3982`）。它们是在**策略层** `boundedModelInsights` 组装模型可见面时才被剥掉的（`S:112-128` 的字段白名单里没有 score / relevanceTier） | 结论"模型看不到"仍成立，但证据应改为 `S:112-128`；并补一句"evidence 信封里有 score 与 relevanceTier，只是模型面没有"——否则将来有人从信封读 score 会以为 03 说错了 |
-| 5 | §4.4 风险 1 | "写入侧 `tags` 值禁英文逗号（含逗号直接抛错）" | 正确，但**抛错点是 Source 的 `prepareRemember`→`commaList`**，`P:1826`，不是 Provider。03 引的是 `contracts.d.ts` | 补上 Source 侧行号，避免误以为要在 Provider 里校验 |
-| 6 | §7 待验证 2 | "`hint` 仅空结果透传，若上游改为总是透传则所有互斥结论松动" | 仍然成立；**新增**一条同类风险：抛错路径的 hint 带 `unavailable: ` 前缀（`P:2444`），与 Provider 自造的 hint 共用同一个键 | 在待验证清单里补这一条 |
-| 7 | §1.3 表末（`hint`） | "只在结果为空时才被转成 `evidence.unavailable`" | 与源码一致 [A+] `P:4110`；但**多空间时 hint 会被拼成 `"<空间名>: <hint>"` 并用 `\n` 连接**（`P:2465,2558`），03 未写 | 补一句"多空间时 hint 是拼接文本，`NO_MATCH` 前缀要放在每个空间自己的 hint 里或统一在源文本开头" |
+| 3 | §1.3 表（`score`） | "缺失 → tier `unknown` → 最多选 2 条、策略每回合只收 1 条" | `2` 是 **Source** 的 `maxUnknownResults` 默认值（`P:3491`）；**策略层每回合只收 1 条**（`S:54`）。两者都对，但"最多 2 条"会被后续 1 条再截一次 | 补一句"Source 放 2 → 策略再截 1，最终 1 条" |
+| 4 | §1.3 表（`normalizedScore` / `relevanceTier` 那一行） | 这些字段"**全部不进模型上下文**：`evidence()` 的 provenance 白名单里没有它们"，引 `P:4010-4025` | 引错了层级：`score`（`normalizedScore ?? score`）**确实写进了 evidence item**（`P:4008`），`relevanceTier` **确实在 provenance 白名单里**（`P:4016`）。它们是在**策略层** `boundedModelInsights` 组装模型可见面时才被剥掉的（`S:112-128` 的字段白名单里没有 score / relevanceTier） | 结论"模型看不到"仍成立，但证据应改为 `S:112-128`；并补一句"evidence 信封里有 score 与 relevanceTier，只是模型面没有"——否则将来有人从信封读 score 会以为 03 说错了 |
+| 5 | §4.4 风险 1 | "写入侧 `tags` 值禁英文逗号（含逗号直接抛错）" | 正确，但**抛错点是 Source 的 `prepareRemember`→`commaList`**，`P:1854`，不是 Provider。03 引的是 `contracts.d.ts` | 补上 Source 侧行号，避免误以为要在 Provider 里校验 |
+| 6 | §7 待验证 2 | "`hint` 仅空结果透传，若上游改为总是透传则所有互斥结论松动" | 仍然成立；**新增**一条同类风险：抛错路径的 hint 带 `unavailable: ` 前缀（`P:2472`），与 Provider 自造的 hint 共用同一个键 | 在待验证清单里补这一条 |
+| 7 | §1.3 表末（`hint`） | "只在结果为空时才被转成 `evidence.unavailable`" | 与源码一致 [A+] `P:4144`；但**多空间时 hint 会被拼成 `"<空间名>: <hint>"` 并用 `\n` 连接**（`P:2493,2558`），03 未写 | 补一句"多空间时 hint 是拼接文本，`NO_MATCH` 前缀要放在每个空间自己的 hint 里或统一在源文本开头" |
 
 ---
 

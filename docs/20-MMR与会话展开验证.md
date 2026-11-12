@@ -75,7 +75,9 @@
 - 单价未确认（与 [`docs/04`](04-embedding重测报告.md) 同口径，阿里云 MaaS 无公开单价），故只报 token；
   按公开中文 embedding 约 ¥0.5/1M tokens 的量级折算 ≈ **¥1.1（≈$0.15）**，明显低于 $0.5 预算。
 - 缓存 `.embedding_cache_mmr.json`（base64 float32、L2 归一化、**40.3MB**，`.gitignore` 已加
-  `research/bench/.embedding_cache_*.json` 规则）：复跑全量 **0 调用**（本轮三次离线复算都是 0）。
+  `research/bench/.embedding_cache_*.json` 规则）：复跑全量 **0 调用**（本轮所有离线复算都是 0）。
+- 机读结果里 `embeddings.*_this_run` 是**最后一次离线复算**的读数（0 调用）；建缓存的真实花费在
+  `embeddings.cache_build`（456 次调用 / 2,125,174 tokens，含 3 题冒烟的 6 次）——两者别混读。
 
 ### 2.3 四种配置
 

@@ -12,27 +12,30 @@ dsh-mnemon 的记忆 provider 后端：一个 FastAPI shim，对上暴露 mnemon
                                    │  FastAPI shim
         ┌──────────────────────────┼──────────────────────────┐
         │                          │                          │
-┌───────▼────────┐        ┌────────▼────────┐        ┌────────▼────────┐
-│ 事实层 (SQLite) │        │ 派生层 (可弃)    │        │ 检索层 v8        │
-│ 只追加 INSERT   │───────▶│ embeddings 表    │───────▶│ 单混合列 bigram  │
-│ 永不 UPDATE     │        │ FTS5 索引        │        │ 路内替换 → RRF   │
-│ 永不 DELETE     │        │ derive_state 水位│        │ → 契约输出       │
-└────────────────┘        └─────────────────┘        └─────────────────┘
-   永远不动                 删光重跑零损失            FINAL_K=4 / 4800 字符
+┌───────▼────────┐        ┌────────▼────────┐        ┌────────▼─────────────┐
+│ 事实层 (SQLite) │        │ 派生层 (可弃)    │        │ 检索层 v9             │
+│ 只追加 INSERT   │───────▶│ embeddings 表    │───────▶│ 默认 vector 单路直出   │
+│ 永不 UPDATE     │        │ FTS5 索引        │        │ score=1/(60+rank)     │
+│ 永不 DELETE     │        │ derive_state 水位│        │ → FINAL_K=4 契约输出   │
+└────────────────┘        └─────────────────┘        └──────────────────────┘
+   永远不动                 删光重跑零损失              bigram 仅降级；
+                                                        显式多路才 RRF
 ```
 
 主轴：**派生层出错删掉重跑，事实层永远不动。**
 
+默认 `RETRIEVAL_ROUTES=vector`：向量单路**不做 RRF 融合**，按该路名次直出；bigram 只在向量不可用/未配置时降级；只有显式配置多路时才走 RRF。
+
 ## 当前状态
 
 - **第一层（事实层）**：建库（只追加触发器 + FTS5）、写入路径（服务端 id/seq、client_write_id 幂等、409）、读取（按 id 全文 / 按会话截断输出）、supersedes 作废边、派生水位循环、自动备份调度（VACUUM INTO + 原子替换）、`/health`。设计见 [docs/01-事实层设计.md](docs/01-事实层设计.md)。
-- **第二层（检索层，v8 + 2026-11-11 重测）**：出厂默认 **R1 vector 单路**（真实 embedding 重测 R@6=**0.8729**；bigram 基线 0.4875 仅作向量不可用时的降级路，**不做 RRF 融合**——等权融合只有 0.6833）；`gseq` 全局单调序；hidden 唯一口径（20 跳、可达存活链头）；路内替换；单路直出（score 仍 1/(60+rank)）→ FINAL_K=4；契约输出（数值 score、ISO 8601 UTC createdAt、tags 状态通道、1200/4800 字符预算）。设计见 [docs/02-检索层设计.md](docs/02-检索层设计.md)、重测报告 [docs/04-embedding重测报告.md](docs/04-embedding重测报告.md)、契约映射 [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md)。
+- **第二层（检索层，v9 + 2026-11-11 真实 embedding 重测）**：索引文本自 v9 起带确定性日期前缀（`event_time`，缺失回退 `recorded_at` UTC；`INDEX_TEXT_VERSION=2`），事实层 `content` 不变。出厂默认 **R1 vector 单路**（真实 embedding 重测 R@6=**0.8729**；bigram 基线 0.4875 仅作向量不可用时的降级路，**不做 RRF 融合**——等权融合只有 0.6833）；`gseq` 全局单调序；hidden 唯一口径（20 跳、可达存活链头）；路内替换；单路直出（score 仍 1/(60+rank)）→ FINAL_K=4；契约输出（数值 score、ISO 8601 UTC createdAt、tags 状态通道、1200/4800 字符预算）。设计见 [docs/02-检索层设计.md](docs/02-检索层设计.md)、重测报告 [docs/04-embedding重测报告.md](docs/04-embedding重测报告.md)、契约映射 [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md)。
 - **第三层（对接层，`plugin/` + shim 侧 `/spaces` / O(1) `/health`）**：一个极薄的 TypeScript provider 适配器包 `dsh-mnemon-provider-factlayer`（`defineMemorySpaceProvider` + `host.install`），把 mnemon 契约的 `discover/status/search/remember/list/graph` 逐方法翻译成对 shim 的一次 HTTP 调用；shim 侧新增 `GET /spaces`、`/health` 后台快照、重建期 503。设计见 [docs/06-对接层设计.md](docs/06-对接层设计.md)、接口契约 [docs/05-provider接口契约.md](docs/05-provider接口契约.md)。安装与配置见 [plugin/README.md](plugin/README.md)。
 
 ## 运行
 
 ```bash
-python -m pip install fastapi uvicorn pytest httpx
+python -m pip install fastapi uvicorn pytest httpx numpy
 cp .env.example .env   # 填 DSH_FACT_DB_PATH 等
 python -m uvicorn app.main:create_app --factory --workers 1   # 固定单 worker（写路径依赖进程内单写锁）
 python -m app.main     # 等价入口，同样用工厂创建 app
@@ -41,7 +44,13 @@ python -m pytest       # 运行测试
 
 `app.main` 不再在模块级创建 `app`（工厂模式）：`import app.main` 无副作用，不会在当前目录生成 `facts.db`。启动后后台线程每 `DSH_BACKUP_INTERVAL_SECONDS`（默认 86400，设 0 关闭）检查一次 `last_backup_at`，到期自动备份；备份失败会在 `/health` 的 `last_backup_error` / `backup_consecutive_failures` 暴露，完整堆栈只写服务端日志。同一后台线程还负责 SQLite 维护：无写入空闲时执行 WAL `TRUNCATE` 检查点（`DSH_WAL_CHECKPOINT_INTERVAL_SECONDS`/`DSH_WAL_CHECKPOINT_IDLE_SECONDS`），并按 `DSH_FTS_OPTIMIZE_INTERVAL_SECONDS`（默认 86400）执行 FTS5 optimize；两者失败只记日志并进 `/health`。派生、备份、检查点、optimize 任一开启就会启动该线程，`/health.maintenance` 可看到 `loop_enabled` 及两项维护的启用状态；全关时启动日志会写明「维护线程未启动」。「空闲 N 秒」是进程本地判定（用单调时钟），重启后视为从未写入。
 
-主要端点：`POST /memories`、`GET /memories/{id}`（全文）、`GET /memories?session_id=`（输出处截断至 1200 字符并标注）、`POST /supersedes`、`POST /search`、`GET /health`、`GET /spaces`（对接层 discover），以及 admin 端点 `GET /admin/search`（`include_superseded=1`，模型路径不可达）、`POST /admin/rebuild`（完成后自动 FTS5 optimize）、`POST /admin/checkpoint`（默认 `PASSIVE`；支持 `?mode=TRUNCATE`）、`POST /admin/canary`、`POST /admin/backup`。
+主要端点（对照 `app/main.py` 的全部 15 条路由）：
+
+- 读写与检索：`POST /memories`、`GET /memories/{id}`（全文）、`GET /memories?session_id=`（输出处截断至 1200 字符并标注）、`GET /memories/{id}/voided`（某条的作废状态）、`POST /supersedes`、`GET /supersedes/state`（某对是否作废）、`POST /search`、`GET /health`、`GET /spaces`（对接层 discover）。
+- `POST /derive/tick`：手动推进一轮派生水位（每轮 50 条），**不鉴权**，与 admin 端点区分；不能当作迁移补数手段。
+- admin 端点：`GET /admin/search`（`include_superseded=1`，模型路径不可达）、`POST /admin/rebuild`（完成后自动 FTS5 optimize）、`POST /admin/checkpoint`（默认 `PASSIVE`；支持 `?mode=TRUNCATE`）、`POST /admin/canary`、`POST /admin/backup`。
+
+> **测试数基线（本文是唯一权威口径）**：Python **246 passed**（`python -m pytest -q`）、TS **91 passed / 8 files**（`pnpm -C plugin exec vitest run`）。其它文档提到"当前测试数"一律引用本节；数字随开发变化时只改这里，并在提交说明里注明。
 
 对接层（第三层，`plugin/`）的 shim 侧约定（docs/06 v3）：
 
@@ -52,7 +61,7 @@ python -m pytest       # 运行测试
 
 admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 或 `Authorization: Bearer <token>`；为空时只接受回环访问（含 TestClient）。
 
-## 配置要点（v8）
+## 配置要点（v9）
 
 | 环境变量 | 默认 | 说明 |
 |---|---|---|
@@ -116,7 +125,7 @@ admin 端点由 `ADMIN_TOKEN` 保护：非空时要求 `X-Admin-Token: <token>` 
 
 ## 基线回归
 
-检索层 v8 的 golden fixture 由 `research/recall/make_golden_fixture.py` 生成，
+检索层的 golden fixture 由 `research/recall/make_golden_fixture.py` 生成（v8 时期冻结的历史口径；v9 起索引文本带日期前缀，`tests/test_recall_baseline.py` 显式构造 v1 content-only 派生列来复现该历史基线，见 `docs/09` §5），
 提交在 `tests/fixtures/recall_baseline.json`（40 题基线查询串 + 预期 top-6 +
 sha256 + 基线 commit；含 2/40 空结果题的 id 与查询串）。`tests/test_recall_baseline.py`
 只读 fixture，重算并断言查询串逐字节相等、R@6 = 0.4875（容差 ≤0.01）。
@@ -129,7 +138,7 @@ python research/recall/baseline_r2.py     # 原型 + 出厂实现分别跑 R@6
 ## 文档
 
 - [docs/01-事实层设计.md](docs/01-事实层设计.md) —— 事实层（第一层）
-- [docs/02-检索层设计.md](docs/02-检索层设计.md) —— 检索层（第二层，v8）
+- [docs/02-检索层设计.md](docs/02-检索层设计.md) —— 检索层（第二层，v9）
 - [docs/03-对接层契约映射.md](docs/03-对接层契约映射.md) —— 检索输出到 mnemon provider 契约的映射
 - [docs/05-provider接口契约.md](docs/05-provider接口契约.md) —— provider 完整接口契约（第三层实现手册）
 - [docs/06-对接层设计.md](docs/06-对接层设计.md) —— 对接层设计 v3（装配形状 / 能力键名 / 密钥路径 / session_id / O(1) health / 重建期语义）

@@ -121,7 +121,7 @@
    - `routes == ("vector",)` 且向量不可用（provider 缺失 / 熔断 / 空索引 / 查询异常）时，本次查询追加 bigram、**不融合**；响应 `degraded` 置真，非空结果首条 `tags:["vector-unavailable"]`，空结果 hint 列出 `vector(unavailable:…) + bigram(ok)` 与 `degraded=…`；
    - 显式配置多路时仍按原 RRF 融合（兼容旧配置，不改语义）。
 3. `app/main.py`：vector 路线但 embedding **未配置**（MODEL / BASE_URL 为空）时不再拒绝启动，记 warning 并让查询降级 bigram；**配置了但 build_provider 失败**仍在启动时报错（§8 硬规则 4 保留）。
-4. 测试：`167 passed`。新增/改写覆盖：默认路 = vector；未配置启动降级；无 provider / 空索引 / 熔断降级；单路不融合、score = 1/61；多路融合与既有契约测试全部保持。
+4. 测试：**以仓库 `README.md` 的「测试数基线」为准**（截至本次重测为 246 Python / 91 TS；重测当时的快照是 167 passed）。新增/改写覆盖：默认路 = vector；未配置启动降级；无 provider / 空索引 / 熔断降级；单路不融合、score = 1/61；多路融合与既有契约测试全部保持。
 
 产品路径复算（最终代码、缓存 provider、0 联网）：**R@6 = 0.8729**，与原型一致；`routes=[["vector"]]`、`degraded=False`、单路名次分校验 `True`。
 
